@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-// Lucide icons removed for diagnosis
+import { ChevronDown, LogOut, Languages } from 'lucide-react';
 
 const UserDropdown = () => {
   const { user, logout } = useAuth();
@@ -27,7 +27,9 @@ const UserDropdown = () => {
             {user.role}
           </p>
         </div>
-        <span data-testid="chevron-icon">▼</span>
+        <ChevronDown
+          className={`w-4 h-4 text-notion-text-secondary transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+        />
       </button>
 
       {isOpen && (
@@ -35,9 +37,12 @@ const UserDropdown = () => {
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
           <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#1a1a1a] border border-notion-border dark:border-white/10 rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
             <div className="px-4 py-3 border-b border-notion-border dark:border-white/5 mb-1">
-              <p className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest mb-1">
-                Idioma
-              </p>
+              <div className="flex items-center gap-2 mb-2">
+                <Languages className="w-3.5 h-3.5 text-blue-500" />
+                <p className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest">
+                  {t('select_lang')}
+                </p>
+              </div>
               <div className="flex gap-1">
                 {['es', 'en'].map((l) => (
                   <button
@@ -65,8 +70,8 @@ const UserDropdown = () => {
               }}
               className="w-full px-4 py-2.5 text-left text-sm font-bold text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-3"
             >
-              <span data-testid="logout-icon">⏻</span>
-              {t('common.logout')}
+              <LogOut className="w-4 h-4" />
+              {t('logout')}
             </button>
           </div>
         </>

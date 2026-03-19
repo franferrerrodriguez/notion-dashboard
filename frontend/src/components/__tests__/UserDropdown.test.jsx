@@ -50,8 +50,10 @@ describe('UserDropdown Component', () => {
     renderWithProviders(<UserDropdown />);
     // Open dropdown
     fireEvent.click(screen.getByRole('button'));
+    // Wait for the dropdown to be visible
+    expect(screen.getByText(/Idioma/i)).toBeInTheDocument();
     // Click logout
-    fireEvent.click(screen.getByText(/common.logout/i));
+    fireEvent.click(screen.getByText(/Cerrar Sesión/i));
     expect(mockLogout).toHaveBeenCalled();
   });
 });

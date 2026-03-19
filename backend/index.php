@@ -102,11 +102,19 @@ if ($action === 'settings_save' && $method === 'POST') {
         exit;
     }
     $input = json_decode(file_get_contents('php://input'), true);
+    
+    // Map frontend keys to database keys
+    $mappings = [
+        'notion_token' => 'notion_integration_token',
+        'database_id'  => 'notion_database_id'
+    ];
+
     $pdo->beginTransaction();
     try {
         foreach ($input as $key => $value) {
+            $dbKey = $mappings[$key] ?? $key;
             $stmt = $pdo->prepare("UPDATE settings SET `value` = ? WHERE `key` = ?");
-            $stmt->execute([preg_replace('/\s+/', '', $value), $key]); // Clean whitespace/newlines
+            $stmt->execute([preg_replace('/\s+/', '', $value), $dbKey]);
         }
         $pdo->commit();
         echo json_encode(['success' => true]);

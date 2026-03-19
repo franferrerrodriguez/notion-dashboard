@@ -1,8 +1,16 @@
-
 import { useLanguage } from '../context/LanguageContext';
-// Lucide icons removed for diagnosis
+import { AlertCircle, X, Trash2 } from 'lucide-react';
 
-const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, type = 'danger' }) => {
+const ConfirmModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  type = 'danger',
+  confirmText,
+  cancelText,
+}) => {
   const { t } = useLanguage();
   if (!isOpen) return null;
 
@@ -18,7 +26,11 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, type = 'dang
           <div
             className={`w-12 h-12 rounded-2xl ${type === 'danger' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'} flex items-center justify-center border`}
           >
-            <span data-testid="modal-icon" />
+            {type === 'danger' ? (
+              <Trash2 className="w-6 h-6" />
+            ) : (
+              <AlertCircle className="w-6 h-6" />
+            )}
           </div>
           <div>
             <h3 className="text-xl font-black tracking-tight text-notion-text dark:text-white leading-tight">
@@ -34,23 +46,23 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, type = 'dang
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-3.5 px-4 rounded-xl text-xs font-bold text-notion-text-secondary dark:text-gray-400 bg-notion-bg-light dark:bg-white/5 border border-notion-border dark:border-white/5 hover:bg-black/5 dark:hover:bg-white/10 transition-all active:scale-95"
+            className="flex-1 py-3.5 px-4 rounded-xl text-xs font-bold text-notion-text-secondary dark:text-gray-400 bg-notion-bg-light dark:bg-white/5 border border-notion-border dark:border-white/5 hover:bg-black/10 dark:hover:bg-white/10 transition-all active:scale-95"
           >
-            {t('common.cancel')}
+            {cancelText || t('cancel')}
           </button>
           <button
             onClick={onConfirm}
             className={`flex-1 py-3.5 px-4 rounded-xl text-xs font-black uppercase tracking-widest text-white ${type === 'danger' ? 'bg-red-600 hover:bg-red-500 shadow-red-500/20' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/20'} transition-all shadow-lg active:scale-95`}
           >
-            {t('common.confirm')}
+            {confirmText || t('confirm')}
           </button>
         </div>
 
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-notion-text-secondary dark:text-gray-500 hover:text-notion-text dark:hover:text-white transition-colors"
+          className="absolute top-6 right-6 p-2 text-notion-text-secondary dark:text-gray-500 hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors"
         >
-          <span data-testid="close-icon" />
+          <X className="w-5 h-5" />
         </button>
       </div>
     </div>

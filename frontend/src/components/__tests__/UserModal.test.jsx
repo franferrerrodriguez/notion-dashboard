@@ -38,7 +38,7 @@ describe('UserModal Component', () => {
       expect(screen.getByPlaceholderText(/ejemplo@cliente.com/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Nuevo Usuario')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Nuevo Usuario/i })).toBeInTheDocument();
   });
 
   it('shows client selection only when role is CLIENT', async () => {

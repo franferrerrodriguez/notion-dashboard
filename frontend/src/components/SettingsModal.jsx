@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { settingsService } from '../services/api';
-// Lucide icons removed for diagnosis
+import { Settings, X, Save, Eye, EyeOff } from 'lucide-react';
 
 const SettingsModal = ({ isOpen, onClose }) => {
   const { t } = useLanguage();
@@ -40,12 +40,15 @@ const SettingsModal = ({ isOpen, onClose }) => {
     setIsSaving(true);
     setMessage({ type: '', text: '' });
     try {
-      await settingsService.update(settings);
+      await settingsService.save(settings);
       setMessage({ type: 'success', text: t('settings_save_success') });
       setTimeout(() => {
         onClose();
         setMessage({ type: '', text: '' });
       }, 2000);
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      setMessage({ type: 'error', text: t('settings_save_error') });
     } finally {
       setIsSaving(false);
     }
@@ -59,14 +62,14 @@ const SettingsModal = ({ isOpen, onClose }) => {
         <div className="px-8 py-6 border-b border-notion-border dark:border-white/5 flex justify-between items-center bg-notion-bg-light dark:bg-white/[0.01]">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-indigo-500/10 rounded-2xl border border-indigo-500/20 text-indigo-500">
-              <span data-testid="settings-icon">⚙️</span>
+              <Settings className="w-6 h-6" />
             </div>
             <div>
               <h2 className="text-lg font-black tracking-tight text-notion-text dark:text-white">
-                Configuración Global
+                {t('settings_title')}
               </h2>
               <p className="text-[10px] font-bold text-notion-text-secondary uppercase tracking-widest">
-                Notion API & Dashboard
+                {t('settings_subtitle')}
               </p>
             </div>
           </div>
@@ -74,7 +77,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
             onClick={onClose}
             className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors text-notion-text-secondary"
           >
-            <span data-testid="x-icon">✕</span>
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -85,7 +88,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
               className="text-[10px] font-bold text-notion-text-secondary uppercase tracking-[0.2em]"
               data-testid="loading-text"
             >
-              Obteniendo ajustes
+              {t('settings_loading')}
             </p>
           </div>
         ) : (
@@ -108,9 +111,9 @@ const SettingsModal = ({ isOpen, onClose }) => {
                     type="button"
                     onClick={() => setShowToken(!showToken)}
                     aria-label="Toggle Token Visibility"
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-notion-text-secondary hover:text-indigo-500"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-notion-text-secondary/40 hover:text-indigo-500 transition-colors"
                   >
-                    {showToken ? 'Hide' : 'Show'}
+                    {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
@@ -145,16 +148,19 @@ const SettingsModal = ({ isOpen, onClose }) => {
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-3.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-notion-text-secondary rounded-2xl text-[10px] font-black uppercase tracking-widest border border-notion-border"
+                className="flex-1 py-3.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-notion-text-secondary rounded-2xl text-[10px] font-black uppercase tracking-widest border border-notion-border dark:border-white/5 transition-all active:scale-95"
               >
-                Cancelar
+                {t('cancel')}
               </button>
               <button
                 type="submit"
                 disabled={isSaving}
-                className="flex-1 py-3.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl active:scale-95"
+                className="flex-1 py-3.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-indigo-500/20 transition-all active:scale-95"
               >
-                {isSaving ? 'Guardando...' : 'Aplicar Cambios'}
+                <div className="flex items-center justify-center gap-2">
+                  <Save className="w-3.5 h-3.5" />
+                  {isSaving ? t('applying') : t('save_changes')}
+                </div>
               </button>
             </div>
           </form>

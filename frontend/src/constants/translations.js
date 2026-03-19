@@ -9,6 +9,10 @@ export const translations = {
     logout: 'Cerrar Sesión',
     confirm: 'Confirmar',
     cancel: 'Cancelar',
+    save_changes: 'Guardar Cambios',
+    applying: 'Aplicando...',
+    edit: 'Editar',
+    delete: 'Eliminar',
 
     // Login
     login_title: 'Panel de Control',
@@ -28,6 +32,16 @@ export const translations = {
     mgmt_projects: 'Gestión de Proyectos',
     admin_general: 'Administración General',
     projects: 'Proyectos',
+    admin_panel: 'Panel de Administración',
+    access_mgmt: 'Gestión de Accesos & Usuarios',
+
+    // Admin Panel
+    user_list: 'Listado de Acceso',
+    new_user: 'Nuevo Usuario',
+    config_required: 'Configuración Requerida',
+    notion_config: 'Configuración de Notion',
+    loading_users: 'Cargando Usuarios',
+    view_as_client: 'Ver Dashboard como Cliente',
 
     // Analytics
     not_started: 'Sin empezar',
@@ -36,10 +50,37 @@ export const translations = {
     total: 'Total',
 
     // Table Headers
+    col_email: 'Email',
+    col_role: 'Rol',
+    col_status: 'Estado',
+    col_notion_link: 'Vinculación Notion',
+    col_actions: 'Acciones',
     col_project: 'Proyecto',
     col_phase: 'Fase',
-    col_status: 'Estado',
     col_billing: 'Facturación',
+
+    // Settings Modal
+    settings_title: 'Configuración Global',
+    settings_subtitle: 'Notion API & Dashboard',
+    settings_loading: 'Obteniendo ajustes',
+    settings_save_success: 'Configuración guardada correctamente',
+    settings_save_error: 'Error al guardar la configuración',
+
+    // User Modal
+    user_edit: 'Editar Usuario',
+    user_new: 'Nuevo Usuario',
+    user_email: 'Email',
+    user_password: 'Contraseña',
+    user_password_new: 'Nueva Contraseña (opcional)',
+    user_role: 'Rol',
+    user_client_tag: 'Cliente Notion (Tag)',
+    user_generate: 'Generar',
+    user_select_client: 'Seleccionar Cliente',
+    user_loading_data: 'Cargando datos',
+
+    // Confirm Delete
+    delete_user_title: 'Eliminar Usuario',
+    delete_user_confirm: '¿Estás seguro de que deseas eliminar al usuario {email}? Esta acción no se puede deshacer.',
 
     // SideDrawer Properties
     prop_client: 'Cliente',
@@ -82,6 +123,10 @@ export const translations = {
     logout: 'Logout',
     confirm: 'Confirm',
     cancel: 'Cancel',
+    save_changes: 'Save Changes',
+    applying: 'Applying...',
+    edit: 'Edit',
+    delete: 'Delete',
 
     // Login
     login_title: 'Control Panel',
@@ -101,6 +146,16 @@ export const translations = {
     mgmt_projects: 'Projects Management',
     admin_general: 'General Administration',
     projects: 'Projects',
+    admin_panel: 'Admin Panel',
+    access_mgmt: 'Access & User Management',
+
+    // Admin Panel
+    user_list: 'Access List',
+    new_user: 'New User',
+    config_required: 'Configuration Required',
+    notion_config: 'Notion Configuration',
+    loading_users: 'Loading Users',
+    view_as_client: 'View Dashboard as Client',
 
     // Analytics
     not_started: 'Not started',
@@ -109,10 +164,37 @@ export const translations = {
     total: 'Total',
 
     // Table Headers
+    col_email: 'Email',
+    col_role: 'Role',
+    col_status: 'Status',
+    col_notion_link: 'Notion Link',
+    col_actions: 'Actions',
     col_project: 'Project',
     col_phase: 'Phase',
-    col_status: 'Status',
     col_billing: 'Billing',
+
+    // Settings Modal
+    settings_title: 'Global Settings',
+    settings_subtitle: 'Notion API & Dashboard',
+    settings_loading: 'Fetching settings',
+    settings_save_success: 'Settings saved successfully',
+    settings_save_error: 'Error saving settings',
+
+    // User Modal
+    user_edit: 'Edit User',
+    user_new: 'New User',
+    user_email: 'Email',
+    user_password: 'Password',
+    user_password_new: 'New Password (optional)',
+    user_role: 'Role',
+    user_client_tag: 'Notion Client (Tag)',
+    user_generate: 'Generate',
+    user_select_client: 'Select Client',
+    user_loading_data: 'Loading data',
+
+    // Confirm Delete
+    delete_user_title: 'Delete User',
+    delete_user_confirm: 'Are you sure you want to delete user {email}? This action cannot be undone.',
 
     // SideDrawer Properties
     prop_client: 'Client',

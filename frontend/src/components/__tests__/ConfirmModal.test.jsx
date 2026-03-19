@@ -24,14 +24,14 @@ describe('ConfirmModal Component', () => {
 
   it('calls onClose when clicking cancel', () => {
     renderWithProvider(<ConfirmModal {...defaultProps} />);
-    // Select by text since common.cancel is provided by mock context
-    fireEvent.click(screen.getByText(/common.cancel/i));
+    // Select by text since translation provides "Cancelar"
+    fireEvent.click(screen.getByText(/Cancelar/i));
     expect(defaultProps.onClose).toHaveBeenCalled();
   });
 
   it('calls onConfirm when clicking confirm', () => {
     renderWithProvider(<ConfirmModal {...defaultProps} />);
-    fireEvent.click(screen.getByText(/common.confirm/i));
+    fireEvent.click(screen.getByText(/Confirmar/i));
     expect(defaultProps.onConfirm).toHaveBeenCalled();
   });
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userService, settingsService } from './services/api';
+import { useLanguage } from './context/LanguageContext';
 import {
   UserPlus,
   Trash2,
@@ -21,6 +22,7 @@ import { ROLES } from './constants/auth';
 
 const AdminPanel = () => {
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -83,8 +85,8 @@ const AdminPanel = () => {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-notion-light dark:bg-notion-dark gap-4 transition-colors">
         <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
-        <p className="text-sm font-medium text-notion-text-secondary animate-pulse uppercase tracking-widest">
-          Cargando Usuarios
+        <p className="text-sm font-black text-notion-text-secondary animate-pulse uppercase tracking-[0.2em]">
+          {t('loading_users')}
         </p>
       </div>
     );
@@ -98,9 +100,9 @@ const AdminPanel = () => {
               <Shield className="w-8 h-8 text-amber-500" />
             </div>
             <div>
-              <h1 className="text-4xl font-black tracking-tight mb-1">Panel de Administración</h1>
-              <p className="text-notion-text-secondary font-medium uppercase text-[10px] tracking-[0.3em]">
-                Gestión de Accesos & Usuarios
+              <h1 className="text-4xl font-black tracking-tight mb-1">{t('admin_panel')}</h1>
+              <p className="text-notion-text-secondary font-bold uppercase text-[10px] tracking-[0.3em]">
+                {t('access_mgmt')}
               </p>
             </div>
           </div>
@@ -117,7 +119,7 @@ const AdminPanel = () => {
           <div className="flex items-center gap-2 overflow-hidden">
             <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
             <span className="text-[10px] font-black text-notion-text-secondary uppercase tracking-[0.2em]">
-              Listado de Acceso
+              {t('user_list')}
             </span>
           </div>
           <div className="flex items-center gap-4">
@@ -127,13 +129,13 @@ const AdminPanel = () => {
                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-xl ring-2 ring-blue-500/10"
               >
                 <UserPlus className="w-3.5 h-3.5" />
-                Nuevo Usuario
+                {t('new_user')}
               </button>
             ) : (
               <div className="flex items-center gap-3 bg-amber-500/10 border border-amber-500/20 px-4 py-2.5 rounded-xl animate-pulse">
                 <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
                 <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest">
-                  Configuración Requerida
+                  {t('config_required')}
                 </span>
               </div>
             )}
@@ -144,30 +146,30 @@ const AdminPanel = () => {
                   ? 'bg-amber-500 text-white border-amber-600 shadow-lg shadow-amber-500/20 animate-bounce'
                   : 'bg-white dark:bg-white/5 hover:bg-black/5 dark:hover:bg-white/10 border-notion-border dark:border-white/10 text-notion-text-secondary dark:text-white/40 hover:text-blue-500 hover:border-blue-500/30'
               }`}
-              title="Configuración de Notion"
+              title={t('notion_config')}
             >
               <Settings className="w-5 h-5" />
             </button>
           </div>
         </div>
-        <div className="overflow-hidden rounded-3xl bg-white dark:bg-white/[0.02] border border-notion-border dark:border-white/5 backdrop-blur-md shadow-2xl transition-colors">
+        <div className="overflow-hidden rounded-3xl bg-white dark:bg-white/[0.02] border border-notion-border dark:border-notion-border-dark backdrop-blur-md shadow-2xl transition-colors">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-notion-border dark:border-white/5 bg-notion-bg-light dark:bg-white/[0.03]">
+              <tr className="border-b border-notion-border dark:border-notion-border-dark bg-notion-bg-light dark:bg-white/[0.03]">
                 <th className="py-5 px-8 text-[11px] font-black text-notion-text-secondary dark:text-white/40 uppercase tracking-widest">
-                  Email
+                  {t('col_email')}
                 </th>
                 <th className="py-5 px-4 text-[11px] font-black text-notion-text-secondary dark:text-white/40 uppercase tracking-widest text-center">
-                  Rol
+                  {t('col_role')}
                 </th>
                 <th className="py-5 px-4 text-[11px] font-black text-notion-text-secondary dark:text-white/40 uppercase tracking-widest text-center">
-                  Estado
+                  {t('col_status')}
                 </th>
                 <th className="py-5 px-4 text-[11px] font-black text-notion-text-secondary dark:text-white/40 uppercase tracking-widest text-center">
-                  Vinculación Notion
+                  {t('col_notion_link')}
                 </th>
                 <th className="py-5 px-8 text-[11px] font-black text-notion-text-secondary dark:text-white/40 uppercase tracking-widest text-right">
-                  Acciones
+                  {t('col_actions')}
                 </th>
               </tr>
             </thead>
@@ -228,7 +230,7 @@ const AdminPanel = () => {
                               : `/view-as/${u.external_client_id}`;
                             window.open(path, '_blank');
                           }}
-                          title="Ver Dashboard como Cliente"
+                          title={t('view_as_client')}
                           className="p-2.5 bg-blue-500/5 hover:bg-blue-500/10 rounded-xl border border-blue-500/10 transition-colors text-blue-500/50 hover:text-blue-400"
                         >
                           <ExternalLink className="w-4 h-4" />
@@ -288,10 +290,10 @@ const AdminPanel = () => {
             setUserToDelete(null);
           }
         }}
-        title="Eliminar Usuario"
-        message={`¿Estás seguro de que deseas eliminar al usuario ${userToDelete?.email}? Esta acción no se puede deshacer.`}
-        confirmText="Eliminar"
-        cancelText="Cancelar"
+        title={t('delete_user_title')}
+        message={t('delete_user_confirm').replace('{email}', userToDelete?.email || '')}
+        confirmText={t('delete')}
+        cancelText={t('cancel')}
       />
     </div>
   );
