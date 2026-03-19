@@ -1,45 +1,45 @@
-# Notion Dashboard - Premium React Portal ⚛️✨
+# Notion Dashboard - Full-Stack React Architecture ⚛️⚡
 
-A high-end, modern Client Portal and Administrative Dashboard built primarily with **React 18**, **Vite**, and **Tailwind CSS v4**. This project serves as a bridge between Notion and your clients, offering a premium "Notion-style" experience for project visualization and management.
+A professional-grade Client Portal and Administrative Dashboard built with a modern, scalable architecture. This project bridges **Notion API** data with a custom-built interface, providing a seamless experience for project visualization and client management.
 
-## ⚛️ Frontend Highlight (The Core)
+## ⚛️ Frontend Architecture (Core)
 
-The heart of this project is a sophisticated Single Page Application (SPA) designed for visual excellence and smooth user experience.
+The frontend is a high-performance Single Page Application (SPA) designed with a focus on state management, modular components, and modern CSS practices.
 
-- **Modern Stack**: React 18 + Vite + TanStack Query.
-- **Tailwind CSS v4**: Utilizing the latest CSS capabilities for a high-performance, glassmorphism-inspired UI.
-- **Dynamic Projects**: Real-time fetching and filtering of Notion Database items.
-- **Admin & Client Modes**: Sophisticated role-based interfaces with secure, dynamic configuration.
-- **Dark Mode Native**: A curated dark aesthetic that feels premium and easy on the eyes.
+- **Stack**: React 18 + Vite (ESM) + TanStack Query.
+- **Styling**: Tailwind CSS v4 utilizing advanced design tokens and glassmorphism techniques.
+- **State Management**: Optimized data fetching and caching using React Query to minimize API overhead.
+- **Security**: Implementation of custom guards to prevent browser credential caching and ensure secure data handling.
+- **UX/UI**: Native Dark Mode, fluid animations with Lucide icons, and responsive layouts.
 
-[Explore the Frontend Architecture & Installation ➔](./frontend/README.md)
-
----
-
-## 🛠️ Backend Support
-
-A lightweight, secure PHP 8.x + MySQL engine that powers the data persistence and secure communication with the Notion API.
-
-- **Secure API**: Handles authentication, user management, and encrypted settings.
-- **Notion Integration**: Centralized project fetching with client-tag filtering.
-- **Database driven**: Dynamic storage for Notion API keys and system settings.
-
-[Explore the Backend API & Database Setup ➔](./backend/README.md)
+[Explore Frontend Technical Details ➔](./frontend/README.md)
 
 ---
 
-## 🚀 Quick Setup
+## 🛠️ Backend Infrastructure
 
-1. **Backend**: Setup your MySQL database using `setup_schema.sql` and configure `config/secrets.php`.
-2. **Frontend**: Install dependencies with `npm install` and launch with `npm run dev`.
-3. **Connect**: Log in as admin, go to **Settings**, and paste your Notion Integration Token + Database ID.
+A lightweight, efficient PHP 8.x + MySQL engine designed for high availability and secure data persistence.
 
-## 🔒 Security First
+- **API Design**: RESTful architecture for user orchestration and Notion API mediation.
+- **Security Persistence**: Encrypted storage for API credentials and BCrypt password hashing.
+- **Dynamic Configuration**: A database-driven settings engine allowing real-time system updates without redeployment.
+- **Access Control**: Robust Role-Based Access Control (RBAC) system for Admin and Client isolation.
 
-Designed with privacy and security in mind:
-- **Zero-AutoFill**: Custom hacks to block browser credential leakages.
-- **Secret Separation**: API keys are managed via the UI and stored encrypted in DB, never hardcoded.
-- **Admin Guard**: Critical functions are blocked until valid Notion credentials are provided.
+[Explore Backend Technical Details ➔](./backend/README.md)
 
 ---
-Created by [Fran Ferrer](https://github.com/franferrerrodriguez) - Empowering Notion Workflows.
+
+## 🚀 Technical Implementation
+
+1. **Database Orchestration**: Initialize via `setup_schema.sql` (automatic resets and seed data).
+2. **Environment Management**: Decoupled secret management through PHP defines and UI-driven settings.
+3. **Notion Integration**: Custom Project Controller layer for managing complex API filtering and client-tag isolation.
+
+## 🔒 Security & Performance Features
+
+- **Asynchronous Execution**: Optimized UI responsiveness during heavy API operations.
+- **Action Guarding**: 412 Precondition Failed logic to prevent system execution during partial configuration states.
+- **Privacy Design**: User-specific data filtering based on Notion external IDs.
+
+---
+Developed by [Fran Ferrer](https://github.com/franferrerrodriguez) — Focused on Modern Web Architecture and Scalable Solutions.
