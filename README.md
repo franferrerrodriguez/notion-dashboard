@@ -1,23 +1,45 @@
-# Notion Client Dashboard 🚀
+# Notion Dashboard - Premium React Portal ⚛️✨
 
-A comprehensive solution for managing clients and projects integrated with Notion. This repository contains both the Backend (PHP) and the Frontend (React/Vite).
+A high-end, modern Client Portal and Administrative Dashboard built primarily with **React 18**, **Vite**, and **Tailwind CSS v4**. This project serves as a bridge between Notion and your clients, offering a premium "Notion-style" experience for project visualization and management.
 
-## 📁 Repository Structure
+## ⚛️ Frontend Highlight (The Core)
 
-- **`/backend`**: PHP REST API with MySQL integration and Notion API controller.
-- **`/frontend`**: React application built with Vite and Tailwind CSS v4.
+The heart of this project is a sophisticated Single Page Application (SPA) designed for visual excellence and smooth user experience.
 
-## 🚀 Quick Start
+- **Modern Stack**: React 18 + Vite + TanStack Query.
+- **Tailwind CSS v4**: Utilizing the latest CSS capabilities for a high-performance, glassmorphism-inspired UI.
+- **Dynamic Projects**: Real-time fetching and filtering of Notion Database items.
+- **Admin & Client Modes**: Sophisticated role-based interfaces with secure, dynamic configuration.
+- **Dark Mode Native**: A curated dark aesthetic that feels premium and easy on the eyes.
 
-1. **Backend**: Follow the [Backend README](./backend/README.md) to set up your database and PHP server.
-2. **Frontend**: Follow the [Frontend README](./frontend/README.md) to install dependencies and launch the dashboard.
-
-## 🔒 Key Features
-
-- **Dynamic Configuration**: Manage Notion API keys directly from the UI.
-- **Role-based Access**: Admins manage users; Clients see filtered project views.
-- **Notion Integration**: Real-time project status and details fetching.
-- **Premium Design**: Dark mode, animations, and fluid user experience.
+[Explore the Frontend Architecture & Installation ➔](./frontend/README.md)
 
 ---
-Created by [Fran Ferrer](https://github.com/franferrerrodriguez)
+
+## 🛠️ Backend Support
+
+A lightweight, secure PHP 8.x + MySQL engine that powers the data persistence and secure communication with the Notion API.
+
+- **Secure API**: Handles authentication, user management, and encrypted settings.
+- **Notion Integration**: Centralized project fetching with client-tag filtering.
+- **Database driven**: Dynamic storage for Notion API keys and system settings.
+
+[Explore the Backend API & Database Setup ➔](./backend/README.md)
+
+---
+
+## 🚀 Quick Setup
+
+1. **Backend**: Setup your MySQL database using `setup_schema.sql` and configure `config/secrets.php`.
+2. **Frontend**: Install dependencies with `npm install` and launch with `npm run dev`.
+3. **Connect**: Log in as admin, go to **Settings**, and paste your Notion Integration Token + Database ID.
+
+## 🔒 Security First
+
+Designed with privacy and security in mind:
+- **Zero-AutoFill**: Custom hacks to block browser credential leakages.
+- **Secret Separation**: API keys are managed via the UI and stored encrypted in DB, never hardcoded.
+- **Admin Guard**: Critical functions are blocked until valid Notion credentials are provided.
+
+---
+Created by [Fran Ferrer](https://github.com/franferrerrodriguez) - Empowering Notion Workflows.
