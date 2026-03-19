@@ -34,6 +34,24 @@ An administrative interface and client portal for visualizing Notion projects. A
    ```
    Files will be generated in the `dist/` folder.
 
+## 🧪 Testing & Quality
+
+### Run Unit Tests
+```bash
+npm run test
+```
+Powered by **Vitest** and **React Testing Library**.
+
+### Code Quality (Linter)
+```bash
+npm run lint
+```
+Strict **ESLint** rules and **Prettier** formatting are enforced.
+
+### Automation
+- **Husky**: Pre-commit hooks to ensure quality before every push.
+- **Lint-staged**: Only formats and lints files modified in the commit.
+
 ## ⚙️ Configuration
 
 The frontend is configured to communicate with the backend using relative paths (managed in `api.js`). Ensure the backend is reachable for login and management features to work correctly.

@@ -41,5 +41,14 @@ A lightweight, efficient PHP 8.x + MySQL engine designed for high availability a
 - **Action Guarding**: 412 Precondition Failed logic to prevent system execution during partial configuration states.
 - **Privacy Design**: User-specific data filtering based on Notion external IDs.
 
+## 🏆 Technical Excellence & Quality
+
+This project follows high-level engineering standards to ensure stability and maintainability:
+
+- **Unit Testing**: Complete suite with 38 tests (Vitest + React Testing Library) covering services, contexts, and critical UI components.
+- **Code Quality**: Strict ESLint configuration and Prettier for consistent styling.
+- **Automated Git Hooks**: Husky and Lint-staged integration to prevent commits with linting errors or failing tests.
+- **CI Readiness**: "Zero-warning" policy achieved (excluding Tailwind CSS v4 internal lints).
+
 ---
 Developed by [Fran Ferrer](https://github.com/franferrerrodriguez) — Focused on Modern Web Architecture and Scalable Solutions.
