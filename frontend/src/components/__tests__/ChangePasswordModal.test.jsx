@@ -23,7 +23,7 @@ describe('ChangePasswordModal Component', () => {
 
   it('renders correctly when open', () => {
     renderWithProvider(<ChangePasswordModal {...defaultProps} />);
-    expect(screen.getByText(/change_password_title/i)).toBeInTheDocument();
+    expect(screen.getByText(/Seguridad de la Cuenta/i)).toBeInTheDocument();
   });
 
   it('toggles password visibility', () => {
@@ -47,11 +47,12 @@ describe('ChangePasswordModal Component', () => {
     fireEvent.change(inputs[1], { target: { value: 'new' } });
     fireEvent.change(inputs[2], { target: { value: 'new' } });
 
-    fireEvent.click(screen.getByText(/common.save/i));
+    // The button text is "Guardar Cambios" in Spanish
+    fireEvent.click(screen.getByText(/Guardar Cambios/i));
 
     await waitFor(() => {
       expect(userService.changePassword).toHaveBeenCalledWith('old', 'new');
-      expect(screen.getByText(/change_password_success/i)).toBeInTheDocument();
+      expect(screen.getByText(/Contraseña actualizada con éxito/i)).toBeInTheDocument();
     });
   });
 });

@@ -28,14 +28,15 @@ describe('Login Component', () => {
 
     renderWithProvider(<Login />);
 
-    fireEvent.change(screen.getByPlaceholderText(/admin@example.com/i), {
+    fireEvent.change(screen.getByPlaceholderText(/ejemplo@correo.com/i), {
       target: { value: 'test@test.com' },
     });
     fireEvent.change(screen.getByPlaceholderText(/••••••••/i), {
       target: { value: 'password123' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /login/i }));
+    // The button text is "Entrar" by default in LanguageProvider (Spanish)
+    fireEvent.click(screen.getByRole('button', { name: /Entrar/i }));
 
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith('test@test.com', 'password123');
@@ -50,14 +51,14 @@ describe('Login Component', () => {
 
     renderWithProvider(<Login />);
 
-    fireEvent.change(screen.getByPlaceholderText(/admin@example.com/i), {
+    fireEvent.change(screen.getByPlaceholderText(/ejemplo@correo.com/i), {
       target: { value: 'test@test.com' },
     });
     fireEvent.change(screen.getByPlaceholderText(/••••••••/i), {
       target: { value: 'wrong' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /login/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Entrar/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Invalid credentials/i)).toBeInTheDocument();

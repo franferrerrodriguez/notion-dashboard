@@ -40,7 +40,7 @@ describe('UserDropdown Component', () => {
     expect(screen.getByText(/Idioma/i)).toBeInTheDocument();
   });
 
-  it('calls onLogout when logout is clicked', () => {
+  it('calls onLogout when logout is clicked and confirmed', async () => {
     const mockLogout = vi.fn();
     vi.mocked(AuthModule.useAuth).mockReturnValue({
       user: { email: 'test@example.com', role: 'admin' },
@@ -50,10 +50,15 @@ describe('UserDropdown Component', () => {
     renderWithProviders(<UserDropdown />);
     // Open dropdown
     fireEvent.click(screen.getByRole('button'));
-    // Wait for the dropdown to be visible
-    expect(screen.getByText(/Idioma/i)).toBeInTheDocument();
     // Click logout
     fireEvent.click(screen.getByText(/Cerrar Sesión/i));
+    
+    // Check that ConfirmModal is open
+    expect(screen.getByText(/Confirmar/i)).toBeInTheDocument();
+    
+    // Click confirm in modal
+    fireEvent.click(screen.getByText(/Confirmar/i));
+    
     expect(mockLogout).toHaveBeenCalled();
   });
 });

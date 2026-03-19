@@ -161,14 +161,14 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
               onClick={onClose}
               className="flex-1 py-3.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-notion-text-secondary dark:text-white/50 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-notion-border dark:border-white/5"
             >
-              {t('common.cancel')}
+              {t('cancel')}
             </button>
             <button
               type="submit"
               disabled={isLoading || success}
               className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20 active:scale-95"
             >
-              {isLoading ? t('common.loading') : t('common.save')}
+              {isLoading ? t('loading') : t('save_changes')}
             </button>
           </div>
         </form>

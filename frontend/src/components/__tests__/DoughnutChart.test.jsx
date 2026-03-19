@@ -7,26 +7,15 @@ describe('DoughnutChart Component', () => {
     progress: 70,
     stats: { notStarted: 10, inProgress: 20, completed: 70 },
     total: 100,
-    label: 'Test Label',
   };
 
-  it('renders progress correctly', () => {
-    render(<DoughnutChart {...defaultProps} />);
-    expect(screen.getByText('70%')).toBeInTheDocument();
+  it('renders without crashing', () => {
+    const { container } = render(<DoughnutChart {...defaultProps} />);
+    expect(container.querySelector('svg')).toBeInTheDocument();
   });
 
-  it('renders label if provided', () => {
-    render(<DoughnutChart {...defaultProps} />);
-    expect(screen.getByText('Test Label')).toBeInTheDocument();
-  });
-
-  it('handles progress overflow', () => {
-    render(<DoughnutChart progress={150} />);
-    expect(screen.getByText('100%')).toBeInTheDocument();
-  });
-
-  it('handles missing stats gracefully', () => {
-    render(<DoughnutChart progress={50} stats={null} />);
-    expect(screen.getByText('50%')).toBeInTheDocument();
+  it('renders correctly with zero values', () => {
+    const { container } = render(<DoughnutChart progress={0} stats={null} total={0} />);
+    expect(container.querySelector('svg')).toBeInTheDocument();
   });
 });

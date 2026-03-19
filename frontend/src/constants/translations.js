@@ -15,16 +15,16 @@ export const translations = {
     delete: 'Eliminar',
 
     // Login
-    login_title: 'Panel de Control',
-    login_subtitle: 'Inicia sesión para continuar',
+    login_title: 'Portal de Gestión',
+    login_subtitle: 'Acceso Clientes Notion',
     login_email: 'Email',
     login_password: 'Contraseña',
     login_button: 'Entrar',
-    login_error: 'Email o contraseña incorrectos',
+    login_error: 'Credenciales inválidas o error de conexión',
 
     // Logout Modal
-    logout_confirm_title: '¿Cerrar sesión?',
-    logout_confirm_desc: '¿Estás seguro de que quieres salir del Panel de Control?',
+    logout_confirm_title: '¿Cerrar sesión ahora?',
+    logout_confirm_desc: 'Tu sesión actual se cerrará y tendrás que volver a introducir tus credenciales para acceder.',
 
     // Dashboard Header
     control_panel: 'Panel de Control',
@@ -108,6 +108,15 @@ export const translations = {
     unassigned: 'sin asignar',
     view_file: 'Ver archivo',
 
+    // Password Change
+    change_password_title: 'Seguridad de la Cuenta',
+    current_password: 'Contraseña Actual',
+    new_password: 'Nueva Contraseña',
+    confirm_password: 'Confirmar Nueva Contraseña',
+    change_password_success: 'Contraseña actualizada con éxito',
+    change_password_error: 'No se pudo cambiar la contraseña',
+    passwords_not_match: 'Las contraseñas no coinciden',
+
     // Language Selector
     select_lang: 'Idioma',
     spanish: 'Español',
@@ -129,16 +138,16 @@ export const translations = {
     delete: 'Delete',
 
     // Login
-    login_title: 'Control Panel',
-    login_subtitle: 'Sign in to continue',
+    login_title: 'Management Portal',
+    login_subtitle: 'Notion Client Access',
     login_email: 'Email',
     login_password: 'Password',
-    login_button: 'Login',
-    login_error: 'Incorrect email or password',
+    login_button: 'Sign In',
+    login_error: 'Invalid credentials or connection error',
 
     // Logout Modal
-    logout_confirm_title: 'Logout?',
-    logout_confirm_desc: 'Are you sure you want to sign out from the Control Panel?',
+    logout_confirm_title: 'Logout now?',
+    logout_confirm_desc: 'Your current session will be closed and you will need to re-enter your credentials to access.',
 
     // Dashboard Header
     control_panel: 'Control Panel',
@@ -221,6 +230,15 @@ export const translations = {
     linked_task: 'Linked task',
     unassigned: 'unassigned',
     view_file: 'View file',
+
+    // Password Change
+    change_password_title: 'Account Security',
+    current_password: 'Current Password',
+    new_password: 'New Password',
+    confirm_password: 'Confirm New Password',
+    change_password_success: 'Password updated successfully',
+    change_password_error: 'Could not change password',
+    passwords_not_match: 'Passwords do not match',
 
     // Language Selector
     select_lang: 'Language',
