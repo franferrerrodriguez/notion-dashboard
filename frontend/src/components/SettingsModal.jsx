@@ -89,7 +89,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
             </p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-8 space-y-6">
+          <form onSubmit={handleSubmit} className="p-8 space-y-6" autoComplete="off">
             <div className="space-y-4">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest pl-1">
@@ -98,9 +98,10 @@ const SettingsModal = ({ isOpen, onClose }) => {
                 <div className="relative">
                   <input
                     type={showToken ? 'text' : 'password'}
+                    autoComplete="new-password"
                     value={settings.notion_token}
                     onChange={(e) => setSettings({ ...settings, notion_token: e.target.value })}
-                    className="w-full bg-notion-bg-light dark:bg-notion-dark border border-notion-border dark:border-white/5 rounded-xl px-4 py-3 text-sm text-notion-text dark:text-white"
+                    className="w-full bg-notion-bg-light dark:bg-notion-dark border border-notion-border dark:border-white/5 rounded-xl px-4 pr-16 py-3 text-sm text-notion-text dark:text-white"
                     placeholder="secret_..."
                   />
                   <button

@@ -129,10 +129,11 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
                 <div className="relative group">
                   <input
                     type={showPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
                     required={!editingUser}
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full bg-white dark:bg-notion-dark border border-notion-border rounded-xl px-4 py-3 text-sm"
+                    className="w-full bg-white dark:bg-notion-dark border border-notion-border rounded-xl px-4 pr-16 py-3 text-sm"
                     placeholder="••••••••"
                   />
                   <button
