@@ -8,11 +8,11 @@ export const COLORS = {
 };
 
 export const PHASE_COLORS = {
-  'Legalizacion': '#8a6552',
-  'Obra': '#d9730d',
-  'Proyecto': '#337ea9',
+  Legalizacion: '#8a6552',
+  Obra: '#d9730d',
+  Proyecto: '#337ea9',
   'Sin Fase': '#37352f',
-  'Varios': '#37352f',
+  Varios: '#37352f',
 };
 
 export const CHART_COLORS = {

@@ -9,7 +9,7 @@ const fetchConfig = {
 
 export const projectService = {
   async getAll(clientId = null) {
-    const url = clientId 
+    const url = clientId
       ? `${BASE_URL}/index.php?action=list&clientId=${clientId}`
       : `${BASE_URL}/index.php?action=list`;
     const response = await fetch(url, fetchConfig);
@@ -28,7 +28,7 @@ export const projectService = {
     const response = await fetch(`${BASE_URL}/index.php?action=client_options`, fetchConfig);
     if (!response.ok) throw new Error('Failed to fetch client options');
     return await response.json();
-  }
+  },
 };
 
 export const authService = {
@@ -64,7 +64,7 @@ export const authService = {
     });
     if (!response.ok) throw new Error('Failed to update password');
     return await response.json();
-  }
+  },
 };
 
 export const settingsService = {
@@ -77,11 +77,11 @@ export const settingsService = {
     const response = await fetch(`${BASE_URL}/index.php?action=settings_save`, {
       ...fetchConfig,
       method: 'POST',
-      body: JSON.stringify(settings)
+      body: JSON.stringify(settings),
     });
     if (!response.ok) throw new Error('Failed to save settings');
     return await response.json();
-  }
+  },
 };
 
 export const userService = {
@@ -115,5 +115,5 @@ export const userService = {
       method: 'DELETE',
     });
     return await response.json();
-  }
+  },
 };

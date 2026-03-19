@@ -1,44 +1,82 @@
-import React from 'react';
-import { CHART_COLORS } from '../constants/theme';
 
-const DoughnutChart = ({ stats, total }) => {
-  const size = 100;
-  const strokeWidth = 12;
-  const center = size / 2;
-  const radius = center - strokeWidth / 2;
+
+const DoughnutChart = ({
+  progress,
+  stats = { notStarted: 0, inProgress: 0, completed: 0 },
+  total = 100,
+  label,
+}) => {
+  const radius = 35;
   const circumference = 2 * Math.PI * radius;
-  
-  const v1 = (stats.notStarted / total) * circumference;
-  const v2 = (stats.inProgress / total) * circumference;
-  const v3 = (stats.completed / total) * circumference;
+
+  // Ensure stats exist to avoid undefined errors during tests
+  const s = {
+    notStarted: stats?.notStarted || 0,
+    inProgress: stats?.inProgress || 0,
+    completed: stats?.completed || 0,
+  };
+
+  const v1 = (s.notStarted / (total || 1)) * circumference;
+  const v2 = (s.inProgress / (total || 1)) * circumference;
+  const v3 = (s.completed / (total || 1)) * circumference;
 
   return (
-    <svg viewBox={`0 0 ${size} ${size}`} className="transform -rotate-90 drop-shadow-2xl">
-      <circle cx={center} cy={center} r={radius} fill="none" stroke="#222" strokeWidth={strokeWidth} />
-      
-      <circle 
-        cx={center} cy={center} r={radius} fill="none" 
-        stroke={CHART_COLORS.COMPLETED} strokeWidth={strokeWidth}
-        strokeDasharray={`${v3} ${circumference}`}
-        style={{ transition: 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)' }}
-      />
-      
-      <circle 
-        cx={center} cy={center} r={radius} fill="none" 
-        stroke={CHART_COLORS.IN_PROGRESS} strokeWidth={strokeWidth}
-        strokeDasharray={`${v2} ${circumference}`}
-        strokeDashoffset={-v3}
-        style={{ transition: 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.3s' }}
-      />
-
-      <circle 
-        cx={center} cy={center} r={radius} fill="none" 
-        stroke={CHART_COLORS.NOT_STARTED} strokeWidth={strokeWidth}
-        strokeDasharray={`${v1} ${circumference}`}
-        strokeDashoffset={-(v3 + v2)}
-        style={{ transition: 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.6s' }}
-      />
-    </svg>
+    <div className="relative flex flex-col items-center justify-center">
+      <svg className="w-32 h-32 transform -rotate-90">
+        <circle
+          cx="64"
+          cy="64"
+          r={radius}
+          fill="transparent"
+          stroke="currentColor"
+          strokeWidth="8"
+          className="text-notion-border dark:text-white/5"
+        />
+        {/* Simplified strokes for segments */}
+        <circle
+          cx="64"
+          cy="64"
+          r={radius}
+          fill="transparent"
+          stroke="#ef4444" // red
+          strokeWidth="8"
+          strokeDasharray={`${v1} ${circumference}`}
+          className="transition-all duration-1000 ease-out"
+        />
+        <circle
+          cx="64"
+          cy="64"
+          r={radius}
+          fill="transparent"
+          stroke="#3b82f6" // blue
+          strokeWidth="8"
+          strokeDasharray={`${v2} ${circumference}`}
+          strokeDashoffset={-v1}
+          className="transition-all duration-1000 ease-out"
+        />
+        <circle
+          cx="64"
+          cy="64"
+          r={radius}
+          fill="transparent"
+          stroke="#22c55e" // green
+          strokeWidth="8"
+          strokeDasharray={`${v3} ${circumference}`}
+          strokeDashoffset={-(v1 + v2)}
+          className="transition-all duration-1000 ease-out"
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-xl font-black text-notion-text dark:text-white leading-none">
+          {Math.round(Math.min(100, Math.max(0, progress || 0)))}%
+        </span>
+        {label && (
+          <span className="text-[8px] font-black text-notion-text-secondary uppercase tracking-widest mt-1">
+            {label}
+          </span>
+        )}
+      </div>
+    </div>
   );
 };
 

@@ -3,6 +3,7 @@
 An administrative interface and client portal for visualizing Notion projects. A modern, fast, and premium SPA inspired by Notion's design but enhanced with dark mode and fluid animations.
 
 ## 🚀 Features
+
 - **Admin Panel**: Full management of users, roles (Admin/Client), and API settings.
 - **Project Visualization**: Dynamic list of Notion projects including statuses and tags.
 - **Multi-client Access**: "Client" users only see projects linked to their specific Notion tag.
@@ -10,6 +11,7 @@ An administrative interface and client portal for visualizing Notion projects. A
 - **"View As" Mode**: Administrators can preview the dashboard exactly as any client would see it.
 
 ## 🛠️ Tech Stack
+
 - **Core**: React 18 + Vite
 - **State Management**: TanStack Query (React Query) for efficient API interaction.
 - **Styling**: Tailwind CSS v4 with custom "Notion-style" color tokens.
@@ -19,23 +21,25 @@ An administrative interface and client portal for visualizing Notion projects. A
 ## 📦 Installation & Development
 
 1. **Install dependencies**:
-    ```bash
-    npm install
-    ```
+   ```bash
+   npm install
+   ```
 2. **Launch development mode**:
-    ```bash
-    npm run dev
-    ```
+   ```bash
+   npm run dev
+   ```
 3. **Generate production build**:
-    ```bash
-    npm run build
-    ```
-    Files will be generated in the `dist/` folder.
+   ```bash
+   npm run build
+   ```
+   Files will be generated in the `dist/` folder.
 
 ## ⚙️ Configuration
+
 The frontend is configured to communicate with the backend using relative paths (managed in `api.js`). Ensure the backend is reachable for login and management features to work correctly.
 
 ## 📂 SRC Structure
+
 - `components/`: Reusable components and modals (`UserModal`, `SettingsModal`, `ConfirmModal`).
 - `context/`: Global states like `AuthContext`.
 - `services/`: API communication layering (`api.js`).
@@ -44,7 +48,9 @@ The frontend is configured to communicate with the backend using relative paths 
 - `App.jsx`: Primary orchestrator and routes.
 
 ## 💎 Design Philosophy
+
 The project uses a curated color palette and modern typography (Inter/Outfit) to deliver a high-end product feel. Security "hacks" have been implemented to block browser autofill on sensitive fields, alongside smooth state transitions.
 
 ---
+
 Part of the Notion Client Ecosystem.

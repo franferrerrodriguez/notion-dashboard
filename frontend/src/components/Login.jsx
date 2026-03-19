@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Globe, Check } from 'lucide-react';
-import ThemeToggle from './ThemeToggle';
+// Lucide icons removed for diagnosis
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -16,99 +15,89 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    
     try {
       await login(email, password);
     } catch (err) {
-      setError(t('login_error'));
+      setError(err.message || 'Login failed');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-notion-bg-light dark:bg-notion-dark flex flex-col items-center justify-center p-6 selection:bg-blue-500/30 transition-colors duration-300">
-      
-      {/* Top Navbar for Language/Theme */}
-      <div className="fixed top-6 right-6 flex items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-700">
-        <div className="flex bg-white dark:bg-white/5 border border-notion-border dark:border-white/10 rounded-xl p-1 shadow-sm">
-          <button 
-            onClick={() => setLang('es')}
-            className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${lang === 'es' ? 'bg-blue-500 text-white shadow-lg' : 'text-notion-text-secondary hover:text-notion-text dark:hover:text-white'}`}
-          >
-            ES
-          </button>
-          <button 
-            onClick={() => setLang('en')}
-            className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${lang === 'en' ? 'bg-blue-500 text-white shadow-lg' : 'text-notion-text-secondary hover:text-notion-text dark:hover:text-white'}`}
-          >
-            EN
-          </button>
-        </div>
-        <ThemeToggle />
-      </div>
-
-      <div className="w-full max-w-[400px] animate-in fade-in zoom-in duration-500">
-        
-        {/* Logo/Icon */}
-        <div className="flex justify-center mb-8">
-          <div className="w-16 h-16 bg-white dark:bg-white/5 border border-notion-border dark:border-white/10 rounded-2xl flex items-center justify-center text-3xl shadow-2xl">
-            🚀
+    <div className="min-h-screen flex items-center justify-center bg-notion-bg-light dark:bg-notion-dark p-4">
+      <div className="w-full max-w-md bg-white dark:bg-[#1a1a1a] border border-notion-border dark:border-white/10 rounded-3xl shadow-2xl p-8 animate-in fade-in zoom-in-95 duration-500">
+        <div className="flex justify-between items-center mb-8">
+          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20">
+            <span data-testid="lock-icon">🔒</span>
+          </div>
+          <div className="flex gap-2">
+            {['es', 'en'].map((l) => (
+              <button
+                key={l}
+                onClick={() => setLang(l)}
+                className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase transition-all ${
+                  lang === l
+                    ? 'bg-blue-500 text-white shadow-lg'
+                    : 'bg-black/5 dark:bg-white/5 text-notion-text-secondary'
+                }`}
+              >
+                {l}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="text-center mb-10">
-          <h1 className="text-2xl font-black tracking-tight text-notion-text dark:text-white mb-2">{t('login_title')}</h1>
-          <p className="text-notion-text-secondary text-sm font-medium uppercase tracking-[0.2em] transition-colors">{t('login_subtitle')}</p>
-        </div>
+        <h1 className="text-2xl font-black text-notion-text dark:text-white mb-2 tracking-tight">
+          {t('login.title')}
+        </h1>
+        <p className="text-notion-text-secondary dark:text-gray-400 text-sm font-medium mb-8">
+          {t('login.subtitle')}
+        </p>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-[11px] font-black text-notion-text-secondary uppercase tracking-widest pl-1">{t('login_email')}</label>
-            <input 
-              type="email" 
+            <label className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest pl-1">
+              Email
+            </label>
+            <input
+              type="email"
+              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-white dark:bg-[#202020] border border-notion-border dark:border-white/5 rounded-xl px-4 py-3 text-sm text-notion-text dark:text-white/90 placeholder:text-notion-text-secondary/30 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/30 transition-all font-medium"
-              placeholder="tu@email.com"
-              required
+              className="w-full bg-notion-bg-light dark:bg-notion-dark border border-notion-border dark:border-white/5 rounded-xl px-4 py-3 text-sm text-notion-text dark:text-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+              placeholder="admin@example.com"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-black text-notion-text-secondary uppercase tracking-widest pl-1">{t('login_password')}</label>
-            <input 
-              type="password" 
+            <label className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest pl-1">
+              {t('login.password')}
+            </label>
+            <input
+              type="password"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-white dark:bg-[#202020] border border-notion-border dark:border-white/5 rounded-xl px-4 py-3 text-sm text-notion-text dark:text-white/90 placeholder:text-notion-text-secondary/30 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/30 transition-all font-medium"
+              className="w-full bg-notion-bg-light dark:bg-notion-dark border border-notion-border dark:border-white/5 rounded-xl px-4 py-3 text-sm text-notion-text dark:text-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
               placeholder="••••••••"
-              required
             />
           </div>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-xs font-bold text-red-400 animate-in shake duration-500">
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-bold animate-in slide-in-from-top-2">
               {error}
             </div>
           )}
 
-          <button 
+          <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/50 disabled:cursor-not-allowed text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2"
+            className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-blue-500/20 active:scale-95 mt-4"
           >
-            {isLoading ? (
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-            ) : t('login_button')}
+            {isLoading ? t('login.loading') : t('login.button')}
           </button>
         </form>
-
-        <div className="mt-12 text-center">
-           <p className="text-[10px] text-notion-text-secondary font-bold uppercase tracking-[0.1em] opacity-30">
-             © 2026 • Notion-Client Dashboard
-           </p>
-        </div>
       </div>
     </div>
   );

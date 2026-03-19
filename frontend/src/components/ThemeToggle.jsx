@@ -1,6 +1,6 @@
-import React from 'react';
-import { Sun, Moon } from 'lucide-react';
+
 import { useTheme } from '../context/ThemeContext';
+// Lucide icons removed for diagnosis
 
 const ThemeToggle = () => {
   const { theme, toggleTheme } = useTheme();
@@ -8,26 +8,23 @@ const ThemeToggle = () => {
   return (
     <button
       onClick={toggleTheme}
-      className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all active:scale-95 group relative overflow-hidden"
-      aria-label="Alternar tema"
+      className="p-2.5 rounded-2xl bg-white/10 dark:bg-white/5 border border-notion-border dark:border-white/10 text-notion-text dark:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-all active:scale-90 group relative overflow-hidden"
+      aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
     >
-      <div className="relative w-5 h-5">
-        <Sun 
-          className={`w-5 h-5 text-amber-400 absolute transition-all duration-500 transform ${
-            theme === 'dark' ? 'translate-y-10 opacity-0 rotate-90' : 'translate-y-0 opacity-100 rotate-0'
-          }`} 
-        />
-        <Moon 
-          className={`w-5 h-5 text-blue-400 absolute transition-all duration-500 transform ${
-            theme === 'light' ? '-translate-y-10 opacity-0 -rotate-90' : 'translate-y-0 opacity-100 rotate-0'
-          }`} 
-        />
+      <div className="relative z-10">
+        {theme === 'dark' ? (
+          <span data-testid="sun-icon">☀️</span>
+        ) : (
+          <span data-testid="moon-icon">🌙</span>
+        )}
       </div>
-      
-      {/* Subtle hover glow */}
-      <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none blur-xl ${
-        theme === 'dark' ? 'bg-blue-500/20' : 'bg-amber-500/10'
-      }`}></div>
+
+      {/* Background glow effect */}
+      <div
+        className={`absolute inset-0 opacity-20 blur-xl transition-all duration-500 ${
+          theme === 'dark' ? 'bg-orange-500 scale-150' : 'bg-blue-500 scale-0'
+        }`}
+      />
     </button>
   );
 };

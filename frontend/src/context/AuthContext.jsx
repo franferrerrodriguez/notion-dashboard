@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { authService } from '../services/api';
 
@@ -11,7 +11,8 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check if user is already logged in
-    authService.me()
+    authService
+      .me()
       .then(setUser)
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
@@ -38,10 +39,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>{children}</AuthContext.Provider>
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);

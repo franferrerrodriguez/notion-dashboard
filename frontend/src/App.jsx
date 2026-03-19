@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 
@@ -25,37 +25,38 @@ const App = () => {
   return (
     <BrowserRouter basename={basename}>
       <Routes>
-        <Route 
-          path="/login" 
-          element={user ? <Navigate to="/" replace /> : <Login />} 
-        />
-        
+        <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+
         {/* Main Route: Conditional redirect based on role */}
-        <Route 
-          path="/" 
+        <Route
+          path="/"
           element={
-            !user ? <Navigate to="/login" replace /> : (
-              user.role === ROLES.ADMIN ? <Navigate to="/admin" replace /> : <Dashboard />
+            !user ? (
+              <Navigate to="/login" replace />
+            ) : user.role === ROLES.ADMIN ? (
+              <Navigate to="/admin" replace />
+            ) : (
+              <Dashboard />
             )
-          } 
+          }
         />
 
         {/* Dashboard for Clients */}
-        <Route 
-          path="/dashboard" 
-          element={user?.role === ROLES.CLIENT ? <Dashboard /> : <Navigate to="/" replace />} 
+        <Route
+          path="/dashboard"
+          element={user?.role === ROLES.CLIENT ? <Dashboard /> : <Navigate to="/" replace />}
         />
 
         {/* Admin Panel for Admins */}
-        <Route 
-          path="/admin" 
-          element={user?.role === ROLES.ADMIN ? <AdminPanel /> : <Navigate to="/" replace />} 
+        <Route
+          path="/admin"
+          element={user?.role === ROLES.ADMIN ? <AdminPanel /> : <Navigate to="/" replace />}
         />
 
         {/* View As Client functionality for Admins */}
-        <Route 
-          path="/view-as/:clientId" 
-          element={user?.role === ROLES.ADMIN ? <Dashboard /> : <Navigate to="/" replace />} 
+        <Route
+          path="/view-as/:clientId"
+          element={user?.role === ROLES.ADMIN ? <Dashboard /> : <Navigate to="/" replace />}
         />
 
         <Route path="*" element={<Navigate to="/" replace />} />
