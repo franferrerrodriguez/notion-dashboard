@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@theme {
+  --color-notion-dark: #191919;
+  --color-notion-darker: #0f0f0f;
+  --color-notion-light: #ffffff;
+  --color-notion-bg-light: #f7f7f5;
+  --color-notion-border: #e0e0e0;
+  --color-notion-text: #37352f;
+  --color-notion-text-secondary: #73726e;
+}
+
+@variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  body {
+    @apply transition-colors duration-300;
+    @apply bg-notion-bg-light text-notion-text;
+  }
+
+  .dark body {
+    @apply bg-notion-dark text-white;
+  }
+}
+
+.notion-card {
+  @apply bg-white dark:bg-notion-darker border border-notion-border dark:border-white/10 rounded-2xl p-6 transition-all;
+}
+
+.notion-table-header {
+  @apply text-notion-text-secondary dark:text-white/40 uppercase text-[10px] tracking-widest font-black py-4 px-6;
+}
+
+/* Custom transitions for cards and buttons */
+.theme-transition {
+  @apply transition-all duration-300;
+}
