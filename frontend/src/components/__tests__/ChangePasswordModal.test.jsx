@@ -2,12 +2,12 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import ChangePasswordModal from '../ChangePasswordModal';
 import { LanguageProvider } from '../../context/LanguageContext';
-import { userService } from '../../services/api';
+import { authService } from '../../services/api';
 
-// Mock userService
+// Mock authService
 vi.mock('../../services/api', () => ({
-  userService: {
-    changePassword: vi.fn(),
+  authService: {
+    updatePassword: vi.fn(),
   },
 }));
 
@@ -23,36 +23,48 @@ describe('ChangePasswordModal Component', () => {
 
   it('renders correctly when open', () => {
     renderWithProvider(<ChangePasswordModal {...defaultProps} />);
-    expect(screen.getByText(/Seguridad de la Cuenta/i)).toBeInTheDocument();
+    expect(screen.getByText(/Cambiar Contraseña/i)).toBeInTheDocument();
   });
 
-  it('toggles password visibility', () => {
+  it('generates a password when clicking generate', () => {
     renderWithProvider(<ChangePasswordModal {...defaultProps} />);
-    const toggleButtons = screen.getAllByLabelText(/Toggle Visibility/i);
-
-    // Get all password-style inputs
-    const inputs = screen.getAllByPlaceholderText(/••••••••/i);
-    expect(inputs[0].type).toBe('password');
-
-    fireEvent.click(toggleButtons[0]);
-    expect(inputs[0].type).toBe('text');
+    const generateButton = screen.getByText(/Generar/i);
+    const input = screen.getByPlaceholderText(/••••••••/i);
+    
+    expect(input.value).toBe('');
+    fireEvent.click(generateButton);
+    expect(input.value).not.toBe('');
+    expect(input.value.length).toBe(12);
   });
 
-  it('calls changePassword and shows success on valid submit', async () => {
-    userService.changePassword.mockResolvedValueOnce({});
+  it('calls updatePassword and shows success on valid submit', async () => {
+    authService.updatePassword.mockResolvedValueOnce({});
     renderWithProvider(<ChangePasswordModal {...defaultProps} />);
 
-    const inputs = screen.getAllByPlaceholderText(/••••••••/i);
-    fireEvent.change(inputs[0], { target: { value: 'old' } });
-    fireEvent.change(inputs[1], { target: { value: 'new' } });
-    fireEvent.change(inputs[2], { target: { value: 'new' } });
+    const input = screen.getByPlaceholderText(/••••••••/i);
+    fireEvent.change(input, { target: { value: 'newpassword123' } });
 
-    // The button text is "Guardar Cambios" in Spanish
-    fireEvent.click(screen.getByText(/Guardar Cambios/i));
+    // The button text is "Actualizar" in Spanish
+    const submitButton = screen.getByRole('button', { name: /Actualizar/i });
+    fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(userService.changePassword).toHaveBeenCalledWith('old', 'new');
+      expect(authService.updatePassword).toHaveBeenCalledWith('newpassword123');
       expect(screen.getByText(/Contraseña actualizada con éxito/i)).toBeInTheDocument();
+    });
+  });
+
+  it('shows error message on failure', async () => {
+    authService.updatePassword.mockRejectedValueOnce(new Error('Failed'));
+    renderWithProvider(<ChangePasswordModal {...defaultProps} />);
+
+    const input = screen.getByPlaceholderText(/••••••••/i);
+    fireEvent.change(input, { target: { value: 'fail' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /Actualizar/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Error al actualizar la contraseña/i)).toBeInTheDocument();
     });
   });
 });

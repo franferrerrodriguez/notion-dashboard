@@ -8,7 +8,7 @@ import { settingsService } from '../../services/api';
 vi.mock('../../services/api', () => ({
   settingsService: {
     get: vi.fn(),
-    update: vi.fn(),
+    save: vi.fn(),
   },
 }));
 
@@ -24,34 +24,43 @@ describe('SettingsModal Component', () => {
 
   it('loads settings on open', async () => {
     settingsService.get.mockResolvedValueOnce({
-      notion_token: 'secret_123',
-      database_id: 'db_456',
+      notion_integration_token: 'secret_123',
+      notion_database_id: 'db_456',
     });
 
     renderWithProvider(<SettingsModal {...defaultProps} />);
 
-    expect(screen.getByTestId('loading-text')).toBeInTheDocument();
+    expect(screen.getByText(/Cargando Configuración/i)).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByPlaceholderText(/secret_\.\.\./i).value).toBe('secret_123');
     });
 
-    expect(screen.getByPlaceholderText(/32 chars ID\.\.\./i).value).toBe('db_456');
+    expect(screen.getByDisplayValue('db_456')).toBeInTheDocument();
   });
 
-  it('toggles token visibility', async () => {
-    settingsService.get.mockResolvedValueOnce({ notion_token: 'secret_123' });
+  it('calls save when form is submitted', async () => {
+    settingsService.get.mockResolvedValueOnce({
+      notion_integration_token: 'secret_123',
+      notion_database_id: 'db_456',
+    });
+    settingsService.save.mockResolvedValueOnce({});
+
     renderWithProvider(<SettingsModal {...defaultProps} />);
 
     await waitFor(() => {
       expect(screen.getByPlaceholderText(/secret_\.\.\./i)).toBeInTheDocument();
     });
 
-    const input = screen.getByPlaceholderText(/secret_\.\.\./i);
-    const toggleBtn = screen.getByLabelText(/Toggle Token Visibility/i);
+    const saveButton = screen.getByRole('button', { name: /Guardar Cambios/i });
+    fireEvent.click(saveButton);
 
-    expect(input.type).toBe('password');
-    fireEvent.click(toggleBtn);
-    expect(input.type).toBe('text');
+    await waitFor(() => {
+      expect(settingsService.save).toHaveBeenCalledWith({
+        notion_integration_token: 'secret_123',
+        notion_database_id: 'db_456',
+      });
+      expect(screen.getByText(/Configuración guardada correctamente/i)).toBeInTheDocument();
+    });
   });
 });

@@ -1,81 +1,44 @@
+import React from 'react';
+import { CHART_COLORS } from '../constants/theme';
 
-
-const DoughnutChart = ({
-  progress,
-  stats = { notStarted: 0, inProgress: 0, completed: 0 },
-  total = 0,
-  label,
-}) => {
-  const radius = 35;
-  const strokeWidth = 8;
+const DoughnutChart = ({ stats, total }) => {
+  const size = 100;
+  const strokeWidth = 12;
+  const center = size / 2;
+  const radius = center - strokeWidth / 2;
   const circumference = 2 * Math.PI * radius;
-
-  // Use effective total or 1 to avoid division by zero
-  const effectiveTotal = Math.max(
-    total,
-    ((stats?.notStarted || 0) + (stats?.inProgress || 0) + (stats?.completed || 0)),
-    1
-  );
-
-  const v1 = ((stats?.notStarted || 0) / effectiveTotal) * circumference;
-  const v2 = ((stats?.inProgress || 0) / effectiveTotal) * circumference;
-  const v3 = ((stats?.completed || 0) / effectiveTotal) * circumference;
+  
+  const v1 = (stats.notStarted / total) * circumference;
+  const v2 = (stats.inProgress / total) * circumference;
+  const v3 = (stats.completed / total) * circumference;
 
   return (
-    <div className="relative flex flex-col items-center justify-center animate-in zoom-in duration-700">
-      <svg className="w-32 h-32 transform -rotate-90 filter drop-shadow-[0_0_15px_rgba(59,130,246,0.15)]">
-        {/* Background track */}
-        <circle
-          cx="64"
-          cy="64"
-          r={radius}
-          fill="transparent"
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          className="text-black/5 dark:text-white/5"
-        />
-        
-        {/* Segments - Using brighter colors for visibility */}
-        {/* Not Started - Amber/Orange for alert/pending */}
-        <circle
-          cx="64"
-          cy="64"
-          r={radius}
-          fill="transparent"
-          stroke="#f59e0b" // bg-amber-500
-          strokeWidth={strokeWidth}
-          strokeDasharray={`${v1} ${circumference}`}
-          className="transition-all duration-1000 ease-out"
-        />
-        
-        {/* In Progress - Blue for active */}
-        <circle
-          cx="64"
-          cy="64"
-          r={radius}
-          fill="transparent"
-          stroke="#3b82f6" // bg-blue-500
-          strokeWidth={strokeWidth}
-          strokeDasharray={`${v2} ${circumference}`}
-          strokeDashoffset={-v1}
-          className="transition-all duration-1000 ease-out"
-        />
-        
-        {/* Completed - Green for success */}
-        <circle
-          cx="64"
-          cy="64"
-          r={radius}
-          fill="transparent"
-          stroke="#10b981" // bg-emerald-500
-          strokeWidth={strokeWidth}
-          strokeDasharray={`${v3} ${circumference}`}
-          strokeDashoffset={-(v1 + v2)}
-          className="transition-all duration-1000 ease-out"
-        />
-      </svg>
-      {/* Percentage Center is handled in Dashboard.jsx for more flexibility with i18n */}
-    </div>
+    <svg viewBox={`0 0 ${size} ${size}`} className="transform -rotate-90 drop-shadow-2xl">
+      <circle cx={center} cy={center} r={radius} fill="none" stroke="#222" strokeWidth={strokeWidth} />
+      
+      <circle 
+        cx={center} cy={center} r={radius} fill="none" 
+        stroke={CHART_COLORS.COMPLETED} strokeWidth={strokeWidth}
+        strokeDasharray={`${v3} ${circumference}`}
+        style={{ transition: 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)' }}
+      />
+      
+      <circle 
+        cx={center} cy={center} r={radius} fill="none" 
+        stroke={CHART_COLORS.IN_PROGRESS} strokeWidth={strokeWidth}
+        strokeDasharray={`${v2} ${circumference}`}
+        strokeDashoffset={-v3}
+        style={{ transition: 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.3s' }}
+      />
+
+      <circle 
+        cx={center} cy={center} r={radius} fill="none" 
+        stroke={CHART_COLORS.NOT_STARTED} strokeWidth={strokeWidth}
+        strokeDasharray={`${v1} ${circumference}`}
+        strokeDashoffset={-(v3 + v2)}
+        style={{ transition: 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.6s' }}
+      />
+    </svg>
   );
 };
 

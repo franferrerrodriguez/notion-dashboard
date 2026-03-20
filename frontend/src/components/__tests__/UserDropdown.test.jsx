@@ -29,7 +29,7 @@ describe('UserDropdown Component', () => {
     });
 
     renderWithProviders(<UserDropdown />);
-    expect(screen.getByText('test')).toBeInTheDocument();
+    expect(screen.getByText('test@example.com')).toBeInTheDocument();
     expect(screen.getByText('admin')).toBeInTheDocument();
   });
 
@@ -54,10 +54,10 @@ describe('UserDropdown Component', () => {
     fireEvent.click(screen.getByText(/Cerrar Sesión/i));
     
     // Check that ConfirmModal is open
-    expect(screen.getByText(/Confirmar/i)).toBeInTheDocument();
+    expect(screen.getByText(/¿Cerrar sesión ahora?/i)).toBeInTheDocument();
     
-    // Click confirm in modal
-    fireEvent.click(screen.getByText(/Confirmar/i));
+    // Click confirm in modal (the button text is "Cerrar Sesión" as passed from UserDropdown)
+    fireEvent.click(screen.getByRole('button', { name: /Cerrar Sesión/i }));
     
     expect(mockLogout).toHaveBeenCalled();
   });

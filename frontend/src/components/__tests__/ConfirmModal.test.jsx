@@ -14,6 +14,8 @@ describe('ConfirmModal Component', () => {
     onConfirm: vi.fn(),
     title: 'Test Title',
     message: 'Test Message',
+    confirmText: 'Confirmar',
+    cancelText: 'Cancelar',
   };
 
   it('renders correctly when open', () => {

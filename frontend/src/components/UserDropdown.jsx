@@ -1,14 +1,8 @@
-import { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { 
-  ChevronDown, 
-  LogOut, 
-  Languages, 
-  KeyRound,
-  Shield,
-  User as UserIcon
-} from 'lucide-react';
+import { LogOut, User, ChevronDown, Shield, Globe, Check, Lock } from 'lucide-react';
+import { ROLES } from '../constants/auth';
 import ConfirmModal from './ConfirmModal';
 import ChangePasswordModal from './ChangePasswordModal';
 
@@ -17,113 +11,127 @@ const UserDropdown = () => {
   const { lang, setLang, t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   if (!user) return null;
 
-  const handleLogout = async () => {
-    setShowLogoutConfirm(false);
-    await logout();
-  };
-
   return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 p-1.5 pr-4 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-all active:scale-95 group border border-transparent hover:border-notion-border dark:hover:border-white/10"
-      >
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
-          <UserIcon className="w-4.5 h-4.5" />
-        </div>
-        <div className="hidden sm:block text-left">
-          <p className="text-xs font-black text-notion-text dark:text-white leading-tight">
-            {user.email.split('@')[0]}
-          </p>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <Shield className="w-2.5 h-2.5 text-blue-500" />
-            <p className="text-[9px] font-bold text-notion-text-secondary uppercase tracking-widest leading-none">
-              {user.role}
-            </p>
+    <>
+      <div className="relative" ref={dropdownRef}>
+        {/* Trigger Button */}
+        <button 
+          onClick={() => setIsOpen(!isOpen)}
+          className={`flex items-center gap-3 bg-white dark:bg-white/5 px-3 py-1.5 rounded-2xl border border-notion-border dark:border-white/10 transition-all duration-300 group shadow-sm ${
+            isOpen ? 'ring-4 ring-blue-500/10 border-blue-500/50' : 'hover:border-notion-text-secondary/30 dark:hover:border-white/20'
+          }`}
+        >
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-[10px] font-black shadow-lg ring-2 ring-white/5 transform group-hover:scale-105 transition-transform">
+            {(user.email || '?').charAt(0).toUpperCase()}
           </div>
-        </div>
-        <ChevronDown
-          className={`w-4 h-4 text-notion-text-secondary transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
-        />
-      </button>
+          <div className="flex flex-col items-start mr-1">
+            <span className="text-[11px] font-bold text-notion-text dark:text-white/90 leading-tight max-w-[120px] truncate">{user.email}</span>
+            <span className="text-[8px] font-black text-notion-text-secondary uppercase tracking-[0.2em] flex items-center gap-1.5">
+              <Shield className={`w-2 h-2 ${user.role === ROLES.ADMIN ? 'text-amber-400' : 'text-blue-400'}`} />
+              {user.role}
+            </span>
+          </div>
+          <ChevronDown className={`w-3 h-3 text-notion-text-secondary dark:text-white/20 transition-transform duration-300 ${isOpen ? 'rotate-180 text-blue-500' : ''}`} />
+        </button>
 
-      {isOpen && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 mt-3 w-64 bg-white dark:bg-[#1a1a1a] border border-notion-border dark:border-white/10 rounded-[1.5rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] py-3 z-50 animate-in fade-in zoom-in-95 duration-200">
+        {/* Dropdown Menu */}
+        {isOpen && (
+          <div className="absolute right-0 mt-3 w-56 bg-white dark:bg-notion-dark border border-notion-border dark:border-white/10 rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200 backdrop-blur-xl">
             <div className="px-4 py-3 border-b border-notion-border dark:border-white/5 mb-2">
-              <div className="flex items-center gap-2 mb-2">
-                <Languages className="w-3.5 h-3.5 text-blue-500" />
-                <p className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest pt-0.5">
-                  {t('select_lang')}
-                </p>
+              <p className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest mb-1">Account</p>
+              <p className="text-xs font-bold text-notion-text dark:text-white/90 truncate">{user.email}</p>
+            </div>
+
+            <div className="px-2 py-1.5 border-b border-notion-border dark:border-white/5 mb-1">
+              <div className="px-2 py-1 text-[9px] font-black text-notion-text-secondary dark:text-gray-500 uppercase tracking-widest flex items-center gap-1.5">
+                <Globe className="w-2.5 h-2.5" />
+                {t('select_lang')}
               </div>
-              <div className="flex gap-1.5">
-                {['es', 'en'].map((l) => (
-                  <button
-                    key={l}
-                    onClick={() => {
-                      setLang(l);
-                      setIsOpen(false);
-                    }}
-                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all tracking-widest ${
-                      lang === l
-                        ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/10'
-                        : 'bg-black/5 dark:bg-white/5 text-notion-text-secondary hover:text-notion-text dark:hover:text-white'
-                    }`}
-                  >
-                    {l}
-                  </button>
-                ))}
+              <div className="flex flex-col gap-0.5 mt-1">
+                <button 
+                  onClick={() => setLang('es')}
+                  className={`flex items-center justify-between w-full px-2 py-1.5 text-xs rounded-md transition-colors ${lang === 'es' ? 'bg-blue-500/10 text-blue-500 font-bold' : 'text-notion-text-secondary hover:bg-black/5 dark:hover:bg-white/5'}`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="text-[10px]">🇪🇸</span> {t('spanish')}
+                  </span>
+                  {lang === 'es' && <Check className="w-3 h-3" />}
+                </button>
+                <button 
+                  onClick={() => setLang('en')}
+                  className={`flex items-center justify-between w-full px-2 py-1.5 text-xs rounded-md transition-colors ${lang === 'en' ? 'bg-blue-500/10 text-blue-500 font-bold' : 'text-notion-text-secondary hover:bg-black/5 dark:hover:bg-white/5'}`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="text-[10px]">🇬🇧</span> {t('english')}
+                  </span>
+                  {lang === 'en' && <Check className="w-3 h-3" />}
+                </button>
               </div>
             </div>
 
-            <div className="px-1.5">
-              <button
+            <div className="px-2 py-1 border-b border-notion-border dark:border-white/5 mb-1">
+              <button 
                 onClick={() => {
                   setIsOpen(false);
-                  setShowPasswordModal(true);
+                  setShowChangePassword(true);
                 }}
-                className="w-full px-3.5 py-2.5 text-left text-[11px] font-black uppercase tracking-widest text-notion-text-secondary dark:text-white/60 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-blue-500/5 rounded-xl transition-all flex items-center gap-3.5 group"
+                className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-notion-text dark:text-white/80 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl transition-all group"
               >
-                <div className="p-1.5 bg-blue-500/5 rounded-lg group-hover:bg-blue-500/10 border border-blue-500/0 group-hover:border-blue-500/10 transition-all">
-                  <KeyRound className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
-                </div>
-                {t('change_password_title')}
+                <Lock className="w-3.5 h-3.5 text-notion-text-secondary dark:text-gray-500 group-hover:text-blue-500 transition-colors" />
+                Cambiar Contraseña
               </button>
+            </div>
 
-              <button
-                onClick={() => setShowLogoutConfirm(true)}
-                className="w-full px-3.5 py-2.5 text-left text-[11px] font-black uppercase tracking-widest text-red-500/80 hover:text-red-500 hover:bg-red-500/5 rounded-xl transition-all flex items-center gap-3.5 group mt-1"
+            <div className="mt-2 pt-1 border-notion-border dark:border-white/5 px-2">
+              <button 
+                onClick={() => {
+                  setIsOpen(false);
+                  setShowLogoutConfirm(true);
+                }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-red-400/80 hover:text-red-400 hover:bg-red-500/10 transition-all group"
               >
-                <div className="p-1.5 bg-red-500/5 rounded-lg group-hover:bg-red-500/10 border border-red-500/0 group-hover:border-red-500/10 transition-all">
-                  <LogOut className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
-                </div>
+                <LogOut className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                 {t('logout')}
               </button>
             </div>
           </div>
-        </>
-      )}
+        )}
+      </div>
 
-      {/* Modals */}
-      <ConfirmModal
+      <ConfirmModal 
         isOpen={showLogoutConfirm}
         onClose={() => setShowLogoutConfirm(false)}
-        onConfirm={handleLogout}
+        onConfirm={() => {
+          setShowLogoutConfirm(false);
+          logout();
+        }}
         title={t('logout_confirm_title')}
         message={t('logout_confirm_desc')}
+        confirmText={t('logout')}
+        cancelText={t('cancel')}
       />
 
-      <ChangePasswordModal
-        isOpen={showPasswordModal}
-        onClose={() => setShowPasswordModal(false)}
+      <ChangePasswordModal 
+        isOpen={showChangePassword}
+        onClose={() => setShowChangePassword(false)}
       />
-    </div>
+    </>
   );
 };
 

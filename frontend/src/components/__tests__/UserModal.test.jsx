@@ -31,7 +31,7 @@ describe('UserModal Component', () => {
     renderWithProvider(<UserModal {...defaultProps} />);
 
     // Check loading state first
-    expect(screen.getByTestId('loading-title')).toBeInTheDocument();
+    expect(screen.getByText(/Cargando datos/i)).toBeInTheDocument();
 
     // Wait for options to load and form to show
     await waitFor(() => {

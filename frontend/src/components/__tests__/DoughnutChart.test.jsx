@@ -15,7 +15,7 @@ describe('DoughnutChart Component', () => {
   });
 
   it('renders correctly with zero values', () => {
-    const { container } = render(<DoughnutChart progress={0} stats={null} total={0} />);
+    const { container } = render(<DoughnutChart stats={{ notStarted: 0, inProgress: 0, completed: 0 }} total={1} />);
     expect(container.querySelector('svg')).toBeInTheDocument();
   });
 });

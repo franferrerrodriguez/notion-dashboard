@@ -24,17 +24,23 @@ describe('SideDrawer Component', () => {
   it('loads and displays project details', async () => {
     projectService.getById.mockResolvedValueOnce({
       id: '1',
-      name: 'Test Project',
-      phase: 'Proyecto',
-      progress: 70,
-      billedAmount: 50,
-      description: 'Test description',
+      raw_properties: {
+        'Nombre del proyecto': { title: [{ plain_text: 'Test Project' }] },
+        'Progreso': { rollup: { number: 0.7 } },
+        '% Facturado': { formula: { number: 0.5 } },
+        'Resumen': { rich_text: [{ plain_text: 'Test description' }] },
+        'Cliente': { multi_select: [{ name: 'Client A', color: 'blue' }] },
+        'Estado': { status: { name: 'In Progress', color: 'orange' } },
+        'Fase': { status: { name: 'Development', color: 'blue' } }
+      },
+      related_tasks: [],
+      page_content: []
     });
 
     renderWithProvider(<SideDrawer {...defaultProps} />);
 
-    // Screen should show loading initially
-    expect(screen.getByText(/Cargando datos/i)).toBeInTheDocument();
+    // Screen should show loading initially ("Cargando..." in Spanish)
+    expect(screen.getAllByText(/Cargando\.\.\./i)[0]).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByText('Test Project')).toBeInTheDocument();
@@ -46,7 +52,7 @@ describe('SideDrawer Component', () => {
   });
 
   it('does not render if projectId is null', () => {
-    renderWithProvider(<SideDrawer projectId={null} onClose={vi.fn()} />);
-    expect(screen.queryByText(/ID:/i)).not.toBeInTheDocument();
+    const { container } = renderWithProvider(<SideDrawer projectId={null} onClose={vi.fn()} />);
+    expect(container.firstChild).toBeNull();
   });
 });

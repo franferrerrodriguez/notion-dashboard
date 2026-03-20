@@ -1,18 +1,15 @@
-import { useState, useEffect } from 'react';
-import { useLanguage } from '../context/LanguageContext';
+import React, { useState, useEffect } from 'react';
+import { X, Settings, Database, Key, Save, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
 import { settingsService } from '../services/api';
-import { Settings, X, Save, Eye, EyeOff } from 'lucide-react';
 
 const SettingsModal = ({ isOpen, onClose }) => {
-  const { t } = useLanguage();
   const [settings, setSettings] = useState({
-    notion_token: '',
-    database_id: '',
+    notion_integration_token: '',
+    notion_database_id: ''
   });
-  const [showToken, setShowToken] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -21,150 +18,134 @@ const SettingsModal = ({ isOpen, onClose }) => {
   }, [isOpen]);
 
   const loadSettings = async () => {
+    setLoading(true);
     try {
-      setIsLoading(true);
       const data = await settingsService.get();
-      setSettings({
-        notion_token: data.notion_token || '',
-        database_id: data.database_id || '',
-      });
+      setSettings(data);
     } catch (error) {
-      console.error('Error loading settings:', error);
+      console.error(error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    setIsSaving(true);
-    setMessage({ type: '', text: '' });
+    setSaving(true);
+    setStatus(null);
     try {
       await settingsService.save(settings);
-      setMessage({ type: 'success', text: t('settings_save_success') });
-      setTimeout(() => {
-        onClose();
-        setMessage({ type: '', text: '' });
-      }, 2000);
+      setStatus('success');
+      setTimeout(() => setStatus(null), 3000);
     } catch (error) {
-      console.error('Error saving settings:', error);
-      setMessage({ type: 'error', text: t('settings_save_error') });
+      setStatus('error');
     } finally {
-      setIsSaving(false);
+      setSaving(false);
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-200 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="bg-white dark:bg-notion-dark border border-notion-border dark:border-white/10 rounded-3xl w-full max-w-[480px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-        <div className="px-8 py-6 border-b border-notion-border dark:border-white/5 flex justify-between items-center bg-notion-bg-light dark:bg-white/[0.01]">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="bg-notion-light dark:bg-[#191919] border border-notion-border dark:border-white/10 rounded-3xl w-full max-w-[500px] shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+        
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-notion-border dark:border-white/5 flex justify-between items-center bg-notion-bg-light dark:bg-white/[0.01]">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-indigo-500/10 rounded-2xl border border-indigo-500/20 text-indigo-500">
-              <Settings className="w-6 h-6" />
-            </div>
-            <div>
-              <h2 className="text-lg font-black tracking-tight text-notion-text dark:text-white">
-                {t('settings_title')}
-              </h2>
-              <p className="text-[10px] font-bold text-notion-text-secondary uppercase tracking-widest">
-                {t('settings_subtitle')}
-              </p>
-            </div>
+             <div className="p-2.5 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
+                <Settings className="w-5 h-5 text-indigo-500" />
+             </div>
+             <div>
+                <h2 className="text-sm font-black tracking-tight text-notion-text dark:text-white uppercase px-1">
+                  Configuración Global
+                </h2>
+                <p className="text-[9px] font-bold text-notion-text-secondary uppercase tracking-widest pl-1">API & Notion Central</p>
+             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors text-notion-text-secondary"
-          >
+          <button onClick={onClose} className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors text-notion-text-secondary dark:text-white/20">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {isLoading ? (
-          <div className="p-20 flex flex-col items-center justify-center gap-4">
-            <div className="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
-            <p
-              className="text-[10px] font-bold text-notion-text-secondary uppercase tracking-[0.2em]"
-              data-testid="loading-text"
-            >
-              {t('settings_loading')}
-            </p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="p-8 space-y-6" autoComplete="off">
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest pl-1">
-                  Notion Integration Token
-                </label>
-                <div className="relative">
-                  <input
-                    type={showToken ? 'text' : 'password'}
-                    autoComplete="new-password"
-                    value={settings.notion_token}
-                    onChange={(e) => setSettings({ ...settings, notion_token: e.target.value })}
-                    className="w-full bg-notion-bg-light dark:bg-notion-dark border border-notion-border dark:border-white/5 rounded-xl px-4 pr-16 py-3 text-sm text-notion-text dark:text-white"
+        <form onSubmit={handleSave} className="p-8 space-y-6" autoComplete="off">
+          {/* Hidden fake fields to trick some password managers */}
+          <input type="text" style={{display:'none'}} />
+          <input type="password" style={{display:'none'}} />
+          
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-4">
+               <RefreshCw className="w-8 h-8 text-blue-500 animate-spin" />
+               <p className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest animate-pulse">Cargando Configuración...</p>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-4">
+                {/* Integration Token */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest pl-1 flex items-center gap-2">
+                    <Key className="w-3 h-3" /> Token de Integración Notion
+                  </label>
+                  <input 
+                    type="password"
+                    value={settings.notion_integration_token || ''}
+                    onChange={(e) => setSettings({...settings, notion_integration_token: e.target.value})}
+                    className="w-full bg-white dark:bg-notion-dark border border-notion-border dark:border-white/5 rounded-2xl px-5 py-3.5 text-sm text-notion-text dark:text-white placeholder:text-notion-text-secondary/20 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
                     placeholder="secret_..."
+                    autoComplete="new-password"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowToken(!showToken)}
-                    aria-label="Toggle Token Visibility"
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-notion-text-secondary/40 hover:text-indigo-500 transition-colors"
-                  >
-                    {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
+                </div>
+
+                {/* Database ID */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest pl-1 flex items-center gap-2">
+                    <Database className="w-3 h-3" /> ID Base de Datos Principal
+                  </label>
+                  <input 
+                    type="text"
+                    value={settings.notion_database_id || ''}
+                    onChange={(e) => setSettings({...settings, notion_database_id: e.target.value})}
+                    className="w-full bg-white dark:bg-notion-dark border border-notion-border dark:border-white/5 rounded-2xl px-5 py-3.5 text-sm text-notion-text dark:text-white placeholder:text-notion-text-secondary/20 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
+                    placeholder="30ab2935..."
+                    autoComplete="off"
+                  />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest pl-1">
-                  Database ID
-                </label>
-                <input
-                  type="text"
-                  value={settings.database_id}
-                  onChange={(e) => setSettings({ ...settings, database_id: e.target.value })}
-                  className="w-full bg-notion-bg-light dark:bg-notion-dark border border-notion-border dark:border-white/5 rounded-xl px-4 py-3 text-sm text-notion-text dark:text-white"
-                  placeholder="32 chars ID..."
-                />
-              </div>
-            </div>
-
-            {message.text && (
-              <div
-                className={`p-4 rounded-xl text-xs font-bold text-center animate-in slide-in-from-top-2 ${
-                  message.type === 'success'
-                    ? 'bg-green-500/10 text-green-500 border border-green-500/20'
-                    : 'bg-red-500/10 text-red-500 border border-red-500/20'
-                }`}
-              >
-                {message.text}
-              </div>
-            )}
-
-            <div className="pt-2 flex gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 py-3.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-notion-text-secondary rounded-2xl text-[10px] font-black uppercase tracking-widest border border-notion-border dark:border-white/5 transition-all active:scale-95"
-              >
-                {t('cancel')}
-              </button>
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="flex-1 py-3.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-indigo-500/20 transition-all active:scale-95"
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <Save className="w-3.5 h-3.5" />
-                  {isSaving ? t('applying') : t('save_changes')}
+              {status === 'success' && (
+                <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl animate-in slide-in-from-top-2">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                  <p className="text-xs font-bold text-emerald-500">Configuración guardada correctamente</p>
                 </div>
-              </button>
-            </div>
-          </form>
-        )}
+              )}
+
+              {status === 'error' && (
+                <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl animate-in slide-in-from-top-2">
+                  <AlertCircle className="w-5 h-5 text-red-500" />
+                  <p className="text-xs font-bold text-red-500">Error al guardar la configuración</p>
+                </div>
+              )}
+
+              <div className="pt-4 flex gap-4">
+                 <button 
+                   type="button" 
+                   onClick={onClose}
+                   className="flex-1 py-4 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-notion-text-secondary rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
+                 >
+                    Cerrar
+                 </button>
+                 <button 
+                   type="submit"
+                   disabled={saving}
+                   className="flex-1 py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20 active:scale-95 flex items-center justify-center gap-2"
+                 >
+                    {saving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                    {saving ? 'Guardando...' : 'Guardar Cambios'}
+                 </button>
+              </div>
+            </>
+          )}
+        </form>
       </div>
     </div>
   );

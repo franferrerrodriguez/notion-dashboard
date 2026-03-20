@@ -15,8 +15,16 @@ vi.mock('../../context/AuthContext', async (importOriginal) => {
   };
 });
 
+import { ThemeProvider } from '../../context/ThemeContext';
+
 const renderWithProvider = (ui) => {
-  return render(<LanguageProvider>{ui}</LanguageProvider>);
+  return render(
+    <LanguageProvider>
+      <ThemeProvider>
+        {ui}
+      </ThemeProvider>
+    </LanguageProvider>
+  );
 };
 
 describe('Login Component', () => {
@@ -28,7 +36,7 @@ describe('Login Component', () => {
 
     renderWithProvider(<Login />);
 
-    fireEvent.change(screen.getByPlaceholderText(/ejemplo@correo.com/i), {
+    fireEvent.change(screen.getByPlaceholderText(/tu@email.com/i), {
       target: { value: 'test@test.com' },
     });
     fireEvent.change(screen.getByPlaceholderText(/••••••••/i), {
@@ -51,7 +59,7 @@ describe('Login Component', () => {
 
     renderWithProvider(<Login />);
 
-    fireEvent.change(screen.getByPlaceholderText(/ejemplo@correo.com/i), {
+    fireEvent.change(screen.getByPlaceholderText(/tu@email.com/i), {
       target: { value: 'test@test.com' },
     });
     fireEvent.change(screen.getByPlaceholderText(/••••••••/i), {
@@ -61,7 +69,7 @@ describe('Login Component', () => {
     fireEvent.click(screen.getByRole('button', { name: /Entrar/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Invalid credentials/i)).toBeInTheDocument();
+      expect(screen.getByText(/Credenciales inválidas/i)).toBeInTheDocument();
     });
   });
 });
