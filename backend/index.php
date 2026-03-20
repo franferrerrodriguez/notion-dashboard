@@ -211,8 +211,9 @@ if (strpos($action, 'users') === 0) {
         $hash = password_hash($input['password'], PASSWORD_DEFAULT);
         $pdo->beginTransaction();
         try {
-            $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, role_id) VALUES (?, ?, ?)");
-            $stmt->execute([$input['email'], $hash, $input['role_id']]);
+            $isActive = isset($input['is_active']) ? (int)$input['is_active'] : 1;
+            $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, role_id, is_active) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$input['email'], $hash, $input['role_id'], $isActive]);
             $userId = $pdo->lastInsertId();
             if (!empty($input['external_client_id'])) {
                 $stmt = $pdo->prepare("INSERT INTO client_links (user_id, external_client_id) VALUES (?, ?)");
@@ -248,8 +249,9 @@ if (strpos($action, 'users') === 0) {
                 }
             } else {
                 // Standard User Update
-                $stmt = $pdo->prepare("UPDATE users SET email = ?, role_id = ? WHERE id = ?");
-                $stmt->execute([$input['email'], $input['role_id'], $id]);
+                $isActive = isset($input['is_active']) ? (int)$input['is_active'] : 1;
+                $stmt = $pdo->prepare("UPDATE users SET email = ?, role_id = ?, is_active = ? WHERE id = ?");
+                $stmt->execute([$input['email'], $input['role_id'], $isActive, $id]);
                 
                 // Optional Password Update
                 if (!empty($input['password'])) {
