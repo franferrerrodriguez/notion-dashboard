@@ -5,7 +5,6 @@ import ProgressBar from '../ProgressBar';
 describe('ProgressBar Component', () => {
   it('renders correctly with given value', () => {
     const { container } = render(<ProgressBar value={50} color="#238636" />);
-    const fill = container.querySelector('div > div > div > div') || container.querySelector('div > div > div');
     // The previous selector might have been catching the middle div depending on showText
     const actualFill = Array.from(container.querySelectorAll('div')).find(el => el.style.width);
     expect(actualFill).toBeInTheDocument();

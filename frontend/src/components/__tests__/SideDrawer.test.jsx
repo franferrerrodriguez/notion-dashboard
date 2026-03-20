@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import SideDrawer from '../SideDrawer';
 import { projectService } from '../../services/api';
 import { LanguageProvider } from '../../context/LanguageContext';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Mock projectService
 vi.mock('../../services/api', () => ({
@@ -11,8 +12,20 @@ vi.mock('../../services/api', () => ({
   },
 }));
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+
 const renderWithProvider = (ui) => {
-  return render(<LanguageProvider>{ui}</LanguageProvider>);
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <LanguageProvider>{ui}</LanguageProvider>
+    </QueryClientProvider>
+  );
 };
 
 describe('SideDrawer Component', () => {

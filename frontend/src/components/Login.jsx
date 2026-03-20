@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Globe, Check } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 
 const Login = () => {
@@ -19,7 +18,7 @@ const Login = () => {
     
     try {
       await login(email, password);
-    } catch (err) {
+    } catch {
       setError(t('login_error'));
     } finally {
       setIsLoading(false);
@@ -105,7 +104,7 @@ const Login = () => {
         </form>
 
         <div className="mt-12 text-center">
-           <p className="text-[10px] text-notion-text-secondary font-bold uppercase tracking-[0.1em] opacity-30">
+           <p className="text-[10px] text-notion-text-secondary font-bold uppercase tracking-widest opacity-30">
              © 2026 • Notion-Client Dashboard
            </p>
         </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { projectService } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
@@ -6,28 +6,18 @@ import ProgressBar from './ProgressBar';
 
 const SideDrawer = ({ projectId, onClose }) => {
   const { t } = useLanguage();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['project', projectId],
+    queryFn: () => projectService.getById(projectId),
+    enabled: !!projectId,
+  });
+
   const [isExpanded, setIsExpanded] = useState(false);
   
   // Collapse states for sections
   const [isTasksOpen, setIsTasksOpen] = useState(true);
   const [isInteractionsOpen, setIsInteractionsOpen] = useState(true);
-
-  useEffect(() => {
-    if (!projectId) {
-      setData(null);
-      setIsExpanded(false);
-      setIsTasksOpen(true);
-      setIsInteractionsOpen(true);
-      return;
-    }
-    
-    setLoading(true);
-    projectService.getById(projectId)
-      .then(setData)
-      .finally(() => setLoading(false));
-  }, [projectId]);
 
   if (!projectId) return null;
 

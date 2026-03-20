@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { LogOut, User, ChevronDown, Shield, Globe, Check, Lock } from 'lucide-react';
+import { LogOut, ChevronDown, Shield, Globe, Check, Lock } from 'lucide-react';
 import { ROLES } from '../constants/auth';
 import ConfirmModal from './ConfirmModal';
 import ChangePasswordModal from './ChangePasswordModal';
@@ -37,7 +37,7 @@ const UserDropdown = () => {
             isOpen ? 'ring-4 ring-blue-500/10 border-blue-500/50' : 'hover:border-notion-text-secondary/30 dark:hover:border-white/20'
           }`}
         >
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-[10px] font-black shadow-lg ring-2 ring-white/5 transform group-hover:scale-105 transition-transform">
+          <div className="w-7 h-7 rounded-full bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-[10px] font-black shadow-lg ring-2 ring-white/5 transform group-hover:scale-105 transition-transform">
             {(user.email || '?').charAt(0).toUpperCase()}
           </div>
           <div className="flex flex-col items-start mr-1">

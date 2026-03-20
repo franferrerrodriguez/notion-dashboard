@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Shield, Mail, Lock, Link as LinkIcon, User, RefreshCw } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Shield, Mail, Lock, Link as LinkIcon, RefreshCw } from 'lucide-react';
 import { ROLE_IDS, ROLES } from '../constants/auth';
 import { projectService } from '../services/api';
 
@@ -66,11 +66,11 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="bg-notion-light dark:bg-[#202020] border border-notion-border dark:border-white/10 rounded-3xl w-full max-w-[480px] shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
         
         {/* Header */}
-        <div className="px-8 py-6 border-b border-notion-border dark:border-white/5 flex justify-between items-center bg-notion-bg-light dark:bg-white/[0.02]">
+        <div className="px-8 py-6 border-b border-notion-border dark:border-white/5 flex justify-between items-center bg-notion-bg-light dark:bg-white/2">
           <div className="flex items-center gap-3">
              <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/20">
                 <Shield className="w-5 h-5 text-blue-500" />

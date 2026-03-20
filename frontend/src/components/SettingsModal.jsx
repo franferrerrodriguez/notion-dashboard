@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Settings, Database, Key, Save, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
 import { settingsService } from '../services/api';
 
@@ -37,7 +37,8 @@ const SettingsModal = ({ isOpen, onClose }) => {
       await settingsService.save(settings);
       setStatus('success');
       setTimeout(() => setStatus(null), 3000);
-    } catch (error) {
+    } catch {
+      setSaving(false);
       setStatus('error');
     } finally {
       setSaving(false);
@@ -47,8 +48,8 @@ const SettingsModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="bg-notion-light dark:bg-[#191919] border border-notion-border dark:border-white/10 rounded-3xl w-full max-w-[500px] shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+    <div className="fixed inset-0 z-200 flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="bg-notion-light dark:bg-notion-dark border border-notion-border dark:border-white/10 rounded-3xl w-full max-w-[500px] shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
         
         {/* Header */}
         <div className="px-6 py-5 border-b border-notion-border dark:border-white/5 flex justify-between items-center bg-notion-bg-light dark:bg-white/[0.01]">

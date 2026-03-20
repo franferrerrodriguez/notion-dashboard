@@ -1,4 +1,3 @@
-import React from 'react';
 import { X, LogOut } from 'lucide-react';
 
 const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText, cancelText }) => {

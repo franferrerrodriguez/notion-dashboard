@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { X, Lock, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
 import { authService } from '../services/api';
 
@@ -31,7 +31,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
         setStatus(null);
         setPassword('');
       }, 2000);
-    } catch (error) {
+    } catch {
       setStatus('error');
     } finally {
       setLoading(false);
@@ -39,11 +39,11 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-200 flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="bg-notion-light dark:bg-[#202020] border border-notion-border dark:border-white/10 rounded-3xl w-full max-w-[400px] shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
         
         {/* Header */}
-        <div className="px-6 py-4 border-b border-notion-border dark:border-white/5 flex justify-between items-center bg-notion-bg-light dark:bg-white/[0.02]">
+        <div className="px-6 py-4 border-b border-notion-border dark:border-white/5 flex justify-between items-center bg-notion-bg-light dark:bg-white/2">
           <div className="flex items-center gap-3">
              <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/20">
                 <Lock className="w-4 h-4 text-blue-500" />

@@ -1,4 +1,3 @@
-import React from 'react';
 import { CHART_COLORS } from '../constants/theme';
 
 const DoughnutChart = ({ stats, total }) => {

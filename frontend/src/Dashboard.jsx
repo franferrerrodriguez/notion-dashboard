@@ -231,7 +231,7 @@ const Dashboard = () => {
       </main>
 
       {selectedProject && (
-        <SideDrawer projectId={selectedProject} onClose={() => setSelectedProject(null)} />
+        <SideDrawer key={selectedProject} projectId={selectedProject} onClose={() => setSelectedProject(null)} />
       )}
     </div>
   );
