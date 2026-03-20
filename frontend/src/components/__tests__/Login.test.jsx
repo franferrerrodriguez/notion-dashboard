@@ -72,4 +72,16 @@ describe('Login Component', () => {
       expect(screen.getByText(/Credenciales inválidas/i)).toBeInTheDocument();
     });
   });
+
+  it('toggles password visibility', () => {
+    renderWithProvider(<Login />);
+    const passwordInput = screen.getByPlaceholderText(/••••••••/i);
+    const toggleButton = screen.getByLabelText(/Show password/i);
+
+    expect(passwordInput.type).toBe('password');
+    fireEvent.click(toggleButton);
+    expect(passwordInput.type).toBe('text');
+    fireEvent.click(screen.getByLabelText(/Hide password/i));
+    expect(passwordInput.type).toBe('password');
+  });
 });

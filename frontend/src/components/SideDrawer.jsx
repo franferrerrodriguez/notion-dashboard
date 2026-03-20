@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Calendar, MessageSquare, Clock, ChevronRight, X } from 'lucide-react';
 import { projectService } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 import ProgressBar from './ProgressBar';
@@ -53,9 +54,7 @@ const SideDrawer = ({ projectId, onClose }) => {
             className="p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors group"
             aria-label={t('close')}
           >
-            <svg className="w-5 h-5 text-notion-text-secondary dark:text-gray-400 group-hover:text-notion-text dark:group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-5 h-5 text-notion-text-secondary dark:text-gray-400 group-hover:text-notion-text dark:group-hover:text-white" />
           </button>
         </div>
 
@@ -166,9 +165,7 @@ const SideDrawer = ({ projectId, onClose }) => {
                       onClick={() => setIsExpanded(!isExpanded)}
                       className="flex items-center gap-2 text-xs text-notion-text-secondary hover:text-notion-text dark:hover:text-gray-300 transition-colors py-1 group"
                    >
-                     <svg className={`w-3 h-3 transition-transform duration-200 ${isExpanded ? 'rotate-180' : 'rotate-90'}`} fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M6 8l4 4 4-4H6z"/>
-                      </svg>
+                      <ChevronRight className={`w-3 h-3 transition-transform duration-200 ${isExpanded ? 'rotate-180' : 'rotate-90'}`} />
                       {isExpanded ? 'Show fewer' : 'More properties'}
                    </button>
                 </div>
@@ -203,9 +200,7 @@ const SideDrawer = ({ projectId, onClose }) => {
                   onClick={() => setIsTasksOpen(!isTasksOpen)}
                   className="flex items-center gap-2 mb-4 group w-full text-left"
                 >
-                  <svg className={`w-4 h-4 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isTasksOpen ? 'rotate-90' : 'rotate-0'}`} fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M6 8l4 4 4-4H6z"/>
-                  </svg>
+                  <ChevronRight className={`w-4 h-4 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isTasksOpen ? 'rotate-90' : 'rotate-0'}`} />
                   <span className="text-xl">✅</span>
                   <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight">{t('tasks')}</h3>
                 </button>
@@ -253,25 +248,59 @@ const SideDrawer = ({ projectId, onClose }) => {
               <section className="mt-6 border-t border-notion-border dark:border-white/10 pt-6">
                 <button 
                   onClick={() => setIsInteractionsOpen(!isInteractionsOpen)}
-                  className="flex items-center gap-2 mb-4 group w-full text-left"
+                  className="flex items-center gap-2 mb-6 group w-full text-left"
                 >
-                  <svg className={`w-4 h-4 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isInteractionsOpen ? 'rotate-90' : 'rotate-0'}`} fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M6 8l4 4 4-4H6z"/>
-                  </svg>
+                  <ChevronRight className={`w-4 h-4 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isInteractionsOpen ? 'rotate-90' : 'rotate-0'}`} />
                   <span className="text-xl">🔄</span>
                   <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight">{t('interactions')}</h3>
                 </button>
                 
                 {isInteractionsOpen && (
-                  <div className="space-y-4 pl-6 border-l border-notion-border dark:border-white/10 animate-in fade-in slide-in-from-top-1 duration-300">
+                  <div className="relative pl-8 space-y-8 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-0.5 before:bg-notion-border dark:before:bg-white/5 animate-in fade-in slide-in-from-left-2 duration-500">
                     {data.page_content?.length > 0 ? (
-                      data.page_content.map((block, i) => (
-                        <div key={i} className="text-[13px] text-notion-text dark:text-white/80 leading-relaxed">
-                          {block.text}
-                        </div>
-                      ))
+                      data.page_content.map((block, i) => {
+                        const isDate = /^\d{4}-\d{2}-\d{2}$/.test(block.text.trim());
+                        
+                        return (
+                          <div key={i} className={`relative group/item ${isDate ? 'mt-4 first:mt-0' : ''}`}>
+                            {/* Dot / Indicator */}
+                            <div className={`absolute -left-[25px] top-1.5 w-2 h-2 rounded-full border-2 transition-all duration-300 z-10 ${
+                              isDate 
+                                ? 'bg-blue-500 border-blue-500/30 scale-125' 
+                                : 'bg-notion-border dark:bg-white/10 border-transparent group-hover/item:border-blue-500/50'
+                            }`} />
+                            
+                            <div className={`transition-all duration-300 ${
+                              isDate 
+                                ? 'flex items-center gap-2 -ml-2 mb-2' 
+                                : 'p-4 rounded-2xl bg-white/50 dark:bg-white/2 border border-notion-border dark:border-white/5 hover:border-blue-500/20 hover:bg-blue-500/2 shadow-sm hover:shadow-md'
+                            }`}>
+                              {isDate ? (
+                                <>
+                                  <Calendar className="w-3.5 h-3.5 text-blue-500" />
+                                  <span className="text-[11px] font-black text-blue-500 uppercase tracking-widest bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
+                                    {block.text.trim()}
+                                  </span>
+                                </>
+                              ) : (
+                                <div className="space-y-2">
+                                  <div className="flex items-start gap-3">
+                                    <MessageSquare className="w-3.5 h-3.5 text-notion-text-secondary/40 shrink-0 mt-0.5" />
+                                    <p className="text-[13px] text-notion-text dark:text-white/90 leading-relaxed font-medium">
+                                      {block.text}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
                     ) : (
-                      <p className="text-xs text-notion-text-secondary dark:text-gray-500 italic py-2">No notes.</p>
+                      <div className="flex flex-col items-center py-10 gap-3 border-2 border-dashed border-notion-border dark:border-white/5 rounded-3xl opacity-40">
+                         <Clock className="w-8 h-8 text-notion-text-secondary" />
+                         <p className="text-xs font-bold uppercase tracking-widest">{t('no_notes') || 'Sin Interacciones'}</p>
+                      </div>
                     )}
                   </div>
                 )}

@@ -101,6 +101,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
                       type="button"
                       onClick={() => setShowToken(!showToken)}
                       className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 text-notion-text-secondary dark:text-gray-500 hover:text-notion-text dark:hover:text-white transition-colors"
+                      aria-label={showToken ? "Hide password" : "Show password"}
                     >
                       {showToken ? (
                         <EyeOff className="w-4 h-4" />

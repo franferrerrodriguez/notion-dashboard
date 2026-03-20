@@ -7,7 +7,8 @@ An administrative interface and client portal for visualizing Notion projects. A
 - **Admin Panel**: Full management of users, roles (Admin/Client), and API settings.
 - **Project Visualization**: Dynamic list of Notion projects including statuses and tags.
 - **Multi-client Access**: "Client" users only see projects linked to their specific Notion tag.
-- **Premium Experience**: Dark mode by default, glassmorphism aesthetics, and icons powered by `lucide-react`.
+- **Premium Experience**: Dark mode by default, glassmorphism aesthetics, icons powered by `lucide-react`, and a **vertical timeline for project interactions**.
+- **Password Visibility**: Integrated "show/hide" toggles in all sensitive fields (Login, User Management, Settings, etc.).
 - **"View As" Mode**: Administrators can preview the dashboard exactly as any client would see it.
 
 ## 🛠️ Tech Stack

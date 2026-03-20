@@ -63,4 +63,22 @@ describe('SettingsModal Component', () => {
       expect(screen.getByText(/Configuración guardada correctamente/i)).toBeInTheDocument();
     });
   });
+
+  it('toggles integration token visibility', async () => {
+    settingsService.get.mockResolvedValueOnce({ notion_integration_token: 'secret_123' });
+    renderWithProvider(<SettingsModal {...defaultProps} />);
+    
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/secret_\.\.\./i)).toBeInTheDocument();
+    });
+
+    const tokenInput = screen.getByPlaceholderText(/secret_\.\.\./i);
+    const toggleButton = screen.getByLabelText(/Show password/i);
+
+    expect(tokenInput.type).toBe('password');
+    fireEvent.click(toggleButton);
+    expect(tokenInput.type).toBe('text');
+    fireEvent.click(screen.getByLabelText(/Hide password/i));
+    expect(tokenInput.type).toBe('password');
+  });
 });

@@ -67,4 +67,16 @@ describe('ChangePasswordModal Component', () => {
       expect(screen.getByText(/Error al actualizar la contraseña/i)).toBeInTheDocument();
     });
   });
+
+  it('toggles password visibility', () => {
+    renderWithProvider(<ChangePasswordModal {...defaultProps} />);
+    const passwordInput = screen.getByPlaceholderText(/••••••••/i);
+    const toggleButton = screen.getByLabelText(/Show password/i);
+
+    expect(passwordInput.type).toBe('password');
+    fireEvent.click(toggleButton);
+    expect(passwordInput.type).toBe('text');
+    fireEvent.click(screen.getByLabelText(/Hide password/i));
+    expect(passwordInput.type).toBe('password');
+  });
 });

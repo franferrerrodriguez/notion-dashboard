@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import UserModal from '../UserModal';
 import { LanguageProvider } from '../../context/LanguageContext';
@@ -51,5 +51,23 @@ describe('UserModal Component', () => {
 
     // Default role is CLIENT, so "Cliente Notion (Tag)" should be visible
     expect(screen.getByText(/Cliente Notion/i)).toBeInTheDocument();
+  });
+
+  it('toggles password visibility', async () => {
+    projectService.getClientOptions.mockResolvedValueOnce([]);
+    renderWithProvider(<UserModal {...defaultProps} />);
+    
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/ejemplo@cliente.com/i)).toBeInTheDocument();
+    });
+
+    const passwordInput = screen.getByPlaceholderText(/••••••••/i);
+    const toggleButton = screen.getByLabelText(/Show password/i);
+
+    expect(passwordInput.type).toBe('password');
+    fireEvent.click(toggleButton);
+    expect(passwordInput.type).toBe('text');
+    fireEvent.click(screen.getByLabelText(/Hide password/i));
+    expect(passwordInput.type).toBe('password');
   });
 });
