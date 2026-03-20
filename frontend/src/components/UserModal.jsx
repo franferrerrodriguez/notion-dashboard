@@ -8,7 +8,8 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
     email: '',
     password: '',
     role_id: ROLE_IDS.CLIENT,
-    external_client_id: ''
+    external_client_id: '',
+    is_active: true
   });
   const [clientOptions, setClientOptions] = useState([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
@@ -38,14 +39,16 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
         email: editingUser.email || '',
         password: '', // Don't show old hash
         role_id: editingUser.role === ROLES.ADMIN ? ROLE_IDS.ADMIN : ROLE_IDS.CLIENT,
-        external_client_id: editingUser.external_client_id || ''
+        external_client_id: editingUser.external_client_id || '',
+        is_active: !!editingUser.is_active
       });
     } else {
       setFormData({
         email: '',
         password: '',
         role_id: ROLE_IDS.CLIENT,
-        external_client_id: ''
+        external_client_id: '',
+        is_active: true
       });
     }
   }, [editingUser, isOpen]);
@@ -195,11 +198,40 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
                         <option key={opt.id} value={opt.id}>{opt.name}</option>
                       ))}
                     </select>
-                    <p className="text-[9px] text-notion-text-secondary font-medium pl-1 italic">
-                      * Este ID filtrará automáticamente sus proyectos de Notion.
-                    </p>
-                 </div>
-               )}
+                     <p className="text-[9px] text-notion-text-secondary font-medium pl-1 italic">
+                       * Este ID filtrará automáticamente sus proyectos de Notion.
+                     </p>
+                  </div>
+                )}
+
+                {/* Status Toggle */}
+                {editingUser && editingUser.email !== 'root@root.com' && (
+                  <div className="pt-4 flex items-center justify-between bg-notion-bg-light dark:bg-white/2 p-4 rounded-2xl border border-notion-border dark:border-white/5">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-1.5 rounded-lg border transition-colors ${formData.is_active ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 'bg-red-500/10 border-red-500/20 text-red-500'}`}>
+                        {formData.is_active ? <Shield className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-notion-text dark:text-white uppercase tracking-widest pl-1">Estado de la cuenta</p>
+                        <p className="text-[9px] font-bold text-notion-text-secondary uppercase tracking-widest pl-1">
+                          {formData.is_active ? 'El usuario puede acceder' : 'Acceso bloqueado'}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ring-2 ring-offset-2 ring-offset-notion-light dark:ring-offset-notion-dark ring-transparent ${formData.is_active ? 'bg-emerald-500' : 'bg-red-500/40'}`}
+                      aria-label="Toggle user status"
+                    >
+                      <span
+                        className={`${
+                          formData.is_active ? 'translate-x-6' : 'translate-x-1'
+                        } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                      />
+                    </button>
+                  </div>
+                )}
             </div>
 
             <div className="pt-4 flex gap-3">

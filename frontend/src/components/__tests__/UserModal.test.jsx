@@ -70,4 +70,27 @@ describe('UserModal Component', () => {
     fireEvent.click(screen.getByLabelText(/Hide password/i));
     expect(passwordInput.type).toBe('password');
   });
+
+  it('toggles is_active status when editing', async () => {
+    projectService.getClientOptions.mockResolvedValueOnce([]);
+    const editingUser = { 
+      id: 1, 
+      email: 'test@test.com', 
+      role: 'Client', 
+      is_active: 1,
+      external_client_id: 'client_1'
+    };
+    
+    renderWithProvider(<UserModal {...defaultProps} editingUser={editingUser} />);
+    
+    await waitFor(() => {
+      expect(screen.getByText(/Estado de la cuenta/i)).toBeInTheDocument();
+    });
+
+    const toggleButton = screen.getByRole('button', { name: /Toggle user status/i });
+    expect(screen.getByText(/El usuario puede acceder/i)).toBeInTheDocument();
+    
+    fireEvent.click(toggleButton);
+    expect(screen.getByText(/Acceso bloqueado/i)).toBeInTheDocument();
+  });
 });
