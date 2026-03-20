@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Settings, Database, Key, Save, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, Settings, Database, Key, Save, RefreshCw, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { settingsService } from '../services/api';
 
 const SettingsModal = ({ isOpen, onClose }) => {
@@ -10,6 +10,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState(null);
+  const [showToken, setShowToken] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -87,14 +88,27 @@ const SettingsModal = ({ isOpen, onClose }) => {
                   <label className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest pl-1 flex items-center gap-2">
                     <Key className="w-3 h-3" /> Token de Integración Notion
                   </label>
-                  <input 
-                    type="password"
-                    value={settings.notion_integration_token || ''}
-                    onChange={(e) => setSettings({...settings, notion_integration_token: e.target.value})}
-                    className="w-full bg-white dark:bg-notion-dark border border-notion-border dark:border-white/5 rounded-2xl px-5 py-3.5 text-sm text-notion-text dark:text-white placeholder:text-notion-text-secondary/20 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
-                    placeholder="secret_..."
-                    autoComplete="new-password"
-                  />
+                  <div className="relative">
+                    <input 
+                      type={showToken ? 'text' : 'password'}
+                      value={settings.notion_integration_token || ''}
+                      onChange={(e) => setSettings({...settings, notion_integration_token: e.target.value})}
+                      className="w-full bg-white dark:bg-notion-dark border border-notion-border dark:border-white/5 rounded-2xl px-5 py-3.5 text-sm text-notion-text dark:text-white placeholder:text-notion-text-secondary/20 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono pr-12"
+                      placeholder="secret_..."
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowToken(!showToken)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 text-notion-text-secondary dark:text-gray-500 hover:text-notion-text dark:hover:text-white transition-colors"
+                    >
+                      {showToken ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Database ID */}

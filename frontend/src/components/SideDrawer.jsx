@@ -214,7 +214,7 @@ const SideDrawer = ({ projectId, onClose }) => {
                   <div className="space-y-1 pl-6 border-l border-notion-border dark:border-white/10 animate-in fade-in slide-in-from-top-1 duration-300">
                      {data.related_tasks?.length > 0 ? (
                        data.related_tasks.map(task => (
-                          <div key={task.id} className="flex items-center justify-between py-2 group hover:bg-black/5 dark:hover:bg-white/[0.03] px-2 -mx-2 rounded transition-colors cursor-default">
+                          <div key={task.id} className="flex items-center justify-between py-2 group hover:bg-black/5 dark:hover:bg-white/3 px-2 -mx-2 rounded transition-colors cursor-default">
                               <div className="flex items-center gap-3">
                                 <span className="text-lg opacity-40">📓</span>
                                 <span className="text-[13px] text-notion-text dark:text-white/90 border-b border-notion-border dark:border-white/10 hover:border-notion-text dark:hover:border-white transition-colors">

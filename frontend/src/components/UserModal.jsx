@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Shield, Mail, Lock, Link as LinkIcon, RefreshCw } from 'lucide-react';
+import { X, Shield, Mail, Lock, Link as LinkIcon, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import { ROLE_IDS, ROLES } from '../constants/auth';
 import { projectService } from '../services/api';
 
@@ -12,6 +12,7 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
   });
   const [clientOptions, setClientOptions] = useState([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -134,15 +135,28 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
                     <RefreshCw className="w-2.5 h-2.5" /> Generar
                   </button>
                 </div>
-                <input 
-                  type="text" // Change to text so user can see what was generated
-                  required={!editingUser}
-                  value={formData.password}
-                  onChange={(e) => setFormData({...formData, password: e.target.value})}
-                  className="w-full bg-white dark:bg-notion-dark border border-notion-border dark:border-white/5 rounded-xl px-4 py-3 text-sm text-notion-text dark:text-white placeholder:text-notion-text-secondary/30 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/30 transition-all font-medium font-mono"
-                  placeholder="••••••••"
-                  autoComplete="new-password"
-                />
+                <div className="relative">
+                  <input 
+                    type={showPassword ? 'text' : 'password'}
+                    required={!editingUser}
+                    value={formData.password}
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    className="w-full bg-white dark:bg-notion-dark border border-notion-border dark:border-white/5 rounded-xl px-4 py-3 text-sm text-notion-text dark:text-white placeholder:text-notion-text-secondary/30 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/30 transition-all font-medium font-mono pr-12"
+                    placeholder="••••••••"
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-notion-text-secondary dark:text-gray-500 hover:text-notion-text dark:hover:text-white transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               {/* Role selection */}

@@ -174,10 +174,10 @@ const Dashboard = () => {
               <ChevronRight className="w-4 h-4 text-notion-text-secondary/30 dark:text-white/10" />
             </div>
 
-            <div className="overflow-hidden rounded-2xl bg-white dark:bg-white/[0.02] border border-notion-border dark:border-white/5 backdrop-blur-md shadow-sm">
+            <div className="overflow-hidden rounded-2xl bg-white dark:bg-white/2 border border-notion-border dark:border-white/5 backdrop-blur-md shadow-sm">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-notion-border dark:border-white/5 bg-notion-bg-light dark:bg-white/[0.03]">
+                  <tr className="border-b border-notion-border dark:border-white/5 bg-notion-bg-light dark:bg-white/3">
                     <th className="py-5 px-8 text-[11px] font-black text-notion-text-secondary dark:text-white/40 uppercase tracking-widest flex items-center gap-2">
                       <FileText className="w-3 h-3" />
                       {t('col_project')}
@@ -197,7 +197,7 @@ const Dashboard = () => {
                   {items.map((p) => (
                     <tr
                       key={p.id}
-                      className="hover:bg-black/[0.02] dark:hover:bg-white/[0.05] cursor-pointer transition-all group"
+                      className="hover:bg-black/2 dark:hover:bg-white/5 cursor-pointer transition-all group"
                       onClick={() => setSelectedProject(p.id)}
                     >
                       <td className="py-6 px-8">
@@ -240,7 +240,7 @@ const Dashboard = () => {
 const LegendItem = ({ color, label, count, icon, t }) => (
   <div className="flex items-center gap-4 group cursor-default">
     <div
-      className="w-8 h-8 rounded-xl flex items-center justify-center transition-all bg-black/[0.02] dark:bg-white/[0.03] border border-notion-border dark:border-white/5 group-hover:border-notion-text-secondary/30 dark:group-hover:border-white/20 group-hover:bg-black/5 dark:group-hover:bg-white/5"
+      className="w-8 h-8 rounded-xl flex items-center justify-center transition-all bg-black/2 dark:bg-white/3 border border-notion-border dark:border-white/5 group-hover:border-notion-text-secondary/30 dark:group-hover:border-white/20 group-hover:bg-black/5 dark:group-hover:bg-white/5"
       style={{ color }}
     >
       {icon}
