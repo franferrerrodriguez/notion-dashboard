@@ -1,18 +1,34 @@
-import React, { useState, useMemo } from 'react';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
+import React, { useState, useMemo, useEffect } from 'react';
+import { projectService } from '../services/api';
+import {
+  Calendar as CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+  PieChart,
+  Castle,
+  Target,
+  Receipt,
+  Clock,
+  MessageSquare,
+  Plus,
+  FileText,
+  User,
+  Mail,
+  Phone,
+  ExternalLink,
   ChevronDown,
-  ChevronUp,
-  Castle
+  ChevronUp
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 
 const Calendar = ({ tasks = [], projects = [], onSelectTask }) => {
-  const { t, language } = useLanguage();
-  const locale = language === 'es' ? 'es-ES' : 'en-US';
+  const { t, lang } = useLanguage();
+  const { theme } = useTheme();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const locale = lang === 'es' ? 'es-ES' : 'en-US';
 
   const getProjectName = (ids) => {
     if (!ids || ids.length === 0) return t('no_project') || '---';
@@ -151,8 +167,11 @@ const Calendar = ({ tasks = [], projects = [], onSelectTask }) => {
                         <div 
                           key={tidx} 
                           onClick={() => onSelectTask && onSelectTask(task.id)}
-                          className="bg-gray-50 dark:bg-[#242424] rounded-3xl p-5 border border-notion-border dark:border-white/5 shadow-sm hover:shadow-2xl hover:-translate-y-1 active:scale-95 transition-all duration-300 cursor-pointer group/card border-l-4 border-l-blue-500"
+                          className="bg-white dark:bg-[#242424] rounded-3xl p-5 border border-notion-border dark:border-white/5 shadow-sm hover:shadow-2xl hover:-translate-y-1 active:scale-95 transition-all duration-300 cursor-pointer group/card border-l-4 border-l-blue-500 relative"
                         >
+                          {task.has_unread_interactions && (
+                            <div className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-blue-500 rounded-full border-2 border-white dark:border-[#1a1a1a] animate-pulse shadow-[0_0_12px_rgba(59,130,246,0.8)] z-20 shrink-0"></div>
+                          )}
                           <div className="flex justify-between items-start mb-4">
                              <h3 className="text-sm font-bold text-notion-text dark:text-gray-100 leading-tight group-hover/card:text-blue-500 transition-colors">
                                 {task.identification?.name}

@@ -2,6 +2,7 @@
 -- WARNING: This script will RESET all data. It drops existing tables and recreates them.
 
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS interaction_reads;
 DROP TABLE IF EXISTS client_links;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS roles;
@@ -40,6 +41,15 @@ CREATE TABLE settings (
     `value` TEXT NOT NULL,
     description TEXT,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Interaction Reads table (Tracks seen interactions per user)
+CREATE TABLE IF NOT EXISTS interaction_reads (
+    user_id INT NOT NULL,
+    item_id VARCHAR(100) NOT NULL,
+    last_read_at DATETIME NOT NULL,
+    PRIMARY KEY (user_id, item_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Initial data seed

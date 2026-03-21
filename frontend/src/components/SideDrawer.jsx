@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Calendar as CalendarIcon, MessageSquare, Clock, ChevronRight, X, Phone, Mail, User, FileText, Castle, Target, Receipt, CalendarDays } from 'lucide-react';
 import { projectService } from '../services/api';
@@ -30,7 +30,13 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [] }) => {
     enabled: !!itemId,
   });
 
-  const [isTasksOpen, setIsTasksOpen] = useState(true); // Default tasks open
+  useEffect(() => {
+    if (data?.has_unread_interactions && itemId) {
+      projectService.markRead(itemId, data.last_edited_time).catch(console.error);
+    }
+  }, [data, itemId]);
+
+  const [isTasksOpen, setIsTasksOpen] = useState(false); // Default tasks closed as requested
   const [isInteractionsOpen, setIsInteractionsOpen] = useState(false);
   const [isDeliveriesOpen, setIsDeliveriesOpen] = useState(false);
   const [isContactsOpen, setIsContactsOpen] = useState(false);

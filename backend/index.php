@@ -328,6 +328,18 @@ if ($action === 'detail' && isset($_GET['id'])) {
     $projectController->detail($_GET['id']);
     exit;
 }
+if ($action === 'mark_read' && isset($_GET['id']) && $method === 'POST') {
+    $projectController->markRead($_GET['id']);
+    exit;
+}
+if ($action === 'mark_all_read' && $method === 'POST') {
+    $projectController->markAllRead();
+    exit;
+}
+if ($action === 'unread_status') {
+    $projectController->unreadStatus();
+    exit;
+}
 if ($action === 'client_options') {
     if (!isAdmin()) {
         http_response_code(403);

@@ -35,7 +35,9 @@ function fetchNotionProjects($databaseId, $clientId, $type = 'projects') {
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         "Authorization: Bearer {$apiKey}",
         "Notion-Version: 2022-06-28",
-        "Content-Type: application/json"
+        "Content-Type: application/json",
+        "Cache-Control: no-cache",
+        "Pragma: no-cache"
     ]);
 
     $response = curl_exec($ch);
@@ -63,7 +65,8 @@ function fetchNotionProjects($databaseId, $clientId, $type = 'projects') {
             }
 
             $projects[] = array_merge([
-                'id' => $page['id']
+                'id' => $page['id'],
+                'last_edited_time' => $page['last_edited_time'] ?? null
             ], $transformed);
         }
     }
@@ -648,6 +651,7 @@ function fetchNotionPageDetail($pageId) {
     }
     return [
         'id' => $pageId,
+        'last_edited_time' => $data['last_edited_time'] ?? null,
         'project' => transformProject($properties),
         'page_content' => $pageContent,
         'interactions_content' => $interactionsContent,
@@ -674,7 +678,9 @@ function fetchSimplePageDetail($pageId) {
         "Authorization: Bearer {$apiKey}",
         "Notion-Version: 2022-06-28",
         "Content-Type: application/json",
-        "User-Agent: PHP-Dashboard/1.0"
+        "User-Agent: PHP-Dashboard/1.0",
+        "Cache-Control: no-cache",
+        "Pragma: no-cache"
     ]);
 
     $response = curl_exec($ch);

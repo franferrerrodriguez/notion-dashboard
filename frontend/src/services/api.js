@@ -29,6 +29,28 @@ export const projectService = {
     if (!response.ok) throw new Error('Failed to fetch client options');
     return await response.json();
   },
+  async markRead(id, lastEditedTime) {
+    const response = await fetch(`${BASE_URL}/index.php?action=mark_read&id=${id}${lastEditedTime ? `&time=${encodeURIComponent(lastEditedTime)}` : ''}`, {
+      ...fetchConfig,
+      method: 'POST',
+    });
+    if (!response.ok) throw new Error(`Failed to mark as read ${id}`);
+    return await response.json();
+  },
+  async markAllRead(maxTime) {
+    const response = await fetch(`${BASE_URL}/index.php?action=mark_all_read${maxTime ? `?time=${encodeURIComponent(maxTime)}` : ''}`, {
+      ...fetchConfig,
+      method: 'POST',
+    });
+    if (!response.ok) throw new Error('Failed to mark all as read');
+    return await response.json();
+  },
+  async getUnreadStatus(clientId) {
+    const url = `${BASE_URL}/index.php?action=unread_status${clientId ? `&client_id=${encodeURIComponent(clientId)}` : ''}`;
+    const response = await fetch(url, fetchConfig);
+    if (!response.ok) throw new Error('Failed to fetch unread status');
+    return await response.json();
+  },
 };
 
 export const authService = {

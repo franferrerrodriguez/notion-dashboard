@@ -164,8 +164,14 @@ export const translations = {
     select_lang: 'Idioma',
     spanish: 'Español',
     english: 'Inglés',
+    notifications: 'Novedades',
+    mark_all_read_btn: 'Marcar todo como leído',
+    refresh: 'Refrescar',
   },
   en: {
+    // ... (skipping some for brevity, but I must provide full context or use multi_replace)
+    // Wait, I should use multi_replace to be safe and efficient.
+
     // General
     loading: 'Loading...',
     notion_query: 'Querying Notion',
@@ -330,5 +336,8 @@ export const translations = {
     select_lang: 'Language',
     spanish: 'Spanish',
     english: 'English',
+    notifications: 'Updates',
+    mark_all_read_btn: 'Mark all as read',
+    refresh: 'Refresh',
   },
 };
