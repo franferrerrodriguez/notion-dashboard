@@ -34,10 +34,9 @@ const DoughnutChart = ({ data, total }) => {
             stroke={segment.color} strokeWidth={strokeWidth}
             strokeDasharray={`${segmentLength} ${circumference}`}
             strokeDashoffset={offset}
-            strokeLinecap="round"
             style={{ 
-              transition: 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
-              transitionDelay: `${index * 0.1}s`
+              transition: 'all 1s cubic-bezier(0.4, 0, 0.2, 1)',
+              transitionDelay: `${index * 0.05}s`
             }}
           />
         );

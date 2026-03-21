@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
-const Calendar = ({ tasks = [], projects = [] }) => {
+const Calendar = ({ tasks = [], projects = [], onSelectTask }) => {
   const { t, language } = useLanguage();
   const locale = language === 'es' ? 'es-ES' : 'en-US';
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -148,7 +148,11 @@ const Calendar = ({ tasks = [], projects = [] }) => {
 
                   <div className="flex-1 flex flex-col gap-5 px-4 pb-8">
                      {d.tasks.map((task, tidx) => (
-                        <div key={tidx} className="bg-gray-50 dark:bg-[#242424] rounded-3xl p-5 border border-notion-border dark:border-white/5 shadow-sm hover:shadow-2xl hover:-translate-y-1 active:scale-95 transition-all duration-300 cursor-pointer group/card border-l-4 border-l-blue-500">
+                        <div 
+                          key={tidx} 
+                          onClick={() => onSelectTask && onSelectTask(task.id)}
+                          className="bg-gray-50 dark:bg-[#242424] rounded-3xl p-5 border border-notion-border dark:border-white/5 shadow-sm hover:shadow-2xl hover:-translate-y-1 active:scale-95 transition-all duration-300 cursor-pointer group/card border-l-4 border-l-blue-500"
+                        >
                           <div className="flex justify-between items-start mb-4">
                              <h3 className="text-sm font-bold text-notion-text dark:text-gray-100 leading-tight group-hover/card:text-blue-500 transition-colors">
                                 {task.identification?.name}

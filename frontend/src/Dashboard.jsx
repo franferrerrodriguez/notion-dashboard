@@ -108,6 +108,7 @@ const Dashboard = () => {
   const { t } = useLanguage();
   const { clientId } = useParams();
   const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedTask, setSelectedTask] = useState(null);
   const [activeTab, setActiveTab] = useState(TABS.PROJECTS);
 
   // TanStack Query for projects - Parallel prefetching for all tabs
@@ -276,7 +277,7 @@ const Dashboard = () => {
         </div>
 
         {/* Global Tasks Calendar */}
-        <Calendar tasks={tasks} projects={projects} />
+        <Calendar tasks={tasks} projects={projects} onSelectTask={setSelectedTask} />
 
         <div className="flex items-center gap-10 mb-10 border-b border-notion-border dark:border-white/5">
           <TabButton 
@@ -572,7 +573,23 @@ const Dashboard = () => {
       </main>
 
       {selectedProject && (
-        <SideDrawer key={selectedProject} projectId={selectedProject} onClose={() => setSelectedProject(null)} />
+        <SideDrawer 
+          key={`project-${selectedProject}`}
+          itemId={selectedProject} 
+          type={activeTab === TABS.PROJECTS ? 'project' : (activeTab === TABS.OFFERS ? 'offer' : 'invoice')}
+          onClose={() => setSelectedProject(null)} 
+          projects={projects}
+        />
+      )}
+
+      {selectedTask && (
+        <SideDrawer 
+          key={`task-${selectedTask}`}
+          itemId={selectedTask} 
+          type="task" 
+          onClose={() => setSelectedTask(null)} 
+          projects={projects}
+        />
       )}
     </div>
   );
