@@ -2,7 +2,7 @@ export const translations = {
   es: {
     // General
     loading: 'Cargando...',
-    notion_query: 'Consultando Notion',
+    notion_query: 'Consultando datos',
     error_loading: 'Error al cargar datos',
     close: 'Cerrar',
     admin: 'Administración',
@@ -37,6 +37,7 @@ export const translations = {
     tab_projects: 'Proyectos',
     tab_offers: 'Ofertas',
     tab_invoices: 'Facturas',
+    no_project: 'Sin proyecto vinculante',
 
     // Admin Panel
     user_list: 'Listado de Acceso',
@@ -77,8 +78,23 @@ export const translations = {
     settings_title: 'Configuración Global',
     settings_subtitle: 'Notion API & Dashboard',
     settings_loading: 'Obteniendo ajustes',
+    settings_loading_msg: 'Cargando Configuración...',
     settings_save_success: 'Configuración guardada correctamente',
     settings_save_error: 'Error al guardar la configuración',
+    settings_token_label: 'Token de Integración Notion',
+    settings_token_placeholder: 'secret_...',
+    settings_db_id_placeholder: 'ID Base de Datos...',
+    settings_projects_db_id: 'ID Base de Datos Proyectos',
+    settings_offers_db_id: 'ID Base de Datos Ofertas',
+    settings_invoices_db_id: 'ID Base de Datos Facturas',
+    settings_tasks_db_id: 'ID Base de Datos Tareas',
+
+    // Calendar
+    calendar_title: 'Calendario de Tareas',
+    calendar_today: 'Hoy',
+    calendar_next: 'Siguiente',
+    calendar_prev: 'Anterior',
+    calendar_no_tasks: 'No hay tareas para este día',
 
     // User Modal
     user_edit: 'Editar Usuario',
@@ -187,6 +203,7 @@ export const translations = {
     tab_projects: 'Projects',
     tab_offers: 'Offers',
     tab_invoices: 'Invoices',
+    no_project: 'No linked project',
 
     // Admin Panel
     user_list: 'Access List',
@@ -227,8 +244,23 @@ export const translations = {
     settings_title: 'Global Settings',
     settings_subtitle: 'Notion API & Dashboard',
     settings_loading: 'Fetching settings',
+    settings_loading_msg: 'Loading Configuration...',
     settings_save_success: 'Settings saved successfully',
     settings_save_error: 'Error saving settings',
+    settings_token_label: 'Notion Integration Token',
+    settings_token_placeholder: 'secret_...',
+    settings_db_id_placeholder: 'Database ID...',
+    settings_projects_db_id: 'Projects Database ID',
+    settings_offers_db_id: 'Offers Database ID',
+    settings_invoices_db_id: 'Invoices Database ID',
+    settings_tasks_db_id: 'Tasks Database ID',
+
+    // Calendar
+    calendar_title: 'Tasks Calendar',
+    calendar_today: 'Today',
+    calendar_next: 'Next',
+    calendar_prev: 'Prev',
+    calendar_no_tasks: 'No tasks for this day',
 
     // User Modal
     user_edit: 'Edit User',

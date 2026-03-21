@@ -20,9 +20,9 @@ function fetchNotionProjects($databaseId, $clientId, $type = 'projects') {
         ]
     ];
 
-    // For Invoices, we remove the Notion filter to avoid the 400 Rollup error.
-    // We will filter manually in PHP later in the loop.
-    if ($type === 'invoices') {
+    // For Invoices and Tasks, we remove the Notion filter to avoid the 400 Rollup error 
+    // or because they might not have a direct 'Cliente' property.
+    if ($type === 'invoices' || $type === 'tasks') {
         $filter = null;
     }
 
@@ -52,11 +52,13 @@ function fetchNotionProjects($databaseId, $clientId, $type = 'projects') {
     if (isset($data['results'])) {
         foreach ($data['results'] as $page) {
             $props = $page['properties'];
-            $transformed = transformProject($props);
+            $transformed = ($type === 'tasks') ? transformTask($props) : transformProject($props);
             
-            // Manual filtering for Invoices (as workaround for Notion Rollup 400 error)
-            if ($type === 'invoices' && !empty($clientId)) {
+            // Manual filtering for Invoices and Tasks (client data isolation)
+            if (($type === 'invoices' || $type === 'tasks') && !empty($clientId)) {
                 $clientName = $transformed['client']['details']['name'] ?? '';
+                // For tasks, we might need a more robust check if client name is not direct
+                // but usually they have a rollup from Project.
                 if (stripos($clientName, $clientId) === false) continue;
             }
 
@@ -76,6 +78,70 @@ function fetchNotionProjects($databaseId, $clientId, $type = 'projects') {
  * Transforms a raw Notion project into a professional, domain-driven domain model.
  * This decouples the application from Notion's internal property names and structures.
  */
+function transformTask($props) {
+    $get = function($names) use ($props) {
+        if (!is_array($names)) $names = [$names];
+        foreach ($names as $name) {
+            $cleanName = trim(mb_strtolower($name));
+            if (isset($props[$name])) return $props[$name];
+            foreach ($props as $key => $val) {
+                if (trim(mb_strtolower($key)) === $cleanName) return $val;
+            }
+        }
+        return null;
+    };
+
+    $name = 'Tarea sin nombre';
+    foreach ($props as $p) {
+        if (($p['type'] ?? '') === 'title') {
+            $name = extractText($p) ?: 'Tarea sin nombre';
+            break;
+        }
+    }
+
+    // Extract Date and Time
+    $dateProp = $get(['Fecha', 'Date', 'Deadline', 'Fecha límite']);
+    $dateData = null;
+    if ($dateProp && $dateProp['type'] === 'date') {
+        $start = $dateProp['date']['start'];
+        $hasTime = strpos($start, 'T') !== false;
+        $time = null;
+        if ($hasTime) {
+            $parts = explode('T', $start);
+            $time = substr($parts[1], 0, 5);
+            $start = $parts[0];
+        }
+        $dateData = ['date' => $start, 'time' => $time];
+    }
+
+    // Extract Status & Priority
+    $statusObj = extractStatus($get(['Estado', 'Status', 'Situación'])) ?: ['name' => 'Sin empezar', 'color' => 'default'];
+    $priority = extractText($get(['Prioridad', 'Priority', 'Urgencia'])) ?: 'Media';
+
+    // Extract Client (for filtering) - Usually a rollup from Project
+    $client = extractText($get(['Cliente', 'Client']));
+
+    // Extract Related Project IDs
+    $projectRelation = extractRelationIds($get(['Proyecto', 'Project', '↗ Proyecto']));
+
+    return [
+        'identification' => [
+            'name' => $name,
+            'project_relation' => $projectRelation
+        ],
+        'status' => [
+            'main' => $statusObj,
+            'priority' => ['name' => $priority, 'color' => null],
+        ],
+        'date' => $dateData['date'] ?? null,
+        'time' => $dateData['time'] ?? null,
+        'client' => [
+            'details' => ['name' => $client]
+        ],
+        'metadata' => extractRemainingProperties($props)
+    ];
+}
+
 function transformProject($props) {
     // Helper to find property by name (case-insensitive and trimmed)
     $get = function($names) use ($props) {

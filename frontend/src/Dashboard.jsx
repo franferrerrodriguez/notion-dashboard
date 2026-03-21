@@ -19,6 +19,7 @@ import {
   Castle,
   Target,
   Receipt,
+  CalendarDays,
 } from 'lucide-react';
 
 // Components
@@ -27,6 +28,7 @@ import SideDrawer from './components/SideDrawer';
 import DoughnutChart from './components/DoughnutChart';
 import UserDropdown from './components/UserDropdown';
 import ThemeToggle from './components/ThemeToggle';
+import Calendar from './components/Calendar';
 
 const TABS = {
   PROJECTS: 'PROJECTS',
@@ -129,7 +131,13 @@ const Dashboard = () => {
     refetchInterval: 1000 * 60 * 5,
   });
 
-  const isLoading = loadingProjects || loadingOffers || loadingInvoices;
+  const { data: tasks = [], isLoading: loadingTasks } = useQuery({
+    queryKey: ['notion_data', effectiveClientId, 'tasks'],
+    queryFn: () => projectService.getAll(effectiveClientId, 'tasks'),
+    refetchInterval: 1000 * 60 * 5,
+  });
+
+  const isLoading = loadingProjects || loadingOffers || loadingInvoices || loadingTasks;
 
   const resolveRelationNames = (ids, type) => {
     if (!ids || ids.length === 0) return '-';
@@ -200,12 +208,11 @@ const Dashboard = () => {
     );
 
   // Select data based on active tab
-  const activeData = activeTab === TABS.PROJECTS ? projects : (activeTab === TABS.OFFERS ? offers : invoices);
+  const activeData = activeTab === TABS.PROJECTS ? projects : 
+                     (activeTab === TABS.OFFERS ? offers : invoices);
 
-  // Sort alphabetically (descending) so PR26XX comes before PR25XX
+  // Sort alphabetically (descending)
   const sortedData = [...activeData].sort((a, b) => (b.identification?.name || '').localeCompare(a.identification?.name || ''));
-
-
 
   // Group by Phase (Projects) or Status (Offers/Invoices)
   const grouped = sortedData.reduce((acc, p) => {
@@ -268,6 +275,9 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Global Tasks Calendar */}
+        <Calendar tasks={tasks} projects={projects} />
+
         <div className="flex items-center gap-10 mb-10 border-b border-notion-border dark:border-white/5">
           <TabButton 
             active={activeTab === TABS.PROJECTS} 
@@ -290,17 +300,17 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <div className="bg-white dark:bg-linear-to-br dark:from-[#202020] dark:to-[#1a1a1a] rounded-3xl p-10 border border-notion-border dark:border-white/5 shadow-2xl flex items-center justify-around relative overflow-hidden group transition-colors">
+          <div className="bg-white dark:bg-linear-to-br dark:from-[#202020] dark:to-[#1a1a1a] rounded-3xl p-10 border border-notion-border dark:border-white/10 shadow-2xl flex items-center justify-around relative overflow-hidden group transition-colors">
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-32 -mt-32 transition-transform duration-1000 group-hover:scale-150"></div>
 
             <div className="relative w-40 h-40">
-              <DoughnutChart data={phaseStats} total={projects.length} />
+              <DoughnutChart data={phaseStats} total={activeData.length} />
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-4xl font-black tracking-tighter text-notion-text dark:text-white/90">
-                  {projects.length}
+                  {activeData.length}
                 </span>
                 <span className="text-[9px] text-notion-text-secondary uppercase tracking-[0.2em] font-bold flex items-center gap-1.5">
-                  <FolderRoot className="w-2 h-2" />
+                  <BarChart3 className="w-2 h-2" />
                   {t('total')}
                 </span>
               </div>
