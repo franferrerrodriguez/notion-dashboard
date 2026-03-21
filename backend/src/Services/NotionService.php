@@ -77,14 +77,15 @@ function fetchNotionProjects($databaseId, $clientId, $type = 'projects') {
  * This decouples the application from Notion's internal property names and structures.
  */
 function transformProject($props) {
-    // Helper to find property by name (case-insensitive) or variants
+    // Helper to find property by name (case-insensitive and trimmed)
     $get = function($names) use ($props) {
         if (!is_array($names)) $names = [$names];
         foreach ($names as $name) {
+            $cleanName = trim(mb_strtolower($name));
             if (isset($props[$name])) return $props[$name];
-            // Case-insensitive search
+            // Case-insensitive & Trimmed search
             foreach ($props as $key => $val) {
-                if (mb_strtolower($key) === mb_strtolower($name)) return $val;
+                if (trim(mb_strtolower($key)) === $cleanName) return $val;
             }
         }
         return null;
@@ -100,7 +101,22 @@ function transformProject($props) {
     }
 
     // 2. Map Status and Phase (Grouping)
-    $mainStatus = extractStatus($get(['Estado', 'Status'])) ?: ['name' => 'Sin estado', 'color' => 'default'];
+    $mainStatus = extractStatus($get(['Estado', 'Status', 'Estado factura', 'Situación'])) ?: null;
+
+    // Fallback: If no status found by name, try finding the FIRST status or select property type
+    if (!$mainStatus) {
+        foreach ($props as $p) {
+            $type = $p['type'] ?? '';
+            if ($type === 'status' || $type === 'select') {
+                $mainStatus = extractStatus($p);
+                if ($mainStatus) break;
+            }
+        }
+    }
+
+    if (!$mainStatus) {
+        $mainStatus = ['name' => 'Sin estado', 'color' => 'default'];
+    }
     $phase = extractStatus($get(['Fase', 'Phase']));
     
     // Fallback: If no Phase, use Status for grouping (Unified Design)
@@ -111,6 +127,8 @@ function transformProject($props) {
     return [
         'identification' => [
             'name' => $name,
+            'project_relation' => extractRelationIds($get(['Proyecto', 'Project'])),
+            'offer_relation' => extractRelationIds($get(['Vínculo oferta', 'Oferta vinculada', '↗ Oferta', 'Vínculo of...'])),
         ],
         'status' => [
             'main' => $mainStatus,
@@ -308,6 +326,17 @@ function extractFinancial($prop) {
         }
     }
     return $prop['formula']['number'] ?? $prop['number'] ?? $prop['rollup']['number'] ?? 0;
+}
+
+function extractRelationIds($prop) {
+    if (!$prop || $prop['type'] !== 'relation') return [];
+    $ids = [];
+    foreach ($prop['relation'] as $r) {
+        if (isset($r['id'])) {
+            $ids[] = $r['id'];
+        }
+    }
+    return $ids;
 }
 
 function extractFile($prop) {

@@ -131,14 +131,12 @@ const Dashboard = () => {
 
   const isLoading = loadingProjects || loadingOffers || loadingInvoices;
 
-  const resolveRelationNames = (ids, dataSource = []) => {
-    if (!ids) return null;
-    const items = Array.isArray(ids) ? ids : [ids];
-    if (items.length === 0) return null;
-    
-    return items.map(id => {
-      const match = dataSource.find(d => d.id === id);
-      return match?.identification?.name || id.substring(0, 6);
+  const resolveRelationNames = (ids, type) => {
+    if (!ids || ids.length === 0) return '-';
+    const source = type === 'project' ? projects : offers;
+    return ids.map(id => {
+      const found = source.find(item => item.id === id);
+      return found?.identification?.name || '...';
     }).join(', ');
   };
 
@@ -206,6 +204,8 @@ const Dashboard = () => {
 
   // Sort alphabetically (descending) so PR26XX comes before PR25XX
   const sortedData = [...activeData].sort((a, b) => (b.identification?.name || '').localeCompare(a.identification?.name || ''));
+
+
 
   // Group by Phase (Projects) or Status (Offers/Invoices)
   const grouped = sortedData.reduce((acc, p) => {
@@ -340,11 +340,12 @@ const Dashboard = () => {
             }
             if (activeTab === TABS.INVOICES) {
               return [
-                { key: 'code', label: t('col_code'), icon: <FileText className="w-3 h-3" />, align: 'left', width: 'w-[220px]' },
-                { key: 'description', label: t('col_description'), align: 'left', width: 'w-[300px]' },
-                { key: 'date', label: t('col_date'), align: 'center', width: 'w-[110px]' },
+                { key: 'code', label: t('col_code'), icon: <FileText className="w-3 h-3" />, align: 'left', width: 'w-[150px]' },
+                { key: 'offer_link', label: t('col_offer_link'), align: 'left', width: 'w-[180px]' },
+                { key: 'project_link', label: t('col_project_link'), align: 'left', width: 'w-[250px]' },
+                { key: 'date', label: t('col_date'), align: 'center', width: 'w-[120px]' },
+                { key: 'total', label: t('col_amount_invoice'), align: 'right', width: 'w-[130px]' },
                 { key: 'status', label: t('col_status'), align: 'center', width: 'w-[150px]' },
-                { key: 'total', label: t('col_total'), align: 'right', width: 'w-[130px]' },
                 { key: 'quarter', label: t('col_quarter'), align: 'center', width: 'w-[120px]' },
               ];
             }
@@ -437,6 +438,22 @@ const Dashboard = () => {
                             return (
                               <td key={col.key} className="py-6 px-4 text-center">
                                 <StatusBadge name={s.name || '-'} color={PHASE_COLORS[s.name] || '#64748b'} />
+                              </td>
+                            );
+                          }
+
+                          if (col.key === 'offer_link' || col.key === 'project_link') {
+                            const type = col.key === 'offer_link' ? 'offer' : 'project';
+                            const ids = type === 'offer' ? p.identification?.offer_relation : p.identification?.project_relation;
+                            const name = resolveRelationNames(ids, type);
+                            return (
+                              <td key={col.key} className="py-6 px-4 truncate max-w-[220px]" title={name}>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm grayscale brightness-150">📄</span>
+                                  <span className="text-sm text-notion-text dark:text-white/70 truncate uppercase tracking-tight font-medium">
+                                    {name}
+                                  </span>
+                                </div>
                               </td>
                             );
                           }

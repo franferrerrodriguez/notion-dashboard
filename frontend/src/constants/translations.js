@@ -69,6 +69,9 @@ export const translations = {
     col_phase: 'Fase',
     col_quarter: 'Trimestre',
     col_linked_invoices: 'Facturas vinculadas',
+    col_offer_link: 'Vínculo oferta',
+    col_project_link: 'Proyecto',
+    col_amount_invoice: 'Importe factura',
 
     // Settings Modal
     settings_title: 'Configuración Global',
@@ -216,6 +219,9 @@ export const translations = {
     col_phase: 'Phase',
     col_quarter: 'Quarter',
     col_linked_invoices: 'Linked Invoices',
+    col_offer_link: 'Offer link',
+    col_project_link: 'Project',
+    col_amount_invoice: 'Invoice amount',
 
     // Settings Modal
     settings_title: 'Global Settings',
