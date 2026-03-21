@@ -51,17 +51,17 @@ const Dashboard = () => {
 
   // Stats for Chart
   const stats = {
-    notStarted: projects.filter((p) => p.phase !== 'Obra' && p.phase !== 'Proyecto').length,
-    inProgress: projects.filter((p) => p.phase === 'Proyecto').length,
-    completed: projects.filter((p) => p.phase === 'Obra').length,
+    notStarted: projects.filter((p) => p.status?.phase?.name !== 'Obra' && p.status?.phase?.name !== 'Proyecto').length,
+    inProgress: projects.filter((p) => p.status?.phase?.name === 'Proyecto').length,
+    completed: projects.filter((p) => p.status?.phase?.name === 'Obra').length,
   };
 
   // Sort projects alphabetically (descending) so PR26XX comes before PR25XX
-  const sortedProjects = [...projects].sort((a, b) => b.name.localeCompare(a.name));
+  const sortedProjects = [...projects].sort((a, b) => (b.identification?.name || '').localeCompare(a.identification?.name || ''));
 
   // Group by Phase
   const grouped = sortedProjects.reduce((acc, p) => {
-    const phaseName = p.phase || 'Sin Fase';
+    const phaseName = p.status?.phase?.name || 'Sin Fase';
     if (!acc[phaseName]) acc[phaseName] = [];
     acc[phaseName].push(p);
     return acc;
@@ -206,20 +206,20 @@ const Dashboard = () => {
                             <FileText className="w-4 h-4 text-notion-text-secondary dark:text-white/30 group-hover:text-blue-500 transition-colors" />
                           </div>
                           <span className="font-bold text-sm text-notion-text dark:text-white/90 group-hover:text-blue-500 transition-colors">
-                            {p.name}
+                            {p.identification?.name || t('unnamed')}
                           </span>
                         </div>
                       </td>
                       <td className="py-6 px-4 text-center">
                         <span className="text-[10px] font-bold bg-black/5 dark:bg-white/5 px-3 py-1.5 rounded-lg border border-notion-border dark:border-white/5 text-notion-text-secondary dark:text-white/70">
-                          {p.phase}
+                          {p.status?.phase?.name || '-'}
                         </span>
                       </td>
                       <td className="py-6 px-4">
-                        <ProgressBar value={p.progress} color="#238636" showText />
+                        <ProgressBar value={p.status?.progress || 0} color="#238636" showText />
                       </td>
                       <td className="py-6 px-8">
-                        <ProgressBar value={p.billedAmount} color="#2ea043" showText />
+                        <ProgressBar value={p.financials?.billingPercentage || 0} color="#2ea043" showText />
                       </td>
                     </tr>
                   ))}

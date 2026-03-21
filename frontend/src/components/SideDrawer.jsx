@@ -40,16 +40,8 @@ const SideDrawer = ({ projectId, onClose }) => {
 
   if (!projectId) return null;
 
-  // Comprehensive list of properties to show by default
-  const mainProps = [
-    'Cliente', 'Estado', 'Progreso', 'Código oferta', 'Hoja Proyecto', 'Oferta', 
-    'Total Ofertado', 'Total Facturado', 'Pendiente Facturar', '% Facturado', 'Fase',
-    'Vínculo Ofertas'
-  ];
-
-  const blacklistedProps = [
-    'Responsable', 'Periodo', 'Resumen', 'Coste interno', 'Historial técnico', 'Margen'
-  ];
+  const project = data?.project || {};
+  const { identification = {}, status = {}, client = {}, financials = {}, assets = {}, metadata = [] } = project;
 
   // Unified rendering for Interactions and Deliveries
   const renderUnifiedTimeline = (content, sectionIcon) => {
@@ -89,7 +81,7 @@ const SideDrawer = ({ projectId, onClose }) => {
         {groups.map((group, idx) => (
           <div key={idx} className="relative">
             {/* Timeline Node Icon */}
-            <div className="absolute -left-[26px] top-0 flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] z-10 border-2 border-white dark:border-notion-bg-dark ring-4 ring-blue-500/10">
+            <div className="absolute -left-[26px] top-0 flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] z-10 border-2 border-white dark:border-notion-dark ring-4 ring-blue-500/10">
                <Calendar className="w-2 h-2 text-white" />
             </div>
             
@@ -137,14 +129,14 @@ const SideDrawer = ({ projectId, onClose }) => {
       />
       
       {/* Drawer Panel */}
-      <div className={`absolute right-0 top-0 h-full w-full max-w-2xl bg-white dark:bg-notion-bg-dark shadow-2xl transform transition-transform duration-500 ease-out border-l border-notion-border dark:border-white/10 ${projectId ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`absolute right-0 top-0 h-full w-full max-w-2xl bg-white dark:bg-notion-dark shadow-2xl transform transition-transform duration-500 ease-out border-l border-notion-border dark:border-white/10 ${projectId ? 'translate-x-0' : 'translate-x-full'}`}>
         
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-white/95 dark:bg-notion-bg-dark/95 backdrop-blur-sm border-b border-notion-border dark:border-white/10 px-8 py-6 flex justify-between items-center text-notion-text dark:text-white">
+        <div className="sticky top-0 z-10 bg-white/95 dark:bg-notion-dark/95 backdrop-blur-sm border-b border-notion-border dark:border-white/10 px-8 py-6 flex justify-between items-center text-notion-text dark:text-white">
           <div className="flex items-center gap-3">
              <span className="text-2xl grayscale brightness-150">📄</span>
              <h2 className="text-xl font-bold truncate max-w-md">
-               {loading ? t('loading') : (data?.raw_properties?.['Nombre del proyecto']?.title?.[0]?.plain_text || 'Project Details')}
+               {loading ? t('loading') : (identification.name || 'Project Details')}
              </h2>
           </div>
           <button 
@@ -167,8 +159,8 @@ const SideDrawer = ({ projectId, onClose }) => {
               
               {/* Properties Section */}
               <div className="space-y-1.5">
-                <PropertyRow icon="👥" label={t('prop_client')} value={data.raw_properties?.Cliente?.multi_select?.[0]?.name} isTag tagColor={data.raw_properties?.Cliente?.multi_select?.[0]?.color} />
-                <PropertyRow icon="⚙️" label={t('prop_status')} value={data.raw_properties?.Estado?.status?.name} isTag tagColor={data.raw_properties?.Estado?.status?.color} />
+                <PropertyRow icon="👥" label={t('prop_client')} value={client.details?.name} isTag tagColor={client.details?.color} />
+                <PropertyRow icon="⚙️" label={t('prop_status')} value={status.main?.name} isTag tagColor={status.main?.color} />
                 
                 {/* Progress Row */}
                 <div className="flex items-start gap-4 py-1.5 group/prop">
@@ -177,32 +169,32 @@ const SideDrawer = ({ projectId, onClose }) => {
                     <span className="text-xs font-medium">{t('prop_progress')}</span>
                   </div>
                   <div className="grow flex items-center gap-4">
-                    <span className="text-xs font-medium text-notion-text dark:text-white/80 w-12 shrink-0">{(data.raw_properties?.Progreso?.rollup?.number * 100 || 0).toFixed(0)}%</span>
+                    <span className="text-xs font-medium text-notion-text dark:text-white/80 w-12 shrink-0">{(status.progress || 0).toFixed(0)}%</span>
                     <div className="grow max-w-[120px]">
-                      <ProgressBar value={(data.raw_properties?.Progreso?.rollup?.number || 0) * 100} color="#238636" />
+                      <ProgressBar value={status.progress || 0} color="#238636" />
                     </div>
                   </div>
                 </div>
 
-                <PropertyRow icon="🔍" label={t('prop_offer_code')} value={data.raw_properties?.['Código oferta']?.rollup?.array?.[0]?.title?.[0]?.plain_text} isLink />
+                <PropertyRow icon="🔍" label={t('prop_offer_code')} value={assets.offerCode} isLink />
                 <PropertyRow 
                   icon="📄" 
                   label={t('prop_project_sheet')} 
-                  value={data.raw_properties?.['Hoja Proyecto']?.files?.[0]} 
+                  value={assets.projectSheet} 
                   isNotionFile 
                   t={t}
                 />
                 <PropertyRow 
                   icon="📄" 
                   label={t('prop_offer')} 
-                  value={data.raw_properties?.['Oferta']?.files?.[0]} 
+                  value={assets.offerFile} 
                   isNotionFile 
                   t={t}
                 />
                 
-                <PropertyRow icon="💰" label={t('prop_total_offered')} value={formatCurrency(data.raw_properties?.['Total Ofertado']?.formula?.number || data.raw_properties?.['Total Ofertado']?.number)} isCurrency />
-                <PropertyRow icon="💰" label={t('prop_total_billed')} value={formatCurrency(data.raw_properties?.['Total Facturado']?.formula?.number || data.raw_properties?.['Total Facturado']?.number)} isCurrency />
-                <PropertyRow icon="Σ" label={t('prop_total_pend')} value={formatCurrency(data.raw_properties?.['Pendiente Facturar']?.formula?.number)} isCurrency />
+                <PropertyRow icon="💰" label={t('prop_total_offered')} value={formatCurrency(financials.totalOffered)} isCurrency />
+                <PropertyRow icon="💰" label={t('prop_total_billed')} value={formatCurrency(financials.totalBilled)} isCurrency />
+                <PropertyRow icon="Σ" label={t('prop_total_pend')} value={formatCurrency(financials.totalPending)} isCurrency />
                 
                 <div className="flex items-start gap-4 py-1.5 group/prop">
                   <div className="flex items-center gap-2 w-36 shrink-0 text-notion-text-secondary dark:text-gray-400">
@@ -210,16 +202,16 @@ const SideDrawer = ({ projectId, onClose }) => {
                     <span className="text-xs font-medium">{t('prop_billed_pct')}</span>
                   </div>
                   <div className="grow flex items-center gap-4">
-                    <span className="text-xs font-medium text-notion-text dark:text-white/80 w-12 shrink-0">{(data.raw_properties?.['% Facturado']?.formula?.number * 100 || 0).toFixed(0)}%</span>
+                    <span className="text-xs font-medium text-notion-text dark:text-white/80 w-12 shrink-0">{(financials.billingPercentage || 0).toFixed(0)}%</span>
                     <div className="grow max-w-[120px]">
-                      <ProgressBar value={(data.raw_properties?.['% Facturado']?.formula?.number || 0) * 100} color="#2ea043" />
+                      <ProgressBar value={financials.billingPercentage || 0} color="#2ea043" />
                     </div>
                   </div>
                 </div>
 
-                <PropertyRow icon="⚖️" label={t('prop_phase')} value={data.raw_properties?.Fase?.status?.name} isTag tagColor={data.raw_properties?.Fase?.status?.color} />
+                <PropertyRow icon="⚖️" label={t('prop_phase')} value={status.phase?.name} isTag tagColor={status.phase?.color} />
 
-                <PropertyRow icon="↗️" label={t('prop_offer_ref')} value={data.raw_properties?.['Vínculo Ofertas']?.rollup?.array?.[0]?.title?.[0]?.plain_text} isLink />
+                <PropertyRow icon="↗️" label={t('prop_offer_ref')} value={assets.offerLink} isLink />
 
                 <div className="pt-2">
                    <button 
@@ -233,25 +225,15 @@ const SideDrawer = ({ projectId, onClose }) => {
 
                 {isExpanded && (
                   <div className="pt-2 space-y-1.5 border-t border-notion-border dark:border-white/5 mt-2 animate-in fade-in slide-in-from-top-1 duration-300">
-                    {Object.entries(data.raw_properties || {})
-                      .filter(([key]) => !mainProps.includes(key) && !blacklistedProps.includes(key))
-                      .map(([key, prop]) => (
-                        <PropertyRow 
-                          key={key} 
-                          icon="📄" 
-                          label={key} 
-                          value={
-                            prop.type === 'date' ? prop.date?.start :
-                            prop.type === 'phone_number' ? prop.phone_number :
-                            prop.type === 'email' ? prop.email :
-                            prop.type === 'url' ? prop.url :
-                            prop.type === 'rich_text' ? prop.rich_text?.[0]?.plain_text :
-                            prop.type === 'number' ? prop.number :
-                            null
-                          } 
-                          t={t}
-                        />
-                      ))}
+                    {metadata.map((prop) => (
+                      <PropertyRow 
+                        key={prop.label} 
+                        icon="📄" 
+                        label={prop.label} 
+                        value={Array.isArray(prop.value) ? prop.value.join(', ') : prop.value} 
+                        t={t}
+                      />
+                    ))}
                   </div>
                 )}
               </div>
