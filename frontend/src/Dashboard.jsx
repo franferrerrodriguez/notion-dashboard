@@ -1,21 +1,35 @@
-import { useState, useMemo, useEffect } from 'react';
-import { useTheme } from './context/ThemeContext';
 import { useQuery } from '@tanstack/react-query';
-import { useParams, Link } from 'react-router-dom';
-import { projectService } from './services/api';
+import {
+  ArrowLeft,
+  BarChart3,
+  Bell,
+  Castle,
+  ChevronRight,
+  Clock,
+  FileText,
+  FolderRoot,
+  Loader2,
+  PieChart,
+  Receipt,
+  ShieldAlert,
+  Target,
+} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { ROLES } from './constants/auth';
+import { PHASE_COLORS } from './constants/theme';
 import { useAuth } from './context/AuthContext';
 import { useLanguage } from './context/LanguageContext';
-import { PHASE_COLORS, CHART_COLORS } from './constants/theme';
-import { ROLES } from './constants/auth';
-import { Calendar as CalendarIcon, MessageSquare, Clock, ChevronRight, X, Phone, Mail, User, FileText, Castle, Target, Receipt, CalendarDays, FolderRoot, ShieldAlert, ArrowLeft, Bell, BarChart3, PieChart, TrendingUp, Loader2 } from 'lucide-react';
+import { useTheme } from './context/ThemeContext';
+import { projectService } from './services/api';
 
 // Components
+import Calendar from './components/Calendar';
+import DoughnutChart from './components/DoughnutChart';
 import ProgressBar from './components/ProgressBar';
 import SideDrawer from './components/SideDrawer';
-import DoughnutChart from './components/DoughnutChart';
-import UserDropdown from './components/UserDropdown';
 import ThemeToggle from './components/ThemeToggle';
-import Calendar from './components/Calendar';
+import UserDropdown from './components/UserDropdown';
 
 const TABS = {
   PROJECTS: 'PROJECTS',
@@ -27,34 +41,34 @@ const TabButton = ({ active, onClick, icon, label }) => (
   <button
     onClick={onClick}
     className={`flex items-center gap-2.5 py-4 px-2 border-b-2 transition-all cursor-pointer relative ${
-      active 
-        ? 'border-blue-500 text-blue-500' 
+      active
+        ? 'border-blue-500 text-blue-500'
         : 'border-transparent text-notion-text-secondary hover:text-notion-text dark:hover:text-white'
     }`}
   >
-    <span className={`transition-transform duration-300 ${active ? 'scale-110' : 'scale-100 opacity-50'}`}>
+    <span
+      className={`transition-transform duration-300 ${active ? 'scale-110' : 'scale-100 opacity-50'}`}
+    >
       {icon}
     </span>
-    <span className="text-xs font-black uppercase tracking-widest">
-      {label}
-    </span>
+    <span className="text-xs font-black uppercase tracking-widest">{label}</span>
     {active && (
       <span className="absolute inset-0 bg-blue-500/5 blur-xl -z-10 rounded-full animate-pulse"></span>
     )}
   </button>
 );
 
-const StatusBadge = ({ name, color, className = "" }) => {
+const StatusBadge = ({ name, color, className = '' }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
   return (
     <span
       className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border inline-flex items-center gap-2 whitespace-nowrap transition-all duration-300 ${className}`}
-      style={{ 
-        backgroundColor: isDark ? `${color}15` : `${color}10`, 
+      style={{
+        backgroundColor: isDark ? `${color}15` : `${color}10`,
         color: isDark ? color : `color-mix(in srgb, ${color}, black 15%)`,
-        borderColor: isDark ? `${color}30` : `${color}25` 
+        borderColor: isDark ? `${color}30` : `${color}25`,
       }}
     >
       {name}
@@ -70,22 +84,22 @@ const LegendItem = ({ color, label, count, icon, t }) => {
     <div className="flex items-center gap-4 group cursor-default">
       <div
         className="w-10 h-10 rounded-2xl flex items-center justify-center transition-all border"
-        style={{ 
-          backgroundColor: isDark ? `${color}15` : `${color}10`, 
+        style={{
+          backgroundColor: isDark ? `${color}15` : `${color}10`,
           color: isDark ? color : `color-mix(in srgb, ${color}, black 15%)`,
-          borderColor: isDark ? `${color}30` : `${color}25`
+          borderColor: isDark ? `${color}30` : `${color}25`,
         }}
       >
         {icon}
       </div>
-    <div className="flex flex-col">
-      <span className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest leading-none mb-1 group-hover:text-notion-text dark:group-hover:text-white/70 transition-colors">
-        {label}
-      </span>
-      <span className="text-xs font-bold text-notion-text-secondary/50 dark:text-white/50">
-        {count} {t('total').toLowerCase()}
-      </span>
-    </div>
+      <div className="flex flex-col">
+        <span className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest leading-none mb-1 group-hover:text-notion-text dark:group-hover:text-white/70 transition-colors">
+          {label}
+        </span>
+        <span className="text-xs font-bold text-notion-text-secondary/50 dark:text-white/50">
+          {count} {t('total').toLowerCase()}
+        </span>
+      </div>
     </div>
   );
 };
@@ -101,6 +115,8 @@ const Dashboard = () => {
   const [unreadItems, setUnreadItems] = useState([]);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [loadingUnread, setLoadingUnread] = useState(false);
+  const [loadingNotificationId, setLoadingNotificationId] = useState(null);
+  const [isMarkingAll, setIsMarkingAll] = useState(false);
 
   // TanStack Query for projects - Parallel prefetching for all tabs
   const effectiveClientId = user?.role === ROLES.ADMIN && clientId ? clientId : null;
@@ -111,11 +127,23 @@ const Dashboard = () => {
       const status = await projectService.getUnreadStatus(effectiveClientId);
       const items = status.items || [];
       setUnreadItems(items);
-      setUnreadCount(items.filter(i => i.is_unread).length);
+      setUnreadCount(items.filter((i) => i.is_unread).length);
     } catch (err) {
       console.error('Failed to refetch unread:', err);
     } finally {
       setLoadingUnread(false);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    setIsMarkingAll(true);
+    try {
+      await projectService.markAllRead();
+      refetchUnread();
+    } catch (err) {
+      console.error('Failed to mark all as read:', err);
+    } finally {
+      setIsMarkingAll(false);
     }
   };
 
@@ -147,22 +175,19 @@ const Dashboard = () => {
 
   const isLoading = loadingProjects || loadingOffers || loadingInvoices || loadingTasks;
 
-  // Debug Log (Moved after definitions)
-  if (unreadCount > 0) {
-    console.log('Notifications Debug:', unreadItems);
-  }
-
   const resolveRelationNames = (ids, type) => {
     if (!ids || ids.length === 0) return '-';
     const source = type === 'project' ? projects : offers;
-    return ids.map(id => {
-      const found = source.find(item => item.id === id);
-      return found?.identification?.name || '...';
-    }).join(', ');
+    return ids
+      .map((id) => {
+        const found = source.find((item) => item.id === id);
+        return found?.identification?.name || '...';
+      })
+      .join(', ');
   };
 
   const getMetaValue = (p, label) => {
-    const m = p.metadata?.find(m => m.label.toLowerCase() === label.toLowerCase());
+    const m = p.metadata?.find((m) => m.label.toLowerCase() === label.toLowerCase());
     return m?.value;
   };
 
@@ -170,14 +195,16 @@ const Dashboard = () => {
   const reverseInvoiceMap = useMemo(() => {
     const map = {};
     if (!invoices || !offers) return map;
-    
-    invoices.forEach(inv => {
-      // Robustly identify relations that point to an Offer by checking the ID against the offers list
-      const relatedOfferIds = inv.metadata?.filter(m => m.type === 'relation')
-        ?.flatMap(m => Array.isArray(m.value) ? m.value : [m.value])
-        ?.filter(id => offers.some(o => o.id === id)) || [];
 
-      relatedOfferIds.forEach(id => {
+    invoices.forEach((inv) => {
+      // Robustly identify relations that point to an Offer by checking the ID against the offers list
+      const relatedOfferIds =
+        inv.metadata
+          ?.filter((m) => m.type === 'relation')
+          ?.flatMap((m) => (Array.isArray(m.value) ? m.value : [m.value]))
+          ?.filter((id) => offers.some((o) => o.id === id)) || [];
+
+      relatedOfferIds.forEach((id) => {
         if (!map[id]) map[id] = [];
         if (inv.identification?.name) {
           map[id].push(inv.identification.name);
@@ -189,13 +216,17 @@ const Dashboard = () => {
 
   const resolveAllLinkedInvoices = (p) => {
     // 1. Direct relations (from Offer/Project to Invoice)
-    const directIds = p.metadata?.filter(m => m.type === 'relation')
-      ?.flatMap(m => Array.isArray(m.value) ? m.value : [m.value])
-      ?.filter(id => invoices.some(i => i.id === id)) || [];
-    
-    const directNames = directIds.map(id => {
-        return invoices.find(i => i.id === id)?.identification?.name;
-    }).filter(Boolean);
+    const directIds =
+      p.metadata
+        ?.filter((m) => m.type === 'relation')
+        ?.flatMap((m) => (Array.isArray(m.value) ? m.value : [m.value]))
+        ?.filter((id) => invoices.some((i) => i.id === id)) || [];
+
+    const directNames = directIds
+      .map((id) => {
+        return invoices.find((i) => i.id === id)?.identification?.name;
+      })
+      .filter(Boolean);
 
     // 2. Reverse relations (from Invoices pointing to this Offer)
     const reverseNames = reverseInvoiceMap[p.id] || [];
@@ -216,18 +247,21 @@ const Dashboard = () => {
     );
 
   // Select data based on active tab
-  const activeData = activeTab === TABS.PROJECTS ? projects : 
-                     (activeTab === TABS.OFFERS ? offers : invoices);
+  const activeData =
+    activeTab === TABS.PROJECTS ? projects : activeTab === TABS.OFFERS ? offers : invoices;
 
   // Sort alphabetically (descending)
-  const sortedData = [...activeData].sort((a, b) => (b.identification?.name || '').localeCompare(a.identification?.name || ''));
+  const sortedData = [...activeData].sort((a, b) =>
+    (b.identification?.name || '').localeCompare(a.identification?.name || '')
+  );
 
   // Group by Phase (Projects) or Status (Offers/Invoices)
   const grouped = sortedData.reduce((acc, p) => {
-    const groupKey = activeTab === TABS.PROJECTS 
-      ? (p.status?.phase?.name || 'Sin Fase')
-      : (p.status?.main?.name || 'Sin Estado');
-    
+    const groupKey =
+      activeTab === TABS.PROJECTS
+        ? p.status?.phase?.name || 'Sin Fase'
+        : p.status?.main?.name || 'Sin Estado';
+
     if (!acc[groupKey]) acc[groupKey] = [];
     acc[groupKey].push(p);
     return acc;
@@ -237,7 +271,7 @@ const Dashboard = () => {
   const phaseStats = Object.entries(grouped).map(([name, items]) => ({
     name,
     count: items.length,
-    color: PHASE_COLORS[name] || '#64748b', 
+    color: PHASE_COLORS[name] || '#64748b',
   }));
 
   return (
@@ -278,115 +312,136 @@ const Dashboard = () => {
           </div>
 
           <div className="flex items-center gap-4">
-                      {/* Notifications Button */}
-                      <div className="relative group">
-                          <button 
-                            onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                            className="relative p-2 rounded-xl text-hover transition-all"
-                            disabled={loadingUnread}
+            {/* Notifications Button */}
+            <div className="relative group">
+              <button
+                className="p-2.5 rounded-xl bg-gray-50/50 dark:bg-white/5 border border-notion-border dark:border-white/10 hover:border-blue-500/50 dark:hover:border-blue-500/40 hover:bg-white dark:hover:bg-white/10 transition-all text-notion-text-secondary dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 relative group"
+                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                disabled={loadingUnread || isMarkingAll}
+              >
+                {loadingUnread || isMarkingAll ? (
+                  <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+                ) : (
+                  <Bell className="w-5 h-5 transition-transform group-active:scale-95" />
+                )}
+                {!(loadingUnread || isMarkingAll) && unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-notion-bg-default dark:border-notion-bg-dark shadow-sm">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Minimalist Dropdown */}
+              {isNotificationOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsNotificationOpen(false)}
+                  ></div>
+                  <div className="absolute top-full mt-3 right-0 w-80 bg-white dark:bg-[#1e1e1e] border border-notion-border dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                    <div className="p-4 border-b border-notion-border dark:border-white/5 flex justify-between items-center bg-gray-50/50 dark:bg-white/2">
+                      <h3 className="text-[10px] font-black uppercase tracking-widest text-notion-text-secondary dark:text-gray-400">
+                        {t('notifications')}
+                      </h3>
+                      <div className="flex items-center gap-3">
+                        {unreadCount > 0 && (
+                          <button
+                            disabled={isMarkingAll}
+                            onClick={() => {
+                              handleMarkAllRead();
+                              setIsNotificationOpen(false);
+                            }}
+                            className="text-[9px] font-black text-blue-500 hover:text-blue-600 uppercase tracking-tight transition-colors flex items-center gap-1.5"
                           >
-                            {loadingUnread ? (
-                              <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
-                            ) : (
-                              <Bell className="w-5 h-5 transition-transform group-active:scale-95" />
-                            )}
-                            {!loadingUnread && unreadCount > 0 && (
-                              <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-notion-bg-default dark:border-notion-bg-dark shadow-sm">
-                                {unreadCount}
-                              </span>
-                            )}
+                            {t('mark_all_read_btn')}
                           </button>
+                        )}
+                      </div>
+                    </div>
 
-                          {/* Minimalist Dropdown */}
-                          {isNotificationOpen && (
-                            <>
-                              <div 
-                                className="fixed inset-0 z-40" 
-                                onClick={() => setIsNotificationOpen(false)}
-                              ></div>
-                              <div className="absolute top-full mt-3 right-0 w-80 bg-white dark:bg-[#1e1e1e] border border-notion-border dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-                                <div className="p-4 border-b border-notion-border dark:border-white/5 flex justify-between items-center bg-gray-50/50 dark:bg-white/2">
-                                  <h3 className="text-[10px] font-black uppercase tracking-widest text-notion-text-secondary dark:text-gray-400">
-                                    {t('notifications')}
-                                  </h3>
-                                  <div className="flex items-center gap-3">
-                                    {unreadCount > 0 && (
-                                      <button 
-                                        onClick={async () => {
-                                          const maxTime = unreadItems.length > 0 
-                                            ? new Date(Math.max(...unreadItems.map(i => new Date(i.last_edited_time).getTime()))).toISOString()
-                                            : null;
-                                          await projectService.markAllRead(maxTime);
-                                          setIsNotificationOpen(false);
-                                          refetchUnread();
-                                        }}
-                                        className="text-[9px] font-black text-blue-500 hover:text-blue-600 uppercase tracking-tight transition-colors"
-                                      >
-                                        {t('mark_all_read_btn')}
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                                
-                                <div className="max-h-[400px] overflow-y-auto">
-                                  {unreadCount === 0 ? (
-                                    <div className="p-8 text-center">
-                                      <div className="w-12 h-12 bg-gray-100 dark:bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                                        <Bell className="w-5 h-5 text-gray-400" />
-                                      </div>
-                                      <p className="text-xs text-notion-text-secondary dark:text-gray-500 font-medium italic">
-                                        No hay novedades pendientes
-                                      </p>
-                                    </div>
+                    <div className="max-h-[400px] overflow-y-auto">
+                      {unreadCount === 0 ? (
+                        <div className="p-8 text-center">
+                          <div className="w-12 h-12 bg-gray-100 dark:bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                            <Bell className="w-5 h-5 text-gray-400" />
+                          </div>
+                          <p className="text-xs text-notion-text-secondary dark:text-gray-500 font-medium italic">
+                            No hay novedades pendientes
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-notion-border dark:divide-white/5">
+                          {unreadItems
+                            .sort(
+                              (a, b) =>
+                                new Date(b.last_edited_time).getTime() -
+                                new Date(a.last_edited_time).getTime()
+                            )
+                            .slice(0, 15)
+                            .map((item) => (
+                              <button
+                                key={item.id}
+                                disabled={loadingNotificationId === item.id}
+                                onClick={async () => {
+                                  setLoadingNotificationId(item.id);
+                                  try {
+                                    // Navigation target detection
+                                    const realId = item.id.split(':')[0];
+                                    const targetId = item.parent_id || realId;
+
+                                    // Detect correct tab for target to avoid SideDrawer getting stuck
+                                    let detectedTab = activeTab;
+                                    if (projects.some((p) => p.id === targetId))
+                                      detectedTab = TABS.PROJECTS;
+                                    else if (offers.some((o) => o.id === targetId))
+                                      detectedTab = TABS.OFFERS;
+                                    else if (invoices.some((i) => i.id === targetId))
+                                      detectedTab = TABS.INVOICES;
+
+                                    // Mark as read immediately
+                                    await projectService.markRead(item.id);
+
+                                    setActiveTab(detectedTab);
+                                    if (item.type === 'tasks' || item.type === 'task') {
+                                      setSelectedTask(targetId);
+                                      setSelectedProject(null);
+                                    } else {
+                                      setSelectedProject(targetId);
+                                      setSelectedTask(null);
+                                    }
+                                    setIsNotificationOpen(false);
+                                    refetchUnread();
+                                  } finally {
+                                    setLoadingNotificationId(null);
+                                  }
+                                }}
+                                className="w-full p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors flex items-start gap-3 text-left group"
+                              >
+                                <div className="p-2 bg-blue-500/10 rounded-xl group-hover:bg-blue-500 group-hover:text-white transition-all shrink-0">
+                                  {loadingNotificationId === item.id ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                   ) : (
-                                    <div className="divide-y divide-notion-border dark:divide-white/5">
-                                      {unreadItems
-                                        .sort((a, b) => new Date(b.last_edited_time).getTime() - new Date(a.last_edited_time).getTime())
-                                        .slice(0, 15)
-                                        .map((item) => (
-                                          <button
-                                            key={item.id}
-                                            onClick={async () => {
-                                              // Mark as read immediately
-                                              await projectService.markRead(item.id);
-                                              refetchUnread();
-
-                                              // Navigate to parent project if it's an interaction, otherwise the item itself
-                                              const realId = item.id.split(':')[0];
-                                              const targetId = item.parent_id || realId;
-
-                                              if (item.type === 'tasks' || item.type === 'task') {
-                                                 setSelectedTask(targetId);
-                                                 setSelectedProject(null);
-                                              } else {
-                                                 setSelectedProject(targetId);
-                                                 setSelectedTask(null);
-                                              }
-                                              setIsNotificationOpen(false);
-                                            }}
-                                            className="w-full p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors flex items-start gap-3 text-left group"
-                                          >
-                                            <div className="p-2 bg-blue-500/10 rounded-xl group-hover:bg-blue-500 group-hover:text-white transition-all shrink-0">
-                                               <FileText className="w-3.5 h-3.5" />
-                                            </div>
-                                            <div className="text-left">
-                                              <p className="text-xs font-bold text-notion-text dark:text-gray-200 line-clamp-3 mb-1">
-                                                {item.text || item.identification?.name || 'Item sin nombre'}
-                                              </p>
-                                              <p className="text-[10px] text-notion-text-secondary dark:text-gray-500 flex items-center gap-1.5 uppercase font-black">
-                                                <Clock className="w-3 h-3" />
-                                                {item.last_edited_time}
-                                              </p>
-                                            </div>
-                                          </button>
-                                        ))}
-                                    </div>
+                                    <FileText className="w-3.5 h-3.5" />
                                   )}
                                 </div>
-                              </div>
-                            </>
-                          )}
+                                <div className="text-left">
+                                  <p className="text-xs font-bold text-notion-text dark:text-gray-200 line-clamp-3 mb-1">
+                                    {item.text || item.identification?.name || 'Item sin nombre'}
+                                  </p>
+                                  <p className="text-[10px] text-notion-text-secondary dark:text-gray-500 flex items-center gap-1.5 uppercase font-black">
+                                    <Clock className="w-3 h-3" />
+                                    {item.last_edited_time}
+                                  </p>
+                                </div>
+                              </button>
+                            ))}
                         </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
             <ThemeToggle />
             <UserDropdown />
           </div>
@@ -396,20 +451,20 @@ const Dashboard = () => {
         <Calendar tasks={tasks} projects={projects} onSelectTask={setSelectedTask} />
 
         <div className="flex items-center gap-10 mb-10 border-b border-notion-border dark:border-white/5">
-          <TabButton 
-            active={activeTab === TABS.PROJECTS} 
+          <TabButton
+            active={activeTab === TABS.PROJECTS}
             onClick={() => setActiveTab(TABS.PROJECTS)}
             icon={<Castle className="w-4 h-4" />}
             label={t('tab_projects')}
           />
-          <TabButton 
-            active={activeTab === TABS.OFFERS} 
+          <TabButton
+            active={activeTab === TABS.OFFERS}
             onClick={() => setActiveTab(TABS.OFFERS)}
             icon={<Target className="w-4 h-4" />}
             label={t('tab_offers')}
           />
-          <TabButton 
-            active={activeTab === TABS.INVOICES} 
+          <TabButton
+            active={activeTab === TABS.INVOICES}
             onClick={() => setActiveTab(TABS.INVOICES)}
             icon={<Receipt className="w-4 h-4" />}
             label={t('tab_invoices')}
@@ -454,30 +509,83 @@ const Dashboard = () => {
           const getColumns = () => {
             if (activeTab === TABS.OFFERS) {
               return [
-                { key: 'code', label: t('col_code'), icon: <FileText className="w-3 h-3" />, align: 'left', width: 'w-[220px]' },
-                { key: 'description', label: t('col_description'), align: 'left', width: 'w-[300px]' },
+                {
+                  key: 'code',
+                  label: t('col_code'),
+                  icon: <FileText className="w-3 h-3" />,
+                  align: 'left',
+                  width: 'w-[220px]',
+                },
+                {
+                  key: 'description',
+                  label: t('col_description'),
+                  align: 'left',
+                  width: 'w-[300px]',
+                },
                 { key: 'date', label: t('col_date'), align: 'center', width: 'w-[110px]' },
                 { key: 'status', label: t('col_status'), align: 'center', width: 'w-[150px]' },
-                { key: 'amount_net', label: t('col_amount_net'), align: 'right', width: 'w-[130px]' },
+                {
+                  key: 'amount_net',
+                  label: t('col_amount_net'),
+                  align: 'right',
+                  width: 'w-[130px]',
+                },
                 { key: 'total', label: t('col_total'), align: 'right', width: 'w-[130px]' },
-                { key: 'billed_amount', label: t('col_billed_amount'), align: 'right', width: 'w-[140px]' },
+                {
+                  key: 'billed_amount',
+                  label: t('col_billed_amount'),
+                  align: 'right',
+                  width: 'w-[140px]',
+                },
                 { key: 'progress', label: '%', align: 'center', width: 'w-[120px]' },
-                { key: 'linked_invoices', label: t('col_linked_invoices'), align: 'left', width: 'w-[250px]' },
+                {
+                  key: 'linked_invoices',
+                  label: t('col_linked_invoices'),
+                  align: 'left',
+                  width: 'w-[250px]',
+                },
               ];
             }
             if (activeTab === TABS.INVOICES) {
               return [
-                { key: 'code', label: t('col_code'), icon: <FileText className="w-3 h-3" />, align: 'left', width: 'w-[150px]' },
-                { key: 'offer_link', label: t('col_offer_link'), align: 'left', width: 'w-[180px]' },
-                { key: 'project_link', label: t('col_project_link'), align: 'left', width: 'w-[250px]' },
+                {
+                  key: 'code',
+                  label: t('col_code'),
+                  icon: <FileText className="w-3 h-3" />,
+                  align: 'left',
+                  width: 'w-[150px]',
+                },
+                {
+                  key: 'offer_link',
+                  label: t('col_offer_link'),
+                  align: 'left',
+                  width: 'w-[180px]',
+                },
+                {
+                  key: 'project_link',
+                  label: t('col_project_link'),
+                  align: 'left',
+                  width: 'w-[250px]',
+                },
                 { key: 'date', label: t('col_date'), align: 'center', width: 'w-[120px]' },
-                { key: 'total', label: t('col_amount_invoice'), align: 'right', width: 'w-[130px]' },
+                {
+                  key: 'total',
+                  label: t('col_amount_invoice'),
+                  align: 'right',
+                  width: 'w-[130px]',
+                },
                 { key: 'status', label: t('col_status'), align: 'center', width: 'w-[150px]' },
                 { key: 'quarter', label: t('col_quarter'), align: 'center', width: 'w-[120px]' },
               ];
             }
             return [
-              { key: 'project', label: t('col_project'), icon: <FileText className="w-3 h-3" />, align: 'left', width: 'min-w-[250px]' },
+              {
+                key: 'project',
+                label: t('col_project'),
+                icon: <FileText className="w-3 h-3" />,
+                align: 'left',
+                width: 'min-w-[250px]',
+              },
               { key: 'phase', label: t('col_phase'), align: 'center', width: 'w-[150px]' },
               { key: 'status', label: t('col_status'), align: 'center', width: 'w-[160px]' },
               { key: 'billing', label: t('col_billing'), align: 'center', width: 'w-[160px]' },
@@ -487,7 +595,10 @@ const Dashboard = () => {
           const columns = getColumns();
 
           return (
-            <section key={phaseName} className="relative animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <section
+              key={phaseName}
+              className="relative animate-in fade-in slide-in-from-bottom-4 duration-700"
+            >
               <div className="flex items-center gap-4 mb-8">
                 <div className="flex items-center gap-2">
                   <StatusBadge name={phaseName} color={PHASE_COLORS[phaseName] || '#64748b'} />
@@ -504,11 +615,13 @@ const Dashboard = () => {
                   <thead>
                     <tr className="border-b border-notion-border dark:border-white/5 bg-notion-bg-light dark:bg-white/3">
                       {columns.map((col) => (
-                        <th 
+                        <th
                           key={col.key}
                           className={`py-5 ${col.key === 'code' || col.key === 'project' ? 'px-8' : 'px-4'} ${col.width} text-[11px] font-black text-notion-text-secondary dark:text-white/40 uppercase tracking-widest ${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : ''}`}
                         >
-                          <div className={`flex items-center gap-2 ${col.align === 'center' ? 'justify-center' : col.align === 'right' ? 'justify-end' : ''}`}>
+                          <div
+                            className={`flex items-center gap-2 ${col.align === 'center' ? 'justify-center' : col.align === 'right' ? 'justify-end' : ''}`}
+                          >
                             {col.icon}
                             {col.label}
                           </div>
@@ -525,9 +638,9 @@ const Dashboard = () => {
                       >
                         {columns.map((col) => {
                           const metaValue = (label) => {
-                             const val = getMetaValue(p, label);
-                             if (!val) return null;
-                             return Array.isArray(val) ? val.join(', ') : val;
+                            const val = getMetaValue(p, label);
+                            if (!val) return null;
+                            return Array.isArray(val) ? val.join(', ') : val;
                           };
 
                           if (col.key === 'project' || col.key === 'code') {
@@ -553,7 +666,10 @@ const Dashboard = () => {
                           if (col.key === 'phase') {
                             return (
                               <td key={col.key} className="py-6 px-4 text-center">
-                                <StatusBadge name={p.status?.phase?.name || '-'} color={PHASE_COLORS[p.status?.phase?.name] || '#64748b'} />
+                                <StatusBadge
+                                  name={p.status?.phase?.name || '-'}
+                                  color={PHASE_COLORS[p.status?.phase?.name] || '#64748b'}
+                                />
                               </td>
                             );
                           }
@@ -562,24 +678,38 @@ const Dashboard = () => {
                             if (activeTab === TABS.PROJECTS) {
                               return (
                                 <td key={col.key} className="py-6 px-4">
-                                  <ProgressBar value={p.status?.progress || 0} color="#238636" showText />
+                                  <ProgressBar
+                                    value={p.status?.progress || 0}
+                                    color="#238636"
+                                    showText
+                                  />
                                 </td>
                               );
                             }
                             const s = p.status?.main || {};
                             return (
                               <td key={col.key} className="py-6 px-4 text-center">
-                                <StatusBadge name={s.name || '-'} color={PHASE_COLORS[s.name] || '#64748b'} />
+                                <StatusBadge
+                                  name={s.name || '-'}
+                                  color={PHASE_COLORS[s.name] || '#64748b'}
+                                />
                               </td>
                             );
                           }
 
                           if (col.key === 'offer_link' || col.key === 'project_link') {
                             const type = col.key === 'offer_link' ? 'offer' : 'project';
-                            const ids = type === 'offer' ? p.identification?.offer_relation : p.identification?.project_relation;
+                            const ids =
+                              type === 'offer'
+                                ? p.identification?.offer_relation
+                                : p.identification?.project_relation;
                             const name = resolveRelationNames(ids, type);
                             return (
-                              <td key={col.key} className="py-6 px-4 truncate max-w-[220px]" title={name}>
+                              <td
+                                key={col.key}
+                                className="py-6 px-4 truncate max-w-[220px]"
+                                title={name}
+                              >
                                 <div className="flex items-center gap-2">
                                   <span className="text-sm grayscale brightness-150">📄</span>
                                   <span className="text-sm text-notion-text dark:text-white/70 truncate uppercase tracking-tight font-medium">
@@ -593,95 +723,121 @@ const Dashboard = () => {
                           if (col.key === 'billing') {
                             return (
                               <td key={col.key} className="py-6 px-4">
-                                <ProgressBar value={p.financials?.billingPercentage || 0} color="#2ea043" showText />
+                                <ProgressBar
+                                  value={p.financials?.billingPercentage || 0}
+                                  color="#2ea043"
+                                  showText
+                                />
                               </td>
                             );
                           }
 
                           if (col.key === 'description') {
-                              return (
-                                <td key={col.key} className="py-6 px-4">
-                                  <span className="text-xs text-notion-text-secondary dark:text-white/50 truncate block">
-                                    {metaValue('Descripción') || metaValue('Description') || '-'}
-                                  </span>
-                                </td>
-                              );
+                            return (
+                              <td key={col.key} className="py-6 px-4">
+                                <span className="text-xs text-notion-text-secondary dark:text-white/50 truncate block">
+                                  {metaValue('Descripción') || metaValue('Description') || '-'}
+                                </span>
+                              </td>
+                            );
                           }
 
                           if (col.key === 'date') {
-                              return (
-                                <td key={col.key} className="py-6 px-4 text-center">
-                                  <span className="text-[10px] font-medium text-notion-text-secondary dark:text-white/40 tracking-wider">
-                                    {metaValue('Fecha') || metaValue('Fecha factura') || '-'}
-                                  </span>
-                                </td>
-                              );
+                            return (
+                              <td key={col.key} className="py-6 px-4 text-center">
+                                <span className="text-[10px] font-medium text-notion-text-secondary dark:text-white/40 tracking-wider">
+                                  {metaValue('Fecha') || metaValue('Fecha factura') || '-'}
+                                </span>
+                              </td>
+                            );
                           }
 
                           if (col.key === 'amount_net') {
-                              return (
-                                <td key={col.key} className="py-6 px-4 text-right">
-                                  <span className="text-xs font-bold text-notion-text dark:text-white/80">
-                                    {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(metaValue('Importe neto') || 0)}
-                                  </span>
-                                </td>
-                              );
+                            return (
+                              <td key={col.key} className="py-6 px-4 text-right">
+                                <span className="text-xs font-bold text-notion-text dark:text-white/80">
+                                  {new Intl.NumberFormat('de-DE', {
+                                    style: 'currency',
+                                    currency: 'EUR',
+                                  }).format(metaValue('Importe neto') || 0)}
+                                </span>
+                              </td>
+                            );
                           }
 
                           if (col.key === 'total') {
-                              return (
-                                <td key={col.key} className="py-6 px-4 text-right">
-                                  <span className="text-xs font-black text-notion-text dark:text-white/95">
-                                    {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(p.financials?.totalOffered || 0)}
-                                  </span>
-                                </td>
-                              );
+                            return (
+                              <td key={col.key} className="py-6 px-4 text-right">
+                                <span className="text-xs font-black text-notion-text dark:text-white/95">
+                                  {new Intl.NumberFormat('de-DE', {
+                                    style: 'currency',
+                                    currency: 'EUR',
+                                  }).format(p.financials?.totalOffered || 0)}
+                                </span>
+                              </td>
+                            );
                           }
 
                           if (col.key === 'billed_amount') {
                             return (
                               <td key={col.key} className="py-6 px-4 text-right">
                                 <span className="text-xs font-bold text-emerald-500/80">
-                                  {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(p.financials?.totalBilled || 0)}
+                                  {new Intl.NumberFormat('de-DE', {
+                                    style: 'currency',
+                                    currency: 'EUR',
+                                  }).format(p.financials?.totalBilled || 0)}
                                 </span>
                               </td>
                             );
                           }
 
                           if (col.key === 'progress') {
-                              return (
-                                <td key={col.key} className="py-6 px-4">
-                                  <ProgressBar value={p.financials?.billingPercentage || 0} color="#2ea043" showText />
-                                </td>
-                              );
+                            return (
+                              <td key={col.key} className="py-6 px-4">
+                                <ProgressBar
+                                  value={p.financials?.billingPercentage || 0}
+                                  color="#2ea043"
+                                  showText
+                                />
+                              </td>
+                            );
                           }
 
                           if (col.key === 'linked_invoices') {
                             return (
                               <td key={col.key} className="py-6 pl-12 pr-4">
                                 <div className="flex flex-wrap gap-1">
-                                  {resolveAllLinkedInvoices(p).split(', ').map((text, i) => (
-                                    <span key={i} className="px-1.5 py-0.5 bg-blue-500/10 text-blue-500 dark:text-blue-400 rounded text-[10px] font-bold border border-blue-500/20 leading-none">
-                                      {text}
-                                    </span>
-                                  ))}
+                                  {resolveAllLinkedInvoices(p)
+                                    .split(', ')
+                                    .map((text, i) => (
+                                      <span
+                                        key={i}
+                                        className="px-1.5 py-0.5 bg-blue-500/10 text-blue-500 dark:text-blue-400 rounded text-[10px] font-bold border border-blue-500/20 leading-none"
+                                      >
+                                        {text}
+                                      </span>
+                                    ))}
                                 </div>
                               </td>
                             );
                           }
 
                           if (col.key === 'quarter') {
-                              const q = metaValue('Trimestre');
-                              return (
-                                <td key={col.key} className="py-6 px-4 text-center">
-                                  <span className="text-[10px] font-bold bg-blue-500/5 text-blue-500 px-2 py-1 rounded border border-blue-500/10">
-                                    {q || '-'}
-                                  </span>
-                                </td>
-                              );
+                            const q = metaValue('Trimestre');
+                            return (
+                              <td key={col.key} className="py-6 px-4 text-center">
+                                <span className="text-[10px] font-bold bg-blue-500/5 text-blue-500 px-2 py-1 rounded border border-blue-500/10">
+                                  {q || '-'}
+                                </span>
+                              </td>
+                            );
                           }
 
-                          return <td key={col.key} className="py-6 px-4">-</td>;
+                          return (
+                            <td key={col.key} className="py-6 px-4">
+                              -
+                            </td>
+                          );
                         })}
                       </tr>
                     ))}
@@ -694,21 +850,27 @@ const Dashboard = () => {
       </main>
 
       {selectedProject && (
-        <SideDrawer 
+        <SideDrawer
           key={`project-${selectedProject}`}
-          itemId={selectedProject} 
-          type={activeTab === TABS.PROJECTS ? 'project' : (activeTab === TABS.OFFERS ? 'offer' : 'invoice')}
-          onClose={() => setSelectedProject(null)} 
+          itemId={selectedProject}
+          type={
+            activeTab === TABS.PROJECTS
+              ? 'project'
+              : activeTab === TABS.OFFERS
+                ? 'offer'
+                : 'invoice'
+          }
+          onClose={() => setSelectedProject(null)}
           projects={projects}
         />
       )}
 
       {selectedTask && (
-        <SideDrawer 
+        <SideDrawer
           key={`task-${selectedTask}`}
-          itemId={selectedTask} 
-          type="task" 
-          onClose={() => setSelectedTask(null)} 
+          itemId={selectedTask}
+          type="task"
+          onClose={() => setSelectedTask(null)}
           projects={projects}
         />
       )}
