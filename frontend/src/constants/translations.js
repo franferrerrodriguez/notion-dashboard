@@ -103,7 +103,7 @@ export const translations = {
     tech_history: 'Historial Técnico (Control de horas)',
     no_hours: 'No hay registros de horas.',
     prop_deliveries: 'Entregas',
-    tasks: 'Tareas',
+    tasks: 'Tareas del proyecto',
     no_tasks: 'No hay tareas vinculadas.',
     raw_data: 'Datos RAW',
     linked_task: 'Tarea vinculada',
@@ -113,6 +113,13 @@ export const translations = {
     task_status: 'Estado',
     task_due_date: 'Fecha límite',
     task_priority: 'Prioridad',
+    contacts: 'Contactos del proyecto',
+    team_members: 'miembros',
+    contact_name: 'Contacto',
+    contact_phone: 'Teléfono',
+    contact_email: 'Email',
+    contact_role: 'Rol',
+    contact_notes: 'Notas',
 
     // Password Change
     change_password_title: 'Seguridad de la Cuenta',
@@ -242,6 +249,13 @@ export const translations = {
     task_status: 'Status',
     task_due_date: 'Due date',
     task_priority: 'Priority',
+    contacts: 'Project Contacts',
+    team_members: 'members',
+    contact_name: 'Contact',
+    contact_phone: 'Phone',
+    contact_email: 'Email',
+    contact_role: 'Role',
+    contact_notes: 'Notes',
 
     // Password Change
     change_password_title: 'Account Security',

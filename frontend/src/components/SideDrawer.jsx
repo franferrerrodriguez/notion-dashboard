@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, MessageSquare, Clock, ChevronRight, X } from 'lucide-react';
+import { Calendar, MessageSquare, Clock, ChevronRight, X, Phone, Mail, User, FileText } from 'lucide-react';
 import { projectService } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 import ProgressBar from './ProgressBar';
@@ -29,9 +29,10 @@ const SideDrawer = ({ projectId, onClose }) => {
 
   const [isExpanded, setIsExpanded] = useState(false);
   
-  const [isTasksOpen, setIsTasksOpen] = useState(true);
-  const [isInteractionsOpen, setIsInteractionsOpen] = useState(true);
-  const [isDeliveriesOpen, setIsDeliveriesOpen] = useState(true);
+  const [isTasksOpen, setIsTasksOpen] = useState(false);
+  const [isInteractionsOpen, setIsInteractionsOpen] = useState(false);
+  const [isDeliveriesOpen, setIsDeliveriesOpen] = useState(false);
+  const [isContactsOpen, setIsContactsOpen] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState({});
 
   const toggleGroup = (status) => {
@@ -81,9 +82,7 @@ const SideDrawer = ({ projectId, onClose }) => {
         {groups.map((group, idx) => (
           <div key={idx} className="relative">
             {/* Timeline Node Icon */}
-            <div className="absolute -left-[26px] top-0 flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] z-10 border-2 border-white dark:border-notion-dark ring-4 ring-blue-500/10">
-               <Calendar className="w-2 h-2 text-white" />
-            </div>
+            <div className="absolute -left-[26px] top-[6px] w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)] z-10 border-2 border-white dark:border-notion-dark ring-4 ring-blue-500/10" />
             
             <div className="space-y-5">
               {group.date && (
@@ -129,7 +128,7 @@ const SideDrawer = ({ projectId, onClose }) => {
       />
       
       {/* Drawer Panel */}
-      <div className={`absolute right-0 top-0 h-full w-full max-w-2xl bg-white dark:bg-notion-dark shadow-2xl transform transition-transform duration-500 ease-out border-l border-notion-border dark:border-white/10 ${projectId ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`absolute right-0 top-0 h-full w-full max-w-4xl bg-white dark:bg-notion-dark shadow-2xl transform transition-transform duration-500 ease-out border-l border-notion-border dark:border-white/10 ${projectId ? 'translate-x-0' : 'translate-x-full'}`}>
         
         {/* Header */}
         <div className="sticky top-0 z-10 bg-white/95 dark:bg-notion-dark/95 backdrop-blur-sm border-b border-notion-border dark:border-white/10 px-8 py-6 flex justify-between items-center text-notion-text dark:text-white">
@@ -150,9 +149,19 @@ const SideDrawer = ({ projectId, onClose }) => {
 
         <div className="overflow-y-auto h-[calc(100vh-88px)] p-8 custom-scrollbar">
           {loading ? (
-            <div className="flex flex-col items-center justify-center h-full gap-4 text-notion-text-secondary animate-in fade-in duration-500">
-              <div className="w-8 h-8 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em]">{t('loading')}</p>
+            <div className="flex flex-col items-center justify-center h-full gap-6 text-notion-text-secondary animate-in fade-in duration-700">
+              <div className="relative">
+                {/* External pulsing ring */}
+                <div className="absolute inset-0 w-16 h-16 border-4 border-blue-500/10 rounded-full animate-ping"></div>
+                {/* Main Spinner */}
+                <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin relative z-10 shadow-[0_0_15px_rgba(59,130,246,0.2)]"></div>
+              </div>
+              <div className="space-y-1 text-center animate-pulse">
+                <p className="text-[12px] font-black text-notion-text-secondary dark:text-gray-400 uppercase tracking-[0.3em]">
+                  {t('loading')}
+                </p>
+                <div className="h-0.5 w-12 bg-blue-500/30 rounded-full mx-auto"></div>
+              </div>
             </div>
           ) : data && (
             <div className="space-y-10 animate-in fade-in slide-in-from-right-2 duration-500 pb-20">
@@ -237,6 +246,38 @@ const SideDrawer = ({ projectId, onClose }) => {
                   </div>
                 )}
               </div>
+
+              {/* Interacciones Section - COLLAPSIBLE */}
+              {data.interactions_content?.length > 0 && (
+                <section className="mt-6 border-t border-notion-border dark:border-white/10 pt-6">
+                  <button 
+                    onClick={() => setIsInteractionsOpen(!isInteractionsOpen)}
+                    className="flex items-center gap-2 mb-8 group w-full text-left"
+                  >
+                    <ChevronRight className={`w-4 h-4 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isInteractionsOpen ? 'rotate-90' : 'rotate-0'}`} />
+                    <span className="text-xl">🔄</span>
+                    <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight">{t('interactions')}</h3>
+                  </button>
+                  
+                  {isInteractionsOpen && renderUnifiedTimeline(data.interactions_content, '🔄')}
+                </section>
+              )}
+
+              {/* Entregas Section - COLLAPSIBLE */}
+              {data.deliveries_content?.length > 0 && (
+                <section className="mt-6 border-t border-notion-border dark:border-white/10 pt-6">
+                  <button 
+                    onClick={() => setIsDeliveriesOpen(!isDeliveriesOpen)}
+                    className="flex items-center gap-2 mb-8 group w-full text-left"
+                  >
+                    <ChevronRight className={`w-4 h-4 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isDeliveriesOpen ? 'rotate-90' : 'rotate-0'}`} />
+                    <span className="text-xl">📦</span>
+                    <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight">{t('prop_deliveries')}</h3>
+                  </button>
+                  
+                  {isDeliveriesOpen && renderUnifiedTimeline(data.deliveries_content, '📦')}
+                </section>
+              )}
 
               {/* Related Tasks Section - COLLAPSIBLE */}
               <section className="mt-6 border-t border-notion-border dark:border-white/10 pt-6">
@@ -379,35 +420,99 @@ const SideDrawer = ({ projectId, onClose }) => {
                 )}
               </section>
 
-              {/* Interacciones Section - COLLAPSIBLE */}
-              {data.interactions_content?.length > 0 && (
+              {/* Project Contacts Section - UNIFIED COLLAPSIBLE STYLE */}
+              {data.project_contacts?.length > 0 && (
                 <section className="mt-6 border-t border-notion-border dark:border-white/10 pt-6">
                   <button 
-                    onClick={() => setIsInteractionsOpen(!isInteractionsOpen)}
+                    onClick={() => setIsContactsOpen(!isContactsOpen)}
                     className="flex items-center gap-2 mb-8 group w-full text-left"
                   >
-                    <ChevronRight className={`w-4 h-4 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isInteractionsOpen ? 'rotate-90' : 'rotate-0'}`} />
-                    <span className="text-xl">🔄</span>
-                    <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight">{t('interactions')}</h3>
+                    <ChevronRight className={`w-4 h-4 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isContactsOpen ? 'rotate-90' : 'rotate-0'}`} />
+                    <span className="text-xl">👥</span>
+                    <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight">{t('contacts')}</h3>
                   </button>
-                  
-                  {isInteractionsOpen && renderUnifiedTimeline(data.interactions_content, '🔄')}
-                </section>
-              )}
 
-              {/* Entregas Section - COLLAPSIBLE */}
-              {data.deliveries_content?.length > 0 && (
-                <section className="mt-6 border-t border-notion-border dark:border-white/10 pt-6">
-                  <button 
-                    onClick={() => setIsDeliveriesOpen(!isDeliveriesOpen)}
-                    className="flex items-center gap-2 mb-8 group w-full text-left"
-                  >
-                    <ChevronRight className={`w-4 h-4 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isDeliveriesOpen ? 'rotate-90' : 'rotate-0'}`} />
-                    <span className="text-xl">📦</span>
-                    <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight">{t('prop_deliveries')}</h3>
-                  </button>
-                  
-                  {isDeliveriesOpen && renderUnifiedTimeline(data.deliveries_content, '📦')}
+                  {isContactsOpen && (
+                    <div className="overflow-x-auto rounded-2xl border border-notion-border dark:border-white/5 bg-black/2 dark:bg-white/1 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                      <table className="w-full text-left border-collapse min-w-[800px]">
+                        <thead>
+                          <tr className="bg-black/5 dark:bg-white/5">
+                            <th className="py-3 px-4 text-[9px] font-black text-notion-text-secondary dark:text-white/40 uppercase tracking-widest border-b border-notion-border dark:border-white/10">
+                              {t('contact_name')}
+                            </th>
+                            <th className="py-3 px-4 text-[9px] font-black text-notion-text-secondary dark:text-white/40 uppercase tracking-widest border-b border-notion-border dark:border-white/10">
+                              {t('contact_phone')}
+                            </th>
+                            <th className="py-3 px-4 text-[9px] font-black text-notion-text-secondary dark:text-white/40 uppercase tracking-widest border-b border-notion-border dark:border-white/10">
+                              {t('contact_email')}
+                            </th>
+                            <th className="py-3 px-4 text-[9px] font-black text-notion-text-secondary dark:text-white/40 uppercase tracking-widest border-b border-notion-border dark:border-white/10">
+                              {t('contact_role')}
+                            </th>
+                            <th className="py-3 px-4 text-[9px] font-black text-notion-text-secondary dark:text-white/40 uppercase tracking-widest border-b border-notion-border dark:border-white/10">
+                              {t('contact_notes')}
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-notion-border dark:divide-white/5">
+                          {data.project_contacts.map((contact) => (
+                            <tr key={contact.id} className="hover:bg-black/5 dark:hover:bg-white/2 transition-colors group/row">
+                              <td className="py-3 px-4">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-7 h-7 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 font-bold text-[10px] shrink-0">
+                                    {(contact.name || '?').charAt(0)}
+                                  </div>
+                                  <span className="text-xs font-bold text-notion-text dark:text-white/90 truncate max-w-[150px]">
+                                    {contact.name}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-3 px-4">
+                                {contact.phone ? (
+                                  <a href={`tel:${contact.phone}`} className="flex items-center gap-2 text-[11px] text-notion-text-secondary hover:text-blue-500 transition-colors">
+                                    <Phone className="w-3 h-3 opacity-60" />
+                                    {contact.phone}
+                                  </a>
+                                ) : (
+                                  <span className="text-[10px] text-notion-text-secondary opacity-40 italic">-</span>
+                                )}
+                              </td>
+                              <td className="py-3 px-4">
+                                {contact.email ? (
+                                  <a href={`mailto:${contact.email}`} className="flex items-center gap-2 text-[11px] text-notion-text-secondary hover:text-blue-500 transition-colors">
+                                    <Mail className="w-3 h-3 opacity-60" />
+                                    <span className="truncate max-w-[180px]">{contact.email}</span>
+                                  </a>
+                                ) : (
+                                  <span className="text-[10px] text-notion-text-secondary opacity-40 italic">-</span>
+                                )}
+                              </td>
+                              <td className="py-3 px-4">
+                                {contact.role && (
+                                  <span className="px-1.5 py-0.5 rounded-sm text-[12px] font-medium leading-none whitespace-nowrap" 
+                                    style={{ 
+                                      background: getNotionColor(contact.role.color, true), 
+                                      color: getNotionColor(contact.role.color, false) 
+                                    }}>
+                                    {contact.role.name}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-3 px-4">
+                                {contact.notes ? (
+                                  <p className="text-[11px] text-notion-text-secondary dark:text-gray-400 line-clamp-2 max-w-[200px]" title={contact.notes}>
+                                    {contact.notes}
+                                  </p>
+                                ) : (
+                                  <span className="text-[10px] text-notion-text-secondary opacity-40 italic">-</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </section>
               )}
 
@@ -431,7 +536,7 @@ const PropertyRow = ({ icon, label, value, isTag, tagColor, isLink, isCurrency, 
       <div className="grow flex items-center">
         {isTag ? (
           <span 
-            className="px-2 py-0.5 rounded text-[11px] font-medium"
+            className="px-1.5 py-0.5 rounded-sm text-[12px] font-medium leading-none"
             style={{ 
               background: getNotionColor(tagColor, true),
               color: getNotionColor(tagColor, false)
@@ -470,16 +575,16 @@ const PropertyRow = ({ icon, label, value, isTag, tagColor, isLink, isCurrency, 
 
 const getNotionColor = (color, isBg) => {
   const map = {
-    'blue': { bg: '#28456c33', text: '#5297ff' },
-    'yellow': { bg: '#89632a33', text: '#ffdc49' },
-    'green': { bg: '#2b593f33', text: '#529e72' },
-    'orange': { bg: '#854c1d33', text: '#ffa344' },
-    'brown': { bg: '#603b2c33', text: '#937264' },
-    'pink': { bg: '#69314c33', text: '#ff5c97' },
-    'red': { bg: '#6e363033', text: '#ff7369' },
-    'purple': { bg: '#49306b33', text: '#9a6dd7' },
-    'gray': { bg: '#373737', text: '#9b9b9b' },
-    'default': { bg: '#373737', text: '#ffffff' }
+    'blue': { bg: 'rgba(38, 103, 152, 0.4)', text: '#5297ff' },
+    'yellow': { bg: 'rgba(137, 99, 42, 0.4)', text: '#ffdc49' },
+    'green': { bg: 'rgba(43, 89, 63, 0.4)', text: '#529e72' },
+    'orange': { bg: 'rgba(133, 76, 29, 0.4)', text: '#ffa344' },
+    'brown': { bg: 'rgba(96, 59, 44, 0.4)', text: '#937264' },
+    'pink': { bg: 'rgba(105, 49, 76, 0.4)', text: '#ff5c97' },
+    'red': { bg: 'rgba(110, 54, 48, 0.4)', text: '#ff7369' },
+    'purple': { bg: 'rgba(73, 48, 107, 0.4)', text: '#9a6dd7' },
+    'gray': { bg: 'rgba(155, 155, 155, 0.15)', text: '#9b9b9b' },
+    'default': { bg: 'rgba(255, 255, 255, 0.1)', text: '#ffffff' }
   };
   const val = map[color] || map['default'];
   return isBg ? val.bg : val.text;
