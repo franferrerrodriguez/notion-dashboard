@@ -91,9 +91,10 @@ export const translations = {
     prop_billed_pct: '% Facturado',
     prop_project_sheet: 'Hoja Proyecto',
     prop_offer_ref: 'ref Oferta',
+    prop_offer: 'Oferta',
     prop_total_offered: 'Total Ofertado',
+    prop_total_billed: 'Total Facturado',
     prop_total_pend: 'Total Pendiente',
-    prop_responsable: 'Responsable',
 
     // SideDrawer Sections
     summary: 'Resumen',
@@ -101,12 +102,17 @@ export const translations = {
     interactions: 'Interacciones',
     tech_history: 'Historial Técnico (Control de horas)',
     no_hours: 'No hay registros de horas.',
+    prop_deliveries: 'Entregas',
     tasks: 'Tareas',
     no_tasks: 'No hay tareas vinculadas.',
     raw_data: 'Datos RAW',
     linked_task: 'Tarea vinculada',
     unassigned: 'sin asignar',
     view_file: 'Ver archivo',
+    task_name: 'Nombre de la tarea',
+    task_status: 'Estado',
+    task_due_date: 'Fecha límite',
+    task_priority: 'Prioridad',
 
     // Password Change
     change_password_title: 'Seguridad de la Cuenta',
@@ -214,9 +220,10 @@ export const translations = {
     prop_billed_pct: '% Billed',
     prop_project_sheet: 'Project Sheet',
     prop_offer_ref: 'Offer Ref',
+    prop_offer: 'Offer',
     prop_total_offered: 'Total Offered',
+    prop_total_billed: 'Total Billed',
     prop_total_pend: 'Total Pending',
-    prop_responsable: 'Owner',
 
     // SideDrawer Sections
     summary: 'Summary',
@@ -224,12 +231,17 @@ export const translations = {
     interactions: 'Interactions',
     tech_history: 'Technical History (Hours Control)',
     no_hours: 'No hour logs.',
+    prop_deliveries: 'Deliveries',
     tasks: 'Tasks',
     no_tasks: 'No linked tasks.',
     raw_data: 'RAW Data',
     linked_task: 'Linked task',
     unassigned: 'unassigned',
     view_file: 'View file',
+    task_name: 'Task name',
+    task_status: 'Status',
+    task_due_date: 'Due date',
+    task_priority: 'Priority',
 
     // Password Change
     change_password_title: 'Account Security',

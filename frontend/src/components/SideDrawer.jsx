@@ -5,6 +5,19 @@ import { projectService } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 import ProgressBar from './ProgressBar';
 
+const renderTextWithLinks = (text) => {
+  if (!text) return null;
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  return parts.map((part, i) => 
+    urlRegex.test(part) ? (
+      <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline break-all">
+        {part}
+      </a>
+    ) : part
+  );
+};
+
 const SideDrawer = ({ projectId, onClose }) => {
   const { t } = useLanguage();
   
@@ -16,19 +29,104 @@ const SideDrawer = ({ projectId, onClose }) => {
 
   const [isExpanded, setIsExpanded] = useState(false);
   
-  // Collapse states for sections
   const [isTasksOpen, setIsTasksOpen] = useState(true);
   const [isInteractionsOpen, setIsInteractionsOpen] = useState(true);
+  const [isDeliveriesOpen, setIsDeliveriesOpen] = useState(true);
+  const [collapsedGroups, setCollapsedGroups] = useState({});
+
+  const toggleGroup = (status) => {
+    setCollapsedGroups(prev => ({ ...prev, [status]: !prev[status] }));
+  };
 
   if (!projectId) return null;
 
   // Comprehensive list of properties to show by default
   const mainProps = [
-    'Cliente', 'Estado', 'Progreso', 'Código oferta', 'Hoja Proyecto', 'ref Oferta', 
+    'Cliente', 'Estado', 'Progreso', 'Código oferta', 'Hoja Proyecto', 'Oferta', 
     'Total Ofertado', 'Total Facturado', 'Pendiente Facturar', '% Facturado', 'Fase',
-    'Propietario', 'Periodo', 'Resumen', 'Vínculo Ofertas', 'Coste interno (€)', 
-    'Control de horas', 'Margen (€)'
+    'Vínculo Ofertas'
   ];
+
+  const blacklistedProps = [
+    'Responsable', 'Periodo', 'Resumen', 'Coste interno', 'Historial técnico', 'Margen'
+  ];
+
+  // Unified rendering for Interactions and Deliveries
+  const renderUnifiedTimeline = (content, sectionIcon) => {
+    if (!content || content.length === 0) return null;
+
+    // Group blocks by date
+    const groups = [];
+    let currentGroup = null;
+
+    content.forEach((block) => {
+      const text = block.text.trim();
+      // Detect date (flexible: YYYY-MM-DD, ISO, etc.)
+      const dateMatch = text.match(/^(\d{4}-\d{2}-\d{2})/);
+      
+      if (dateMatch) {
+         const dateObj = new Date(dateMatch[1]);
+         const formattedDate = dateObj.toLocaleDateString('es-ES', { 
+           day: '2-digit', 
+           month: '2-digit', 
+           year: 'numeric' 
+         });
+         currentGroup = { date: formattedDate, items: [] };
+         groups.push(currentGroup);
+      } else if (text) {
+         if (!currentGroup) {
+            currentGroup = { date: null, items: [] };
+            groups.push(currentGroup);
+         }
+         // Clean bullets or prefixes if any
+         const cleanText = text.replace(/^[•\-*]\s?/, '');
+         if (cleanText) currentGroup.items.push(cleanText);
+      }
+    });
+
+    return (
+      <div className="relative pl-8 space-y-10 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-0.5 before:bg-notion-border dark:before:bg-white/5 animate-in fade-in slide-in-from-left-2 duration-1000">
+        {groups.map((group, idx) => (
+          <div key={idx} className="relative">
+            {/* Timeline Node Icon */}
+            <div className="absolute -left-[26px] top-0 flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] z-10 border-2 border-white dark:border-notion-bg-dark ring-4 ring-blue-500/10">
+               <Calendar className="w-2 h-2 text-white" />
+            </div>
+            
+            <div className="space-y-5">
+              {group.date && (
+                <div className="inline-flex items-center gap-2 -mt-1 group/date transition-transform hover:scale-105">
+                  <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20 shadow-sm backdrop-blur-sm">
+                    {group.date}
+                  </span>
+                </div>
+              )}
+              
+              <div className="grid gap-3">
+                {group.items.map((itemText, i) => (
+                  <div key={i} className="group/card relative p-4 rounded-2xl bg-white/40 dark:bg-white/5 border border-notion-border dark:border-white/5 hover:border-blue-500/30 hover:bg-white dark:hover:bg-white/10 transition-all duration-500 shadow-sm hover:shadow-xl hover:-translate-y-0.5">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-1 p-1 rounded-lg bg-gray-100 dark:bg-white/5 opacity-40 group-hover/card:opacity-100 group-hover/card:bg-blue-500/10 transition-all duration-500">
+                        {sectionIcon === '🔄' ? 
+                          <MessageSquare className="w-3 h-3 text-notion-text-secondary group-hover/card:text-blue-500" /> : 
+                          <Clock className="w-3 h-3 text-notion-text-secondary group-hover/card:text-blue-500" />
+                        }
+                      </div>
+                      <div className="grow space-y-1">
+                        <p className="text-[13px] text-notion-text dark:text-white/90 leading-relaxed font-medium">
+                          {renderTextWithLinks(itemText)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden font-sans">
@@ -39,10 +137,10 @@ const SideDrawer = ({ projectId, onClose }) => {
       />
       
       {/* Drawer Panel */}
-      <div className={`absolute right-0 top-0 h-full w-full max-w-2xl bg-white dark:bg-notion-dark shadow-2xl transform transition-transform duration-500 ease-out border-l border-notion-border dark:border-white/10 ${projectId ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`absolute right-0 top-0 h-full w-full max-w-2xl bg-white dark:bg-notion-bg-dark shadow-2xl transform transition-transform duration-500 ease-out border-l border-notion-border dark:border-white/10 ${projectId ? 'translate-x-0' : 'translate-x-full'}`}>
         
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-white/95 dark:bg-notion-dark/95 backdrop-blur-sm border-b border-notion-border dark:border-white/10 px-8 py-6 flex justify-between items-center text-notion-text dark:text-white">
+        <div className="sticky top-0 z-10 bg-white/95 dark:bg-notion-bg-dark/95 backdrop-blur-sm border-b border-notion-border dark:border-white/10 px-8 py-6 flex justify-between items-center text-notion-text dark:text-white">
           <div className="flex items-center gap-3">
              <span className="text-2xl grayscale brightness-150">📄</span>
              <h2 className="text-xl font-bold truncate max-w-md">
@@ -64,7 +162,7 @@ const SideDrawer = ({ projectId, onClose }) => {
               <div className="w-8 h-8 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em]">{t('loading')}</p>
             </div>
-          ) : (
+          ) : data && (
             <div className="space-y-10 animate-in fade-in slide-in-from-right-2 duration-500 pb-20">
               
               {/* Properties Section */}
@@ -94,10 +192,16 @@ const SideDrawer = ({ projectId, onClose }) => {
                   isNotionFile 
                   t={t}
                 />
-                <PropertyRow icon="🔍" label={t('prop_offer_ref')} value={data.raw_properties?.['ref Oferta']?.rollup?.array?.[0]?.title?.[0]?.plain_text} isLink />
+                <PropertyRow 
+                  icon="📄" 
+                  label={t('prop_offer')} 
+                  value={data.raw_properties?.['Oferta']?.files?.[0]} 
+                  isNotionFile 
+                  t={t}
+                />
                 
                 <PropertyRow icon="💰" label={t('prop_total_offered')} value={formatCurrency(data.raw_properties?.['Total Ofertado']?.formula?.number || data.raw_properties?.['Total Ofertado']?.number)} isCurrency />
-                <PropertyRow icon="💰" label={t('prop_total_offered')} value={formatCurrency(data.raw_properties?.['Total Facturado']?.formula?.number || data.raw_properties?.['Total Facturado']?.number)} isCurrency />
+                <PropertyRow icon="💰" label={t('prop_total_billed')} value={formatCurrency(data.raw_properties?.['Total Facturado']?.formula?.number || data.raw_properties?.['Total Facturado']?.number)} isCurrency />
                 <PropertyRow icon="Σ" label={t('prop_total_pend')} value={formatCurrency(data.raw_properties?.['Pendiente Facturar']?.formula?.number)} isCurrency />
                 
                 <div className="flex items-start gap-4 py-1.5 group/prop">
@@ -115,50 +219,7 @@ const SideDrawer = ({ projectId, onClose }) => {
 
                 <PropertyRow icon="⚖️" label={t('prop_phase')} value={data.raw_properties?.Fase?.status?.name} isTag tagColor={data.raw_properties?.Fase?.status?.color} />
 
-                <PropertyRow icon="👤" label={t('prop_responsable')} value={data.raw_properties?.Propietario?.people?.[0]?.name} isUser />
-                
-                <PropertyRow icon="🗓️" label="Periodo" value={data.raw_properties?.Periodo?.date ? `${data.raw_properties.Periodo.date.start}${data.raw_properties.Periodo.date.end ? ' → ' + data.raw_properties.Periodo.date.end : ''}` : 'Empty'} />
-
-                <div className="flex items-start gap-4 py-1.5 group/prop">
-                  <div className="flex items-center gap-2 w-36 shrink-0 text-notion-text-secondary dark:text-gray-400">
-                    <div className="relative">
-                      <span className="text-sm opacity-70">📝</span>
-                      <span className="absolute -top-1 -right-2 bg-purple-500/20 text-purple-400 text-[7px] font-black px-1 rounded-sm uppercase tracking-tighter border border-purple-400/20">AI</span>
-                    </div>
-                    <span className="text-xs font-medium">{t('summary')}</span>
-                  </div>
-                  <div className="grow">
-                    <p className="text-[13px] text-notion-text dark:text-white/90 leading-relaxed font-medium">
-                      {data.raw_properties?.Resumen?.rich_text?.[0]?.plain_text || t('no_summary')}
-                    </p>
-                  </div>
-                </div>
-
                 <PropertyRow icon="↗️" label={t('prop_offer_ref')} value={data.raw_properties?.['Vínculo Ofertas']?.rollup?.array?.[0]?.title?.[0]?.plain_text} isLink />
-                
-                <PropertyRow icon="Σ" label="Coste interno" value={formatCurrency(data.raw_properties?.['Coste interno (€)']?.formula?.number || data.raw_properties?.['Coste interno (€)']?.number)} isCurrency />
-
-                <div className="flex items-start gap-4 py-1.5 group/prop">
-                  <div className="flex items-center gap-2 w-36 shrink-0 text-notion-text-secondary dark:text-gray-400">
-                    <span className="text-sm opacity-70">↗️</span>
-                    <span className="text-xs font-medium">{t('tech_history')}</span>
-                  </div>
-                  <div className="grow space-y-1.5">
-                    {data.raw_properties?.['Control de horas']?.relation?.length > 0 ? (
-                      data.raw_properties['Control de horas'].relation.map((rel, idx) => (
-                        <div key={idx} className="text-[13px] text-notion-text dark:text-white/90 border-b border-notion-border dark:border-white/10 hover:border-notion-text dark:hover:border-white transition-colors cursor-pointer inline-flex items-center gap-1.5 w-full">
-                           📄 {t('linked_task')}: {rel.id.substring(0, 8)}...
-                        </div>
-                      ))
-                    ) : (
-                      <div className="flex flex-col gap-1.5 italic text-notion-text-secondary opacity-60">
-                         {t('no_hours')}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <PropertyRow icon="Σ" label="Margen" value={formatCurrency(data.raw_properties?.['Margen (€)']?.formula?.number)} isCurrency />
 
                 <div className="pt-2">
                    <button 
@@ -173,7 +234,7 @@ const SideDrawer = ({ projectId, onClose }) => {
                 {isExpanded && (
                   <div className="pt-2 space-y-1.5 border-t border-notion-border dark:border-white/5 mt-2 animate-in fade-in slide-in-from-top-1 duration-300">
                     {Object.entries(data.raw_properties || {})
-                      .filter(([key]) => !mainProps.includes(key))
+                      .filter(([key]) => !mainProps.includes(key) && !blacklistedProps.includes(key))
                       .map(([key, prop]) => (
                         <PropertyRow 
                           key={key} 
@@ -188,123 +249,186 @@ const SideDrawer = ({ projectId, onClose }) => {
                             prop.type === 'number' ? prop.number :
                             null
                           } 
+                          t={t}
                         />
                       ))}
                   </div>
                 )}
               </div>
 
-              {/* Tareas Section - COLLAPSIBLE */}
-              <section className="mt-6">
+              {/* Related Tasks Section - COLLAPSIBLE */}
+              <section className="mt-6 border-t border-notion-border dark:border-white/10 pt-6">
                 <button 
                   onClick={() => setIsTasksOpen(!isTasksOpen)}
-                  className="flex items-center gap-2 mb-4 group w-full text-left"
+                  className="flex items-center gap-2 mb-6 group w-full text-left"
                 >
                   <ChevronRight className={`w-4 h-4 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isTasksOpen ? 'rotate-90' : 'rotate-0'}`} />
                   <span className="text-xl">✅</span>
                   <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight">{t('tasks')}</h3>
                 </button>
-                
+
                 {isTasksOpen && (
-                  <div className="space-y-1 pl-6 border-l border-notion-border dark:border-white/10 animate-in fade-in slide-in-from-top-1 duration-300">
-                     {data.related_tasks?.length > 0 ? (
-                       data.related_tasks.map(task => (
-                          <div key={task.id} className="flex items-center justify-between py-2 group hover:bg-black/5 dark:hover:bg-white/3 px-2 -mx-2 rounded transition-colors cursor-default">
-                              <div className="flex items-center gap-3">
-                                <span className="text-lg opacity-40">📓</span>
-                                <span className="text-[13px] text-notion-text dark:text-white/90 border-b border-notion-border dark:border-white/10 hover:border-notion-text dark:hover:border-white transition-colors">
-                                  {task.properties?.['Nombre de la tarea']?.title?.[0]?.plain_text || t('unassigned')}
-                                </span>
-                                <span 
-                                  className="px-2 py-0.5 rounded text-[10px] font-medium" 
-                                  style={{ 
-                                    background: getNotionColor(task.properties?.['Estado']?.status?.color, true),
-                                    color: getNotionColor(task.properties?.['Estado']?.status?.color, false)
-                                  }}
-                                >
-                                  {task.properties?.['Estado']?.status?.name}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-4">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-5 h-5 rounded-full bg-notion-bg-light dark:bg-gray-700 flex items-center justify-center text-[9px] font-bold text-notion-text-secondary dark:text-gray-300 uppercase">
-                                      {(task.properties?.['Responsable']?.people?.[0]?.name || '?').charAt(0)}
-                                    </div>
-                                    <span className="text-[11px] text-notion-text-secondary dark:text-gray-500 whitespace-nowrap">
-                                      {task.properties?.['Responsable']?.people?.[0]?.name || t('unassigned')}
-                                    </span>
-                                  </div>
-                              </div>
+                  <div className="space-y-6 animate-in fade-in slide-in-from-left-2 duration-500">
+                    {(() => {
+                      const groups = data.related_tasks?.reduce((acc, task) => {
+                        const status = task.properties?.Estado?.status?.name || 'Sin estado';
+                        const color = task.properties?.Estado?.status?.color || 'default';
+                        if (!acc[status]) acc[status] = { name: status, color, tasks: [] };
+                        acc[status].tasks.push(task);
+                        return acc;
+                      }, {}) || {};
+
+                      const notionColors = {
+                        default: 'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400',
+                        gray: 'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400',
+                        brown: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+                        orange: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+                        yellow: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+                        green: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
+                        blue: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+                        purple: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+                        pink: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400',
+                        red: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+                      };
+
+                      if (Object.keys(groups).length === 0) {
+                        return (
+                          <div className="flex flex-col items-center py-10 gap-3 border-2 border-dashed border-notion-border dark:border-white/5 rounded-3xl opacity-40 ml-6">
+                            <Clock className="w-8 h-8 text-notion-text-secondary" />
+                            <p className="text-xs font-bold uppercase tracking-widest">{t('no_tasks')}</p>
                           </div>
-                        ))
-                     ) : (
-                       <p className="text-xs text-notion-text-secondary dark:text-gray-500 italic py-2">{t('no_tasks')}</p>
-                     )}
+                        );
+                      }
+
+                      return Object.values(groups).map((group) => {
+                        const isCollapsed = collapsedGroups[group.name];
+                        return (
+                          <div key={group.name} className="ml-4">
+                            <button 
+                              onClick={() => toggleGroup(group.name)}
+                              className="flex items-center gap-2 mb-3 hover:bg-black/5 dark:hover:bg-white/5 px-2 py-1 -ml-2 rounded transition-colors group/header"
+                            >
+                              <ChevronRight className={`w-3 h-3 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isCollapsed ? 'rotate-0' : 'rotate-90'}`} />
+                              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${notionColors[group.color] || notionColors.default}`}>
+                                {group.name}
+                              </span>
+                            </button>
+
+                            {!isCollapsed && (
+                              <div className="overflow-x-auto ml-5 animate-in fade-in slide-in-from-left-1 duration-300">
+                                <table className="w-full text-left border-collapse min-w-[500px]">
+                                  <thead>
+                                    <tr className="border-b border-notion-border dark:border-white/5">
+                                      <th className="py-2 text-[10px] font-bold text-notion-text-secondary dark:text-gray-500 uppercase tracking-wider w-1/3">
+                                        <div className="flex items-center gap-1.5 leading-none">
+                                          <span className="text-[10px]">Aa</span> {t('task_name')}
+                                        </div>
+                                      </th>
+                                      <th className="py-2 text-[10px] font-bold text-notion-text-secondary dark:text-gray-500 uppercase tracking-wider">
+                                        <div className="flex items-center gap-1.5 leading-none">
+                                          <span className="text-[10px]">🔆</span> {t('task_status')}
+                                        </div>
+                                      </th>
+                                      <th className="py-2 text-[10px] font-bold text-notion-text-secondary dark:text-gray-500 uppercase tracking-wider">
+                                        <div className="flex items-center gap-1.5 leading-none">
+                                          <Calendar className="w-2.5 h-2.5" /> {t('task_due_date')}
+                                        </div>
+                                      </th>
+                                      <th className="py-2 text-[10px] font-bold text-notion-text-secondary dark:text-gray-500 uppercase tracking-wider">
+                                        <div className="flex items-center gap-1.5 leading-none">
+                                          <span className="text-[10px]">⊙</span> {t('task_priority')}
+                                        </div>
+                                      </th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {group.tasks.map((task) => {
+                                      const name = task.properties?.['Nombre de la tarea']?.title?.[0]?.plain_text || t('linked_task');
+                                      const status = task.properties?.Estado?.status?.name;
+                                      const statusColor = task.properties?.Estado?.status?.color;
+                                      const dueDate = task.properties?.['Fecha límite']?.date?.start;
+                                      const priority = task.properties?.Prioridad?.select?.name;
+                                      const priorityColor = task.properties?.Prioridad?.select?.color;
+
+                                      return (
+                                        <tr key={task.id} className="border-b border-notion-border/30 dark:border-white/5 hover:bg-black/5 dark:hover:bg-white/2 transition-colors group/row">
+                                          <td className="py-3 pr-4">
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-sm opacity-60">📄</span>
+                                              <span className="text-sm font-medium text-notion-text dark:text-white/90 truncate max-w-[200px]">
+                                                {name}
+                                              </span>
+                                            </div>
+                                          </td>
+                                          <td className="py-3 pr-4">
+                                            {status && (
+                                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${notionColors[statusColor] || notionColors.default}`}>
+                                                <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60"></span>
+                                                {status}
+                                              </span>
+                                            )}
+                                          </td>
+                                          <td className="py-3 pr-4">
+                                            {dueDate && (
+                                              <span className="text-[11px] text-notion-text-secondary dark:text-gray-400">
+                                                {new Date(dueDate).toLocaleDateString()}
+                                              </span>
+                                            )}
+                                          </td>
+                                          <td className="py-3">
+                                            {priority && (
+                                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${notionColors[priorityColor] || notionColors.default}`}>
+                                                {priority}
+                                              </span>
+                                            )}
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      });
+                    })()}
                   </div>
                 )}
               </section>
 
               {/* Interacciones Section - COLLAPSIBLE */}
-              <section className="mt-6 border-t border-notion-border dark:border-white/10 pt-6">
-                <button 
-                  onClick={() => setIsInteractionsOpen(!isInteractionsOpen)}
-                  className="flex items-center gap-2 mb-6 group w-full text-left"
-                >
-                  <ChevronRight className={`w-4 h-4 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isInteractionsOpen ? 'rotate-90' : 'rotate-0'}`} />
-                  <span className="text-xl">🔄</span>
-                  <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight">{t('interactions')}</h3>
-                </button>
-                
-                {isInteractionsOpen && (
-                  <div className="relative pl-8 space-y-8 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-0.5 before:bg-notion-border dark:before:bg-white/5 animate-in fade-in slide-in-from-left-2 duration-500">
-                    {data.page_content?.length > 0 ? (
-                      data.page_content.map((block, i) => {
-                        const isDate = /^\d{4}-\d{2}-\d{2}$/.test(block.text.trim());
-                        
-                        return (
-                          <div key={i} className={`relative group/item ${isDate ? 'mt-4 first:mt-0' : ''}`}>
-                            {/* Dot / Indicator */}
-                            <div className={`absolute -left-[25px] top-1.5 w-2 h-2 rounded-full border-2 transition-all duration-300 z-10 ${
-                              isDate 
-                                ? 'bg-blue-500 border-blue-500/30 scale-125' 
-                                : 'bg-notion-border dark:bg-white/10 border-transparent group-hover/item:border-blue-500/50'
-                            }`} />
-                            
-                            <div className={`transition-all duration-300 ${
-                              isDate 
-                                ? 'flex items-center gap-2 -ml-2 mb-2' 
-                                : 'p-4 rounded-2xl bg-white/50 dark:bg-white/2 border border-notion-border dark:border-white/5 hover:border-blue-500/20 hover:bg-blue-500/2 shadow-sm hover:shadow-md'
-                            }`}>
-                              {isDate ? (
-                                <>
-                                  <Calendar className="w-3.5 h-3.5 text-blue-500" />
-                                  <span className="text-[11px] font-black text-blue-500 uppercase tracking-widest bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
-                                    {block.text.trim()}
-                                  </span>
-                                </>
-                              ) : (
-                                <div className="space-y-2">
-                                  <div className="flex items-start gap-3">
-                                    <MessageSquare className="w-3.5 h-3.5 text-notion-text-secondary/40 shrink-0 mt-0.5" />
-                                    <p className="text-[13px] text-notion-text dark:text-white/90 leading-relaxed font-medium">
-                                      {block.text}
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <div className="flex flex-col items-center py-10 gap-3 border-2 border-dashed border-notion-border dark:border-white/5 rounded-3xl opacity-40">
-                         <Clock className="w-8 h-8 text-notion-text-secondary" />
-                         <p className="text-xs font-bold uppercase tracking-widest">{t('no_notes') || 'Sin Interacciones'}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </section>
+              {data.interactions_content?.length > 0 && (
+                <section className="mt-6 border-t border-notion-border dark:border-white/10 pt-6">
+                  <button 
+                    onClick={() => setIsInteractionsOpen(!isInteractionsOpen)}
+                    className="flex items-center gap-2 mb-8 group w-full text-left"
+                  >
+                    <ChevronRight className={`w-4 h-4 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isInteractionsOpen ? 'rotate-90' : 'rotate-0'}`} />
+                    <span className="text-xl">🔄</span>
+                    <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight">{t('interactions')}</h3>
+                  </button>
+                  
+                  {isInteractionsOpen && renderUnifiedTimeline(data.interactions_content, '🔄')}
+                </section>
+              )}
+
+              {/* Entregas Section - COLLAPSIBLE */}
+              {data.deliveries_content?.length > 0 && (
+                <section className="mt-6 border-t border-notion-border dark:border-white/10 pt-6">
+                  <button 
+                    onClick={() => setIsDeliveriesOpen(!isDeliveriesOpen)}
+                    className="flex items-center gap-2 mb-8 group w-full text-left"
+                  >
+                    <ChevronRight className={`w-4 h-4 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isDeliveriesOpen ? 'rotate-90' : 'rotate-0'}`} />
+                    <span className="text-xl">📦</span>
+                    <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight">{t('prop_deliveries')}</h3>
+                  </button>
+                  
+                  {isDeliveriesOpen && renderUnifiedTimeline(data.deliveries_content, '📦')}
+                </section>
+              )}
+
             </div>
           )}
         </div>
