@@ -5,7 +5,9 @@ import { settingsService } from '../services/api';
 const SettingsModal = ({ isOpen, onClose }) => {
   const [settings, setSettings] = useState({
     notion_integration_token: '',
-    notion_database_id: ''
+    notion_database_id: '',
+    notion_offers_database_id: '',
+    notion_invoices_database_id: ''
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -53,7 +55,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
       <div className="bg-notion-light dark:bg-notion-dark border border-notion-border dark:border-white/10 rounded-3xl w-full max-w-[500px] shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
         
         {/* Header */}
-        <div className="px-6 py-5 border-b border-notion-border dark:border-white/5 flex justify-between items-center bg-notion-bg-light dark:bg-white/[0.01]">
+        <div className="px-6 py-5 border-b border-notion-border dark:border-white/5 flex justify-between items-center bg-notion-bg-light dark:bg-white/1">
           <div className="flex items-center gap-3">
              <div className="p-2.5 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
                 <Settings className="w-5 h-5 text-indigo-500" />
@@ -112,10 +114,10 @@ const SettingsModal = ({ isOpen, onClose }) => {
                   </div>
                 </div>
 
-                {/* Database ID */}
+                {/* Project Database ID */}
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest pl-1 flex items-center gap-2">
-                    <Database className="w-3 h-3" /> ID Base de Datos Principal
+                    <Database className="w-3 h-3" /> ID Base de Datos Proyectos
                   </label>
                   <input 
                     type="text"
@@ -123,6 +125,36 @@ const SettingsModal = ({ isOpen, onClose }) => {
                     onChange={(e) => setSettings({...settings, notion_database_id: e.target.value})}
                     className="w-full bg-white dark:bg-notion-dark border border-notion-border dark:border-white/5 rounded-2xl px-5 py-3.5 text-sm text-notion-text dark:text-white placeholder:text-notion-text-secondary/20 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
                     placeholder="30ab2935..."
+                    autoComplete="off"
+                  />
+                </div>
+
+                {/* Offers Database ID */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest pl-1 flex items-center gap-2 text-indigo-500/80">
+                    <Target className="w-3 h-3" /> ID Base de Datos Ofertas
+                  </label>
+                  <input 
+                    type="text"
+                    value={settings.notion_offers_database_id || ''}
+                    onChange={(e) => setSettings({...settings, notion_offers_database_id: e.target.value})}
+                    className="w-full bg-white dark:bg-notion-dark border border-notion-border dark:border-white/5 rounded-2xl px-5 py-3.5 text-sm text-notion-text dark:text-white placeholder:text-notion-text-secondary/20 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
+                    placeholder="30ab2935..."
+                    autoComplete="off"
+                  />
+                </div>
+
+                {/* Invoices Database ID */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest pl-1 flex items-center gap-2 text-emerald-500/80">
+                    <Receipt className="w-3 h-3" /> ID Base de Datos Facturas
+                  </label>
+                  <input 
+                    type="text"
+                    value={settings.notion_invoices_database_id || ''}
+                    onChange={(e) => setSettings({...settings, notion_invoices_database_id: e.target.value})}
+                    className="w-full bg-white dark:bg-notion-dark border border-notion-border dark:border-white/5 rounded-2xl px-5 py-3.5 text-sm text-notion-text dark:text-white placeholder:text-notion-text-secondary/20 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
+                    placeholder="30bb2935..."
                     autoComplete="off"
                   />
                 </div>

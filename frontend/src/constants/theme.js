@@ -8,11 +8,19 @@ export const COLORS = {
 };
 
 export const PHASE_COLORS = {
-  Legalizacion: '#8a6552',
-  Obra: '#d9730d',
-  Proyecto: '#337ea9',
-  'Sin Fase': '#37352f',
-  Varios: '#37352f',
+  Legalizacion: '#a855f7', // Vibrant Purple
+  Obra: '#f97316',        // Energetic Orange
+  Proyecto: '#0ea5e9',    // Professional Cyan/Blue
+  Estudio: '#ec4899',     // Modern Pink
+  Finalizado: '#10b981',  // Success Emerald
+  'Sin Fase': '#64748b',   // Neutral Slate
+  Varios: '#94a3b8',      // Light Slate
+  // Offers & Invoices Statuses
+  'Aceptado': '#10b981',   // Success Emerald
+  'Enviada': '#f59e0b',    // Professional Amber (changed from pink to match "sent" status)
+  'Por ofertar': '#ef4444', // Warning Red
+  'Cobrada': '#10b981',    // Success Emerald
+  'Pendiente': '#f59e0b',  // Pending Amber
 };
 
 export const CHART_COLORS = {

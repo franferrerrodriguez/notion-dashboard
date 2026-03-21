@@ -56,7 +56,9 @@ function getSetting($pdo, $key, $default = '') {
 
 // Load Notion Config ONLY from DB
 define('NOTION_API_KEY', getSetting($pdo, 'notion_integration_token', ''));
-define('NOTION_DATABASE_ID', getSetting($pdo, 'notion_database_id', ''));
+define('NOTION_DATABASE_ID', getSetting($pdo, 'notion_database_id', '329b2935ab688045ae4cd0f7143b595c'));
+define('NOTION_OFFERS_DATABASE_ID', getSetting($pdo, 'notion_offers_database_id', '30ab2935ab6880518f79f8e6c6b3c5e2'));
+define('NOTION_INVOICES_DATABASE_ID', getSetting($pdo, 'notion_invoices_database_id', '30bb2935ab68802dbf6fc7f546228475'));
 
 // --- CONFIGURATION GUARD ---
 // Define which actions are "safe" to run even without configuration
@@ -106,7 +108,9 @@ if ($action === 'settings_save' && $method === 'POST') {
     // Map frontend keys to database keys
     $mappings = [
         'notion_token' => 'notion_integration_token',
-        'database_id'  => 'notion_database_id'
+        'database_id'  => 'notion_database_id',
+        'offers_database_id' => 'notion_offers_database_id',
+        'invoices_database_id' => 'notion_invoices_database_id'
     ];
 
     $pdo->beginTransaction();
@@ -297,9 +301,21 @@ if (strpos($action, 'users') === 0) {
     }
 }
 
-// --- PROJECTS ---
+// --- PROJECTS / OFFERS / INVOICES ---
 if ($action === 'list') {
-    $projectController->list(NOTION_DATABASE_ID);
+    $type = $_GET['type'] ?? 'projects';
+    $dbId = NOTION_DATABASE_ID;
+    
+    if ($type === 'offers') $dbId = NOTION_OFFERS_DATABASE_ID;
+    if ($type === 'invoices') $dbId = NOTION_INVOICES_DATABASE_ID;
+
+    if (empty($dbId)) {
+        http_response_code(412);
+        echo json_encode(['error' => 'Database ID not configured for ' . $type]);
+        exit;
+    }
+
+    $projectController->list($dbId, $type);
     exit;
 }
 if ($action === 'detail' && isset($_GET['id'])) {

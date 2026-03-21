@@ -3,7 +3,7 @@
  * Project Controller
  */
 class ProjectController {
-    public function list($databaseId) {
+    public function list($databaseId, $type = 'projects') {
         $pdo = $GLOBALS['pdo']; // Assume PDO is available globally or injected
         
         // Default to the current user's linked client ID
@@ -26,11 +26,11 @@ class ProjectController {
             exit;
         }
 
-        $projects = fetchNotionProjects($databaseId, $clientId);
+        $projects = fetchNotionProjects($databaseId, $clientId, $type);
         
         // Debug: if empty, show why
         if (empty($projects) && isset($_SESSION['last_notion_error'])) {
-             echo json_encode(['error' => $_SESSION['last_notion_error'], 'clientId' => $clientId]);
+             echo json_encode(['error' => $_SESSION['last_notion_error'], 'clientId' => $clientId, 'debug_type' => $type]);
              exit;
         }
 

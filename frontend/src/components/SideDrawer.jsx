@@ -133,7 +133,7 @@ const SideDrawer = ({ projectId, onClose }) => {
         {/* Header */}
         <div className="sticky top-0 z-10 bg-white/95 dark:bg-notion-dark/95 backdrop-blur-sm border-b border-notion-border dark:border-white/10 px-8 py-6 flex justify-between items-center text-notion-text dark:text-white">
           <div className="flex items-center gap-3">
-             <span className="text-2xl grayscale brightness-150">📄</span>
+             <span className="text-2xl grayscale dark:brightness-150">📄</span>
              <h2 className="text-xl font-bold truncate max-w-md">
                {loading ? t('loading') : (identification.name || 'Project Details')}
              </h2>
@@ -280,7 +280,8 @@ const SideDrawer = ({ projectId, onClose }) => {
               )}
 
               {/* Related Tasks Section - COLLAPSIBLE */}
-              <section className="mt-6 border-t border-notion-border dark:border-white/10 pt-6">
+              {data.related_tasks?.length > 0 && (
+                <section className="mt-6 border-t border-notion-border dark:border-white/10 pt-6">
                 <button 
                   onClick={() => setIsTasksOpen(!isTasksOpen)}
                   className="flex items-center gap-2 mb-6 group w-full text-left"
@@ -419,6 +420,7 @@ const SideDrawer = ({ projectId, onClose }) => {
                   </div>
                 )}
               </section>
+            )}
 
               {/* Project Contacts Section - UNIFIED COLLAPSIBLE STYLE */}
               {data.project_contacts?.length > 0 && (

@@ -34,6 +34,9 @@ export const translations = {
     projects: 'Proyectos',
     admin_panel: 'Panel de Administración',
     access_mgmt: 'Gestión de Accesos & Usuarios',
+    tab_projects: 'Proyectos',
+    tab_offers: 'Ofertas',
+    tab_invoices: 'Facturas',
 
     // Admin Panel
     user_list: 'Listado de Acceso',
@@ -55,9 +58,17 @@ export const translations = {
     col_status: 'Estado',
     col_notion_link: 'Vinculación Notion',
     col_actions: 'Acciones',
+    col_billing: 'Facturación',
+    col_code: 'Código',
+    col_description: 'Descripción',
+    col_date: 'Fecha',
+    col_amount_net: 'Importe',
+    col_total: 'Total',
+    col_billed_amount: 'Facturado',
     col_project: 'Proyecto',
     col_phase: 'Fase',
-    col_billing: 'Facturación',
+    col_quarter: 'Trimestre',
+    col_linked_invoices: 'Facturas vinculadas',
 
     // Settings Modal
     settings_title: 'Configuración Global',
@@ -170,6 +181,9 @@ export const translations = {
     projects: 'Projects',
     admin_panel: 'Admin Panel',
     access_mgmt: 'Access & User Management',
+    tab_projects: 'Projects',
+    tab_offers: 'Offers',
+    tab_invoices: 'Invoices',
 
     // Admin Panel
     user_list: 'Access List',
@@ -191,9 +205,17 @@ export const translations = {
     col_status: 'Status',
     col_notion_link: 'Notion Link',
     col_actions: 'Actions',
+    col_billing: 'Billing',
+    col_code: 'Code',
+    col_description: 'Description',
+    col_date: 'Date',
+    col_amount_net: 'Net Amount',
+    col_total: 'Total',
+    col_billed_amount: 'Billed',
     col_project: 'Project',
     col_phase: 'Phase',
-    col_billing: 'Billing',
+    col_quarter: 'Quarter',
+    col_linked_invoices: 'Linked Invoices',
 
     // Settings Modal
     settings_title: 'Global Settings',

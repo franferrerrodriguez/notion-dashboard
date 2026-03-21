@@ -8,12 +8,12 @@ const fetchConfig = {
 };
 
 export const projectService = {
-  async getAll(clientId = null) {
-    const url = clientId
-      ? `${BASE_URL}/index.php?action=list&clientId=${clientId}`
-      : `${BASE_URL}/index.php?action=list`;
+  async getAll(clientId = null, type = 'projects') {
+    let url = `${BASE_URL}/index.php?action=list&type=${type}`;
+    if (clientId) url += `&clientId=${clientId}`;
+    
     const response = await fetch(url, fetchConfig);
-    if (!response.ok) throw new Error('Failed to fetch projects');
+    if (!response.ok) throw new Error(`Failed to fetch ${type}`);
     const data = await response.json();
     return data.data || [];
   },

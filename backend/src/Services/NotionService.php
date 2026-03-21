@@ -6,26 +6,32 @@ require_once __DIR__ . '/../../config/secrets.php';
 /**
  * Fetch projects from a Notion Database filtered by Client ID
  */
-function fetchNotionProjects($databaseId, $clientId) {
+function fetchNotionProjects($databaseId, $clientId, $type = 'projects') {
     $apiKey = NOTION_API_KEY;
     
     // Notion API Endpoint for querying a database
     $url = "https://api.notion.com/v1/databases/{$databaseId}/query";
 
-    // Filtering logic: Updated to multi_select to match your Notion column type
-    $filterData = [
-        'filter' => [
-            'property' => 'Cliente', 
-            'multi_select' => [
-                'contains' => $clientId
-            ]
+    // Default filter for multi_select (Projects/Offers)
+    $filter = [
+        'property' => 'Cliente', 
+        'multi_select' => [
+            'contains' => $clientId
         ]
     ];
+
+    // For Invoices, we remove the Notion filter to avoid the 400 Rollup error.
+    // We will filter manually in PHP later in the loop.
+    if ($type === 'invoices') {
+        $filter = null;
+    }
+
+    $filterData = $filter ? ['filter' => $filter] : (object)[];
 
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($filterData, JSON_FORCE_OBJECT));
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($filterData));
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         "Authorization: Bearer {$apiKey}",
         "Notion-Version: 2022-06-28",
@@ -48,6 +54,12 @@ function fetchNotionProjects($databaseId, $clientId) {
             $props = $page['properties'];
             $transformed = transformProject($props);
             
+            // Manual filtering for Invoices (as workaround for Notion Rollup 400 error)
+            if ($type === 'invoices' && !empty($clientId)) {
+                $clientName = $transformed['client']['details']['name'] ?? '';
+                if (stripos($clientName, $clientId) === false) continue;
+            }
+
             $projects[] = array_merge([
                 'id' => $page['id']
             ], $transformed);
@@ -65,29 +77,60 @@ function fetchNotionProjects($databaseId, $clientId) {
  * This decouples the application from Notion's internal property names and structures.
  */
 function transformProject($props) {
+    // Helper to find property by name (case-insensitive) or variants
+    $get = function($names) use ($props) {
+        if (!is_array($names)) $names = [$names];
+        foreach ($names as $name) {
+            if (isset($props[$name])) return $props[$name];
+            // Case-insensitive search
+            foreach ($props as $key => $val) {
+                if (mb_strtolower($key) === mb_strtolower($name)) return $val;
+            }
+        }
+        return null;
+    };
+
+    // 1. Identify Title Property (Name)
+    $name = 'Sin nombre';
+    foreach ($props as $p) {
+        if (($p['type'] ?? '') === 'title') {
+            $name = extractText($p) ?: 'Sin nombre';
+            break;
+        }
+    }
+
+    // 2. Map Status and Phase (Grouping)
+    $mainStatus = extractStatus($get(['Estado', 'Status'])) ?: ['name' => 'Sin estado', 'color' => 'default'];
+    $phase = extractStatus($get(['Fase', 'Phase']));
+    
+    // Fallback: If no Phase, use Status for grouping (Unified Design)
+    if (!$phase || $phase['name'] === 'Sin Fase') {
+        $phase = $mainStatus;
+    }
+
     return [
         'identification' => [
-            'name' => extractText($props['Nombre del proyecto'] ?? null) ?: 'Sin nombre',
+            'name' => $name,
         ],
         'status' => [
-            'main' => extractStatus($props['Estado'] ?? null) ?: ['name' => 'Sin estado', 'color' => 'default'],
-            'phase' => extractStatus($props['Fase'] ?? null) ?: ['name' => 'Sin Fase', 'color' => 'default'],
-            'progress' => extractNumber($props['Progreso'] ?? null, 100),
+            'main' => $mainStatus,
+            'phase' => $phase,
+            'progress' => extractNumber($get(['Progreso', 'Progress', '% completado', '% facturado', '% cobrado']), 100),
         ],
         'client' => [
-            'details' => extractMultiSelect($props['Cliente'] ?? null, true)[0] ?? ['name' => 'Sin Cliente', 'color' => 'default'],
+            'details' => extractMultiSelect($get(['Cliente', 'Client']), true)[0] ?? ['name' => 'Sin Cliente', 'color' => 'default'],
         ],
         'financials' => [
-            'totalOffered' => extractFinancial($props['Total Ofertado'] ?? null),
-            'totalBilled' => extractFinancial($props['Total Facturado'] ?? null),
-            'totalPending' => extractFinancial($props['Pendiente Facturar'] ?? null),
-            'billingPercentage' => extractNumber($props['% Facturado'] ?? null, 100),
+            'totalOffered' => extractFinancial($get(['Total Ofertado', 'Importe neto', 'Base imponible', 'Importe factura'])),
+            'totalBilled' => extractFinancial($get(['Total Facturado', 'Facturado', 'Cobrado'])),
+            'totalPending' => extractFinancial($get(['Pendiente Facturar', 'Pendiente de cobro'])),
+            'billingPercentage' => extractNumber($get(['% Facturado', '% facturado', '% cobrado']), 100),
         ],
         'assets' => [
-            'projectSheet' => extractFile($props['Hoja Proyecto'] ?? null),
-            'offerFile' => extractFile($props['Oferta'] ?? null),
-            'offerCode' => extractRollupTitle($props['Código oferta'] ?? null),
-            'offerLink' => extractRollupTitle($props['Vínculo Ofertas'] ?? null),
+            'projectSheet' => extractFile($get(['Hoja Proyecto', 'Ficha'])),
+            'offerFile' => extractFile($get(['Oferta', 'Presupuesto', 'Factura PDF'])),
+            'offerCode' => extractRollupTitle($get(['Código oferta', 'Nº Factura'])),
+            'offerLink' => extractRollupTitle($get(['Vínculo Ofertas', 'Enlace'])),
         ],
         'metadata' => extractRemainingProperties($props)
     ];
@@ -163,7 +206,7 @@ function extractText($prop) {
     return null;
 }
 
-function transformContact($page, &$debug = null) {
+function transformContact($page) {
     $props = $page['properties'];
     $data = [
         'id' => $page['id'],
@@ -218,12 +261,38 @@ function transformContact($page, &$debug = null) {
 }
 
 function extractStatus($prop) {
-    if (!isset($prop['status']) && !isset($prop['select'])) return null;
-    $data = $prop['status'] ?? $prop['select'];
-    return [
-        'name' => $data['name'],
-        'color' => $data['color'] ?? 'default'
-    ];
+    if (!$prop || !isset($prop['type'])) return null;
+    $type = $prop['type'];
+
+    // Handle Rollups (Recursive check)
+    if ($type === 'rollup' && isset($prop['rollup']['array'])) {
+        foreach ($prop['rollup']['array'] as $rollupItem) {
+            $status = extractStatus($rollupItem);
+            if ($status) return $status;
+        }
+    }
+
+    // Handle Formula result
+    if ($type === 'formula') {
+        $f = $prop['formula'];
+        $val = $f['string'] ?? (string)($f['number'] ?? null);
+        if ($val) return ['name' => $val, 'color' => 'default'];
+    }
+
+    // Handle explicit Status or Select
+    if (isset($prop['status']) || isset($prop['select'])) {
+        $data = $prop['status'] ?? $prop['select'];
+        return [
+            'name' => $data['name'],
+            'color' => $data['color'] ?? 'default'
+        ];
+    }
+
+    // Fallback: Use generic text extraction
+    $txt = extractText($prop);
+    if ($txt) return ['name' => $txt, 'color' => 'default'];
+
+    return null;
 }
 
 function extractNumber($prop, $multiplier = 1) {
@@ -232,7 +301,13 @@ function extractNumber($prop, $multiplier = 1) {
 }
 
 function extractFinancial($prop) {
-    return $prop['formula']['number'] ?? $prop['number'] ?? 0;
+    if (isset($prop['type']) && $prop['type'] === 'rollup' && isset($prop['rollup']['array'])) {
+        foreach ($prop['rollup']['array'] as $rollupItem) {
+            if (isset($rollupItem['number'])) return $rollupItem['number'];
+            if (isset($rollupItem['formula']['number'])) return $rollupItem['formula']['number'];
+        }
+    }
+    return $prop['formula']['number'] ?? $prop['number'] ?? $prop['rollup']['number'] ?? 0;
 }
 
 function extractFile($prop) {
@@ -249,6 +324,21 @@ function extractRollupTitle($prop) {
 }
 
 function extractMultiSelect($prop, $asObject = false) {
+    // Rollup support
+    if (isset($prop['type']) && $prop['type'] === 'rollup' && isset($prop['rollup']['array'])) {
+        $items = [];
+        foreach ($prop['rollup']['array'] as $rollupItem) {
+            if (isset($rollupItem['multi_select'])) {
+                foreach ($rollupItem['multi_select'] as $ms) $items[] = $ms;
+            } else if (isset($rollupItem['select'])) {
+                $items[] = $rollupItem['select'];
+            }
+        }
+        return array_map(function($m) use ($asObject) {
+            return $asObject ? ['name' => $m['name'], 'color' => $m['color']] : $m['name'];
+        }, $items);
+    }
+
     if (!isset($prop['multi_select'])) return [];
     return array_map(function($m) use ($asObject) {
         return $asObject ? ['name' => $m['name'], 'color' => $m['color']] : $m['name'];
@@ -272,6 +362,7 @@ function extractRemainingProperties($props) {
             $value = null;
             switch ($prop['type']) {
                 case 'rich_text': $value = $prop['rich_text'][0]['plain_text'] ?? null; break;
+                case 'title': $value = $prop['title'][0]['plain_text'] ?? null; break;
                 case 'number': $value = $prop['number']; break;
                 case 'select': $value = $prop['select']['name'] ?? null; break;
                 case 'multi_select': $value = extractMultiSelect($prop); break;
@@ -279,6 +370,44 @@ function extractRemainingProperties($props) {
                 case 'email': $value = $prop['email']; break;
                 case 'phone_number': $value = $prop['phone_number']; break;
                 case 'url': $value = $prop['url']; break;
+                case 'formula': 
+                    $f = $prop['formula'];
+                    $value = $f['string'] ?? $f['number'] ?? $f['boolean'] ?? $f['date']['start'] ?? null;
+                    break;
+                case 'relation':
+                    // Extract the IDs of the related pages
+                    $value = array_column($prop['relation'] ?? [], 'id');
+                    break;
+                case 'rollup':
+                    $r = $prop['rollup'];
+                    $type = $r['type'];
+                    if ($type === 'number') $value = $r['number'];
+                    elseif ($type === 'date') $value = $r['date']['start'] ?? null;
+                    elseif ($type === 'array') {
+                        // Extract meaningsful values from rollup array
+                        $items = [];
+                        foreach ($r['array'] as $item) {
+                            $it = $item['type'] ?? null;
+                            if ($it === 'title') $items[] = $item['title'][0]['plain_text'] ?? '';
+                            elseif ($it === 'rich_text') $items[] = $item['rich_text'][0]['plain_text'] ?? '';
+                            elseif ($it === 'number') $items[] = $item['number'] ?? '';
+                            elseif ($it === 'select') $items[] = $item['select']['name'] ?? '';
+                            elseif ($it === 'multi_select') {
+                                foreach (($item['multi_select'] ?? []) as $ms) $items[] = $ms['name'];
+                            }
+                            elseif ($it === 'date') $items[] = $item['date']['start'] ?? '';
+                            elseif ($it === 'formula') {
+                                $f = $item['formula'];
+                                $items[] = $f['string'] ?? $f['number'] ?? $f['boolean'] ?? $f['date']['start'] ?? '';
+                            }
+                            elseif ($it === 'relation') {
+                                foreach (($item['relation'] ?? []) as $rel) $items[] = $rel['id'];
+                            }
+                        }
+                        // Flatten and remove duplicates
+                        $value = !empty($items) ? array_unique(array_filter($items)) : null;
+                    }
+                    break;
             }
             
             if ($value !== null) {
@@ -378,19 +507,13 @@ function fetchNotionPageDetail($pageId) {
 
     // Fetch Project Contacts (Priority 1: Child Database found in blocks)
     $projectContacts = [];
-    $debugLog = [];
     
     if ($contactsDatabaseId) {
         $contactPages = queryDatabase($contactsDatabaseId);
-        if (isset($contactPages['error'])) {
-            $debugLog[] = "Child DB query error: " . $contactPages['error'];
-            $contactPages = [];
-        }
-        if (!empty($contactPages)) {
-            $debugLog[] = "Contact Keys: " . implode(', ', array_keys($contactPages[0]['properties']));
-        }
-        foreach ($contactPages as $page) {
-            $projectContacts[] = transformContact($page, $debugLog);
+        if (!isset($contactPages['error'])) {
+            foreach ($contactPages as $page) {
+                $projectContacts[] = transformContact($page);
+            }
         }
     }
 
@@ -402,12 +525,10 @@ function fetchNotionPageDetail($pageId) {
             'relation' => ['contains' => $pageId]
         ];
         $contactPages = queryDatabase($globalContactsDbId, $filter);
-        if (isset($contactPages['error'])) {
-            $debugLog[] = "Global DB query error: " . $contactPages['error'];
-            $contactPages = [];
-        }
-        foreach ($contactPages as $page) {
-            $projectContacts[] = transformContact($page, $debugLog);
+        if (!isset($contactPages['error'])) {
+            foreach ($contactPages as $page) {
+                $projectContacts[] = transformContact($page);
+            }
         }
     }
 
@@ -438,8 +559,7 @@ function fetchNotionPageDetail($pageId) {
         'deliveries_content' => $deliveriesContent,
         'related_tasks' => $relatedTasks,
         'related_interactions' => $relatedInteractions,
-        'project_contacts' => $projectContacts,
-        'debug_contacts' => $debugLog
+        'project_contacts' => $projectContacts
     ];
 }
 

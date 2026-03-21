@@ -1,42 +1,47 @@
 import { CHART_COLORS } from '../constants/theme';
 
-const DoughnutChart = ({ stats, total }) => {
+const DoughnutChart = ({ data, total }) => {
   const size = 100;
   const strokeWidth = 12;
   const center = size / 2;
   const radius = center - strokeWidth / 2;
   const circumference = 2 * Math.PI * radius;
   
-  const v1 = (stats.notStarted / total) * circumference;
-  const v2 = (stats.inProgress / total) * circumference;
-  const v3 = (stats.completed / total) * circumference;
+  if (!total || !data || data.length === 0) {
+    return (
+      <svg viewBox={`0 0 ${size} ${size}`} className="transform -rotate-90">
+        <circle cx={center} cy={center} r={radius} fill="none" stroke="#222" strokeWidth={strokeWidth} />
+      </svg>
+    );
+  }
+
+  let accumulated = 0;
 
   return (
     <svg viewBox={`0 0 ${size} ${size}`} className="transform -rotate-90 drop-shadow-2xl">
+      {/* Background circle */}
       <circle cx={center} cy={center} r={radius} fill="none" stroke="#222" strokeWidth={strokeWidth} />
       
-      <circle 
-        cx={center} cy={center} r={radius} fill="none" 
-        stroke={CHART_COLORS.COMPLETED} strokeWidth={strokeWidth}
-        strokeDasharray={`${v3} ${circumference}`}
-        style={{ transition: 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)' }}
-      />
-      
-      <circle 
-        cx={center} cy={center} r={radius} fill="none" 
-        stroke={CHART_COLORS.IN_PROGRESS} strokeWidth={strokeWidth}
-        strokeDasharray={`${v2} ${circumference}`}
-        strokeDashoffset={-v3}
-        style={{ transition: 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.3s' }}
-      />
+      {data.map((segment, index) => {
+        const segmentLength = (segment.count / total) * circumference;
+        const offset = -accumulated;
+        accumulated += segmentLength;
 
-      <circle 
-        cx={center} cy={center} r={radius} fill="none" 
-        stroke={CHART_COLORS.NOT_STARTED} strokeWidth={strokeWidth}
-        strokeDasharray={`${v1} ${circumference}`}
-        strokeDashoffset={-(v3 + v2)}
-        style={{ transition: 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.6s' }}
-      />
+        return (
+          <circle 
+            key={segment.name}
+            cx={center} cy={center} r={radius} fill="none" 
+            stroke={segment.color} strokeWidth={strokeWidth}
+            strokeDasharray={`${segmentLength} ${circumference}`}
+            strokeDashoffset={offset}
+            strokeLinecap="round"
+            style={{ 
+              transition: 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
+              transitionDelay: `${index * 0.1}s`
+            }}
+          />
+        );
+      })}
     </svg>
   );
 };
