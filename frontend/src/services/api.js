@@ -38,7 +38,7 @@ export const projectService = {
     return await response.json();
   },
   async markAllRead(maxTime) {
-    const response = await fetch(`${BASE_URL}/index.php?action=mark_all_read${maxTime ? `?time=${encodeURIComponent(maxTime)}` : ''}`, {
+    const response = await fetch(`${BASE_URL}/index.php?action=mark_all_read${maxTime ? `&time=${encodeURIComponent(maxTime)}` : ''}`, {
       ...fetchConfig,
       method: 'POST',
     });

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTheme } from './context/ThemeContext';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
@@ -7,7 +7,7 @@ import { useAuth } from './context/AuthContext';
 import { useLanguage } from './context/LanguageContext';
 import { PHASE_COLORS, CHART_COLORS } from './constants/theme';
 import { ROLES } from './constants/auth';
-import { Calendar as CalendarIcon, MessageSquare, Clock, ChevronRight, X, Phone, Mail, User, FileText, Castle, Target, Receipt, CalendarDays, FolderRoot, ShieldAlert, ArrowLeft, Bell, BarChart3, PieChart, TrendingUp } from 'lucide-react';
+import { Calendar as CalendarIcon, MessageSquare, Clock, ChevronRight, X, Phone, Mail, User, FileText, Castle, Target, Receipt, CalendarDays, FolderRoot, ShieldAlert, ArrowLeft, Bell, BarChart3, PieChart, TrendingUp, Loader2 } from 'lucide-react';
 
 // Components
 import ProgressBar from './components/ProgressBar';
@@ -97,46 +97,55 @@ const Dashboard = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedTask, setSelectedTask] = useState(null);
   const [activeTab, setActiveTab] = useState(TABS.PROJECTS);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadItems, setUnreadItems] = useState([]);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [loadingUnread, setLoadingUnread] = useState(false);
 
   // TanStack Query for projects - Parallel prefetching for all tabs
   const effectiveClientId = user?.role === ROLES.ADMIN && clientId ? clientId : null;
 
+  const refetchUnread = async () => {
+    setLoadingUnread(true);
+    try {
+      const status = await projectService.getUnreadStatus(effectiveClientId);
+      const items = status.items || [];
+      setUnreadItems(items);
+      setUnreadCount(items.filter(i => i.is_unread).length);
+    } catch (err) {
+      console.error('Failed to refetch unread:', err);
+    } finally {
+      setLoadingUnread(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      refetchUnread();
+    }
+  }, [user, effectiveClientId]);
+
   const { data: projects = [], isLoading: loadingProjects } = useQuery({
     queryKey: ['notion_data', effectiveClientId, TABS.PROJECTS],
     queryFn: () => projectService.getAll(effectiveClientId, TABS.PROJECTS.toLowerCase()),
-    refetchInterval: 1000 * 30,
   });
 
   const { data: offers = [], isLoading: loadingOffers } = useQuery({
     queryKey: ['notion_data', effectiveClientId, TABS.OFFERS],
     queryFn: () => projectService.getAll(effectiveClientId, TABS.OFFERS.toLowerCase()),
-    refetchInterval: 1000 * 30,
   });
 
   const { data: invoices = [], isLoading: loadingInvoices } = useQuery({
     queryKey: ['notion_data', effectiveClientId, TABS.INVOICES],
     queryFn: () => projectService.getAll(effectiveClientId, TABS.INVOICES.toLowerCase()),
-    refetchInterval: 1000 * 30,
   });
 
   const { data: tasks = [], isLoading: loadingTasks } = useQuery({
     queryKey: ['notion_data', effectiveClientId, 'tasks'],
     queryFn: () => projectService.getAll(effectiveClientId, 'tasks'),
-    refetchInterval: 1000 * 30,
   });
 
   const isLoading = loadingProjects || loadingOffers || loadingInvoices || loadingTasks;
-
-  // New Isolated Notification Query 🔔
-  const { data: unreadData = { count: 0, items: [] }, refetch: refetchUnread } = useQuery({
-    queryKey: ['unread_status', effectiveClientId],
-    queryFn: () => projectService.getUnreadStatus(effectiveClientId),
-    refetchInterval: 1000 * 30, // 30s
-  });
-
-  const unreadCount = unreadData.count;
-  const unreadItems = unreadData.items;
 
   // Debug Log (Moved after definitions)
   if (unreadCount > 0) {
@@ -160,40 +169,35 @@ const Dashboard = () => {
   // REVERSE LOOKUP: Group invoices by their related offer ID
   const reverseInvoiceMap = useMemo(() => {
     const map = {};
-    if (!invoices) return map;
+    if (!invoices || !offers) return map;
     
     invoices.forEach(inv => {
-      const offerProperty = inv.metadata?.find(m => 
-        m.label === 'Vínculo oferta' || 
-        m.label === 'Oferta vinculada' || 
-        m.label === '↗ Oferta'
-      );
-      const offerIds = offerProperty?.value;
+      // Robustly identify relations that point to an Offer by checking the ID against the offers list
+      const relatedOfferIds = inv.metadata?.filter(m => m.type === 'relation')
+        ?.flatMap(m => Array.isArray(m.value) ? m.value : [m.value])
+        ?.filter(id => offers.some(o => o.id === id)) || [];
 
-      if (offerIds) {
-        const ids = Array.isArray(offerIds) ? offerIds : [offerIds];
-        ids.forEach(id => {
-          if (!map[id]) map[id] = [];
-          if (inv.identification?.name) {
-            map[id].push(inv.identification.name);
-          }
-        });
-      }
+      relatedOfferIds.forEach(id => {
+        if (!map[id]) map[id] = [];
+        if (inv.identification?.name) {
+          map[id].push(inv.identification.name);
+        }
+      });
     });
     return map;
-  }, [invoices]);
+  }, [invoices, offers]);
 
   const resolveAllLinkedInvoices = (p) => {
-    // 1. Direct relations (from Offer to Invoice)
-    const directIds = getMetaValue(p, 'Facturas vinculadas') || 
-                      getMetaValue(p, '↗ Facturas vinculadas') || 
-                      getMetaValue(p, 'Factura vinculada');
+    // 1. Direct relations (from Offer/Project to Invoice)
+    const directIds = p.metadata?.filter(m => m.type === 'relation')
+      ?.flatMap(m => Array.isArray(m.value) ? m.value : [m.value])
+      ?.filter(id => invoices.some(i => i.id === id)) || [];
     
-    const directNames = directIds ? (Array.isArray(directIds) ? directIds : [directIds]).map(id => {
+    const directNames = directIds.map(id => {
         return invoices.find(i => i.id === id)?.identification?.name;
-    }).filter(Boolean) : [];
+    }).filter(Boolean);
 
-    // 2. Reverse relations (from Invoices to this Offer)
+    // 2. Reverse relations (from Invoices pointing to this Offer)
     const reverseNames = reverseInvoiceMap[p.id] || [];
 
     // Combine and unique
@@ -274,105 +278,115 @@ const Dashboard = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Minimalist Notification Bell */}
-            <div className="relative">
-              <button 
-                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                className={`p-2.5 rounded-xl border transition-all duration-300 hover:scale-105 active:scale-95 ${unreadCount > 0 ? 'bg-blue-500/10 border-blue-500/30 text-blue-500' : 'bg-black/5 dark:bg-white/5 border-notion-border dark:border-white/10 text-notion-text-secondary'}`}
-              >
-                <Bell className="w-5 h-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-5 min-w-[20px] px-1 bg-blue-500 rounded-full text-[9px] font-black text-white items-center justify-center border-2 border-notion-light dark:border-notion-dark shadow-lg">
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Minimalist Dropdown */}
-              {isNotificationOpen && (
-                <>
-                  <div 
-                    className="fixed inset-0 z-40" 
-                    onClick={() => setIsNotificationOpen(false)}
-                  ></div>
-                  <div className="absolute top-full mt-3 right-0 w-80 bg-white dark:bg-[#1e1e1e] border border-notion-border dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-                    <div className="p-4 border-b border-notion-border dark:border-white/5 flex justify-between items-center bg-gray-50/50 dark:bg-white/2">
-                      <h3 className="text-[10px] font-black uppercase tracking-widest text-notion-text-secondary dark:text-gray-400">
-                        {t('notifications')}
-                      </h3>
-                      <div className="flex items-center gap-3">
-                        {unreadCount > 0 && (
+                      {/* Notifications Button */}
+                      <div className="relative group">
                           <button 
-                            onClick={async () => {
-                              const maxTime = unreadItems.length > 0 
-                                ? new Date(Math.max(...unreadItems.map(i => new Date(i.last_edited_time).getTime()))).toISOString()
-                                : null;
-                              await projectService.markAllRead(maxTime);
-                              setIsNotificationOpen(false);
-                              refetchUnread();
-                              // Also reload to sync dots if needed, but the bell is now isolated.
-                              window.location.reload(); 
-                            }}
-                            className="text-[9px] font-black text-blue-500 hover:text-blue-600 uppercase tracking-tight transition-colors"
+                            onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                            className="relative p-2 rounded-xl text-hover transition-all"
+                            disabled={loadingUnread}
                           >
-                            {t('mark_all_read_btn')}
+                            {loadingUnread ? (
+                              <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+                            ) : (
+                              <Bell className="w-5 h-5 transition-transform group-active:scale-95" />
+                            )}
+                            {!loadingUnread && unreadCount > 0 && (
+                              <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-notion-bg-default dark:border-notion-bg-dark shadow-sm">
+                                {unreadCount}
+                              </span>
+                            )}
                           </button>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="max-h-[400px] overflow-y-auto">
-                      {unreadCount === 0 ? (
-                        <div className="p-8 text-center">
-                          <div className="w-12 h-12 bg-gray-100 dark:bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                            <Bell className="w-5 h-5 text-gray-400" />
-                          </div>
-                          <p className="text-xs text-notion-text-secondary dark:text-gray-500 font-medium italic">
-                            No hay novedades pendientes
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="divide-y divide-notion-border dark:divide-white/5">
-                          {unreadItems
-                            .sort((a, b) => new Date(b.last_edited_time).getTime() - new Date(a.last_edited_time).getTime())
-                            .slice(0, 15)
-                            .map((item) => (
-                              <button
-                                key={item.id}
-                                onClick={() => {
-                                  // Simplified logic to open correctly
-                                  if (item.type === 'tasks') {
-                                     setSelectedTask(item.id);
-                                     setSelectedProject(null);
-                                  } else {
-                                     setSelectedProject(item.id);
-                                     setSelectedTask(null);
-                                  }
-                                  setIsNotificationOpen(false);
-                                }}
-                                className="w-full p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors flex items-start gap-3 text-left group"
-                              >
-                                <div className="p-2 bg-blue-500/10 rounded-xl group-hover:bg-blue-500 group-hover:text-white transition-all shrink-0">
-                                   <FileText className="w-3.5 h-3.5" />
+
+                          {/* Minimalist Dropdown */}
+                          {isNotificationOpen && (
+                            <>
+                              <div 
+                                className="fixed inset-0 z-40" 
+                                onClick={() => setIsNotificationOpen(false)}
+                              ></div>
+                              <div className="absolute top-full mt-3 right-0 w-80 bg-white dark:bg-[#1e1e1e] border border-notion-border dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                                <div className="p-4 border-b border-notion-border dark:border-white/5 flex justify-between items-center bg-gray-50/50 dark:bg-white/2">
+                                  <h3 className="text-[10px] font-black uppercase tracking-widest text-notion-text-secondary dark:text-gray-400">
+                                    {t('notifications')}
+                                  </h3>
+                                  <div className="flex items-center gap-3">
+                                    {unreadCount > 0 && (
+                                      <button 
+                                        onClick={async () => {
+                                          const maxTime = unreadItems.length > 0 
+                                            ? new Date(Math.max(...unreadItems.map(i => new Date(i.last_edited_time).getTime()))).toISOString()
+                                            : null;
+                                          await projectService.markAllRead(maxTime);
+                                          setIsNotificationOpen(false);
+                                          refetchUnread();
+                                        }}
+                                        className="text-[9px] font-black text-blue-500 hover:text-blue-600 uppercase tracking-tight transition-colors"
+                                      >
+                                        {t('mark_all_read_btn')}
+                                      </button>
+                                    )}
+                                  </div>
                                 </div>
-                                <div className="min-w-0">
-                                  <p className="text-xs font-bold text-notion-text dark:text-gray-200 truncate mb-1">
-                                    {item.identification?.name || 'Item sin nombre'}
-                                  </p>
-                                  <p className="text-[10px] text-notion-text-secondary dark:text-gray-500 flex items-center gap-1.5 uppercase font-black">
-                                    <Clock className="w-3 h-3" />
-                                    {new Date(item.last_edited_time).toLocaleString()}
-                                  </p>
+                                
+                                <div className="max-h-[400px] overflow-y-auto">
+                                  {unreadCount === 0 ? (
+                                    <div className="p-8 text-center">
+                                      <div className="w-12 h-12 bg-gray-100 dark:bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                                        <Bell className="w-5 h-5 text-gray-400" />
+                                      </div>
+                                      <p className="text-xs text-notion-text-secondary dark:text-gray-500 font-medium italic">
+                                        No hay novedades pendientes
+                                      </p>
+                                    </div>
+                                  ) : (
+                                    <div className="divide-y divide-notion-border dark:divide-white/5">
+                                      {unreadItems
+                                        .sort((a, b) => new Date(b.last_edited_time).getTime() - new Date(a.last_edited_time).getTime())
+                                        .slice(0, 15)
+                                        .map((item) => (
+                                          <button
+                                            key={item.id}
+                                            onClick={async () => {
+                                              // Mark as read immediately
+                                              await projectService.markRead(item.id);
+                                              refetchUnread();
+
+                                              // Navigate to parent project if it's an interaction, otherwise the item itself
+                                              const realId = item.id.split(':')[0];
+                                              const targetId = item.parent_id || realId;
+
+                                              if (item.type === 'tasks' || item.type === 'task') {
+                                                 setSelectedTask(targetId);
+                                                 setSelectedProject(null);
+                                              } else {
+                                                 setSelectedProject(targetId);
+                                                 setSelectedTask(null);
+                                              }
+                                              setIsNotificationOpen(false);
+                                            }}
+                                            className="w-full p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors flex items-start gap-3 text-left group"
+                                          >
+                                            <div className="p-2 bg-blue-500/10 rounded-xl group-hover:bg-blue-500 group-hover:text-white transition-all shrink-0">
+                                               <FileText className="w-3.5 h-3.5" />
+                                            </div>
+                                            <div className="text-left">
+                                              <p className="text-xs font-bold text-notion-text dark:text-gray-200 line-clamp-3 mb-1">
+                                                {item.text || item.identification?.name || 'Item sin nombre'}
+                                              </p>
+                                              <p className="text-[10px] text-notion-text-secondary dark:text-gray-500 flex items-center gap-1.5 uppercase font-black">
+                                                <Clock className="w-3 h-3" />
+                                                {item.last_edited_time}
+                                              </p>
+                                            </div>
+                                          </button>
+                                        ))}
+                                    </div>
+                                  )}
                                 </div>
-                              </button>
-                            ))}
+                              </div>
+                            </>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
             <ThemeToggle />
             <UserDropdown />
           </div>

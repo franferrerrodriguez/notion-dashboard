@@ -161,63 +161,187 @@ class ProjectController {
         }
 
         // Fetch DB IDs from settings
-        $stmt = $pdo->query("SELECT `key`, `value` FROM settings WHERE `key` IN ('notion_projects_db_id', 'notion_offers_db_id', 'notion_invoices_db_id', 'notion_tasks_db_id')");
+        $stmt = $pdo->query("SELECT `key`, `value` FROM settings WHERE `key` IN ('notion_database_id', 'notion_offers_database_id', 'notion_invoices_database_id', 'notion_tasks_database_id')");
         $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
         
         $types = [
-            'projects' => $settings['notion_projects_db_id'] ?? null,
-            'offers' => $settings['notion_offers_db_id'] ?? null,
-            'invoices' => $settings['notion_invoices_db_id'] ?? null,
-            'tasks' => $settings['notion_tasks_db_id'] ?? null,
+            'projects' => $settings['notion_database_id'] ?? null,
+            'offers' => $settings['notion_offers_database_id'] ?? null,
+            'invoices' => $settings['notion_invoices_database_id'] ?? null,
+            'tasks' => $settings['notion_tasks_database_id'] ?? null,
         ];
-
-        // Global read mark
-        $stmt = $pdo->prepare("SELECT `value` FROM settings WHERE `key` = ?");
-        $stmt->execute(["last_mark_all_read_$userId"]);
-        $globalReadTS = strtotime(($stmt->fetchColumn() ?: '1970-01-01 00:00:00') . ' UTC');
 
         // Individual reads
         $stmt = $pdo->prepare("SELECT item_id, last_read_at FROM interaction_reads WHERE user_id = ?");
         $stmt->execute([$userId]);
         $reads = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+        
+        // Fetch global mark all as read time for this user
+        $stmt = $pdo->prepare("SELECT `value` FROM settings WHERE `key` = ?");
+        $stmt->execute(["last_mark_all_read_$userId"]);
+        $globalReadAt = ($stmt->fetchColumn() ?: '1970-01-01 00:00:00') . ' UTC';
+        $globalReadTS = strtotime($globalReadAt);
 
         $unreadItems = [];
         $totalUnread = 0;
+        $debugCounts = [];
+        $allProjectsMap = []; // Collect everything for search matching
 
         foreach ($types as $type => $dbId) {
-            if (!$dbId) continue;
+            if (!$dbId) {
+                $debugCounts[$type] = 'no_db_id';
+                continue;
+            }
             
-            $results = fetchNotionProjects($dbId, $clientId, $type);
+            $results = fetchNotionProjects($dbId, $clientId, $type, true);
+            $debugItemsRaw = [];
             foreach ($results as $item) {
-                $lastReadTS = strtotime(($reads[$item['id']] ?? '1970-01-01 00:00:00') . ' UTC');
+                $pId = $item['id'];
+                $pName = $item['identification']['name'] ?? 'Sin nombre';
+                $allProjectsMap[$pId] = $pName;
+
+                $lastReadTS = strtotime(($reads[$pId] ?? '1970-01-01 00:00:00') . ' UTC');
                 $maxReadAtTS = max($lastReadTS, $globalReadTS);
                 $lastEditTS = strtotime($item['last_edited_time'] ?? '1970-01-01 00:00:00');
+
+                $debugItemsRaw[] = [
+                    'id' => $pId,
+                    'name' => $pName,
+                    'time' => $item['last_edited_time'] ?? 'null',
+                    'is_unread' => ($lastEditTS > $maxReadAtTS),
+                    'max_read_at' => date('Y-m-d H:i:s', $maxReadAtTS)
+                ];
 
                 if ($lastEditTS > $maxReadAtTS) {
                     $totalUnread++;
                     // Basic info for the list
                     $unreadItems[] = [
-                        'id' => $item['id'],
-                        'name' => $item['identification']['name'] ?? 'Sin nombre',
+                        'id' => $pId,
+                        'name' => $pName,
                         'last_edited_time' => $item['last_edited_time'],
                         'type' => $type
                     ];
                 }
             }
+            $debugCounts[$type] = [
+                'total' => count($results),
+                'items' => $debugItemsRaw
+            ];
         }
+
+        // --- GLOBAL SEARCH FALLBACK 🌐 ---
+        // Catch items that don't update parent timestamp (Interactions, etc.)
+        $searchResults = searchRecentNotionEdits();
+        $flatInteractions = []; 
+        $projectIds = array_keys($allProjectsMap);
+
+        foreach ($searchResults as $item) {
+            if ($item['object'] === 'database') continue;
+            
+            $itemId = $item['id'];
+            $notionEditTS = strtotime($item['last_edited_time'] ?? '1970-01-01 00:00:00');
+            $parentPageId = $item['parent']['page_id'] ?? null;
+            
+            // Name Extraction
+            $name = '';
+            foreach ($item['properties'] ?? [] as $p) {
+                if (($p['type'] ?? '') === 'title') { $name = $p['title'][0]['plain_text'] ?? ''; break; }
+            }
+            if (!$name) $name = $item['properties']['Name']['title'][0]['plain_text'] ?? 'Sin título';
+
+            // Check Relation to Projects
+            $isRelated = in_array($itemId, $projectIds) || ($parentPageId && in_array($parentPageId, $projectIds));
+            
+            if (!$isRelated) {
+                foreach ($item['properties'] ?? [] as $prop) {
+                    if (($prop['type'] ?? '') === 'relation') {
+                        foreach ($prop['relation'] ?? [] as $rel) {
+                            if (in_array($rel['id'], $projectIds)) { $isRelated = true; break 2; }
+                        }
+                    }
+                    if (($prop['type'] ?? '') === 'multi_select' || ($prop['type'] ?? '') === 'select') {
+                        $pValues = $prop['multi_select'] ?? [$prop['select'] ?? []];
+                        foreach ($pValues as $v) {
+                            if (($v['name'] ?? '') === $clientId) { $isRelated = true; break 2; }
+                        }
+                    }
+                }
+            }
+
+            if ($isRelated) {
+                // If it's an "Interacciones" page, parse it into individual entries
+                if ($name === 'Interacciones' || $name === 'Interacción') {
+                    $projectName = $allProjectsMap[$parentPageId] ?? $name;
+                    $blocks = fetchBlocks($itemId);
+                    
+                    $currentDate = '';
+                    $currentLines = [];
+                    foreach ($blocks as $b) {
+                        $bt = $b['type'];
+                        $line = '';
+                        if (isset($b[$bt]['rich_text'])) {
+                            foreach ($b[$bt]['rich_text'] as $rt) $line .= ($rt['plain_text'] ?? '');
+                        }
+                        $line = trim($line);
+                        if (!$line) continue;
+
+                        // Is this line a date? (YYYY-MM-DD or DD/MM/YYYY)
+                        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $line) || preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $line)) {
+                            // Save previous entry if exists
+                            if ($currentDate && count($currentLines) > 0) {
+                                $granularId = $itemId . ':' . $currentDate;
+                                $itemReadMark = strtotime(($reads[$granularId] ?? '1970-01-01 00:00:00') . ' UTC');
+                                $maxReadAtTS = max($globalReadTS, $itemReadMark);
+                                $isSubUnread = ($notionEditTS > $maxReadAtTS);
+
+                                $flatInteractions[] = [
+                                    'id' => $granularId,
+                                    'parent_id' => $parentPageId, // NAVIGATE TO PROJECT
+                                    'identification' => ['name' => mb_substr(implode("\n", $currentLines), 0, 100)],
+                                    'last_edited_time' => $currentDate,
+                                    'text' => implode("\n", $currentLines),
+                                    'is_unread' => $isSubUnread,
+                                    'type' => 'interacción'
+                                ];
+                            }
+                            $currentDate = $line;
+                            $currentLines = [];
+                        } else {
+                            $currentLines[] = $line;
+                        }
+                    }
+                    // Save final entry
+                    if ($currentDate && count($currentLines) > 0) {
+                        $granularId = $itemId . ':' . $currentDate;
+                        $itemReadMark = strtotime(($reads[$granularId] ?? '1970-01-01 00:00:00') . ' UTC');
+                        $maxReadAtTS = max($globalReadTS, $itemReadMark);
+                        $isSubUnread = ($notionEditTS > $maxReadAtTS);
+
+                        $flatInteractions[] = [
+                            'id' => $granularId,
+                            'parent_id' => $parentPageId, // NAVIGATE TO PROJECT
+                            'identification' => ['name' => mb_substr(implode("\n", $currentLines), 0, 100)],
+                            'last_edited_time' => $currentDate,
+                            'text' => implode("\n", $currentLines),
+                            'is_unread' => $isSubUnread,
+                            'type' => 'interacción'
+                        ];
+                    }
+                }
+            }
+        }
+
+        // --- FINAL COUNT CORRECTION ---
+        $finalCount = 0;
+        foreach ($flatInteractions as $fi) if ($fi['is_unread']) $finalCount++;
 
         header('Content-Type: application/json');
         echo json_encode([
-            'count' => $totalUnread,
-            'has_unread' => $totalUnread > 0,
-            'items' => $unreadItems,
-            '_debug' => [
-                'user_id' => $userId,
-                'client_id' => $clientId,
-                'global_read_ts' => date('Y-m-d H:i:s', $globalReadTS),
-                'now_utc' => gmdate('Y-m-d H:i:s'),
-                'checked_count' => count($unreadItems) + ($totalUnread > 0 ? 0 : 0) // Just to have something
-            ]
+            'count' => $finalCount,
+            'has_unread' => $finalCount > 0,
+            'items' => $flatInteractions,
+            'user_id' => $userId,
+            'client_id' => $clientId
         ]);
     }
 }

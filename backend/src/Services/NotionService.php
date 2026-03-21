@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../config/secrets.php';
 /**
  * Fetch projects from a Notion Database filtered by Client ID
  */
-function fetchNotionProjects($databaseId, $clientId, $type = 'projects') {
+function fetchNotionProjects($databaseId, $clientId, $type = 'projects', $forceManualFilter = false) {
     $apiKey = NOTION_API_KEY;
     
     // Notion API Endpoint for querying a database
@@ -22,7 +22,7 @@ function fetchNotionProjects($databaseId, $clientId, $type = 'projects') {
 
     // For Invoices and Tasks, we remove the Notion filter to avoid the 400 Rollup error 
     // or because they might not have a direct 'Cliente' property.
-    if ($type === 'invoices' || $type === 'tasks') {
+    if ($type === 'invoices' || $type === 'tasks' || $forceManualFilter) {
         $filter = null;
     }
 
@@ -838,5 +838,40 @@ function fetchNotionClientOptions($databaseId) {
 
     ksort($uniqueClients);
     return array_values($uniqueClients);
+}
+
+/**
+ * Search Notion for ANY item matching the client name.
+ * This is a fallback to catch edits in related pages (Interactions) 
+ * that don't update the parent project's last_edited_time.
+ */
+function searchRecentNotionEdits() {
+    $apiKey = NOTION_API_KEY;
+    $url = "https://api.notion.com/v1/search";
+    
+    $payload = [
+        'sort' => [
+            'direction' => 'descending',
+            'timestamp' => 'last_edited_time'
+        ],
+        'page_size' => 25
+    ];
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        "Authorization: Bearer {$apiKey}",
+        "Notion-Version: 2022-06-28",
+        "Content-Type: application/json",
+        "Cache-Control: no-cache",
+        "Pragma: no-cache"
+    ]);
+
+    $response = curl_exec($ch);
+    $data = json_decode($response, true);
+    
+    return $data['results'] ?? [];
 }
 ?>
