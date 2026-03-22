@@ -289,7 +289,7 @@ const Dashboard = () => {
                     className="fixed inset-0 z-40"
                     onClick={() => setIsNotificationOpen(false)}
                   ></div>
-                  <div className="absolute top-full mt-3 right-0 w-[500px] bg-white dark:bg-[#1e1e1e] border border-notion-border dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                  <div className="absolute top-full mt-3 right-0 w-[800px] bg-white dark:bg-[#1e1e1e] border border-notion-border dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                     <div className="p-4 border-b border-notion-border dark:border-white/5 flex justify-between items-center bg-gray-50/50 dark:bg-white/2">
                       <h3 className="text-[10px] font-black uppercase tracking-widest text-notion-text-secondary dark:text-gray-400">
                         {t('notifications')}

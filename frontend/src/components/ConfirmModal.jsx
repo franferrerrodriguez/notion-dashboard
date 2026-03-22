@@ -23,7 +23,7 @@ const ConfirmModal = React.memo(({ isOpen, onClose, onConfirm, title, message, c
     <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 overflow-hidden animate-in fade-in duration-300">
       {/* Overlay */}
       <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-[4px] transition-opacity" 
+        className="absolute inset-0 bg-black/50 backdrop-blur-xs transition-opacity" 
         onClick={onClose}
       />
       

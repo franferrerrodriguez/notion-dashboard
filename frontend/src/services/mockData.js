@@ -673,7 +673,7 @@ export const mockData = {
           "color": "red"
         },
         "due_date": {
-          "start": "2026-03-03T12:30:00.000+01:00",
+          "start": "2026-03-23T12:30:00.000+01:00",
           "end": null
         }
       },
@@ -703,7 +703,7 @@ export const mockData = {
           "color": "red"
         },
         "due_date": {
-          "start": "2026-03-04T17:30:00.000+01:00",
+          "start": "2026-03-23T17:30:00.000+01:00",
           "end": null
         }
       },
@@ -733,7 +733,7 @@ export const mockData = {
           "color": "red"
         },
         "due_date": {
-          "start": "2026-03-23",
+          "start": "2026-03-24",
           "end": null
         }
       },
@@ -763,7 +763,7 @@ export const mockData = {
           "color": "red"
         },
         "due_date": {
-          "start": "2026-03-24T12:00:00.000+01:00",
+          "start": "2026-03-25T12:00:00.000+01:00",
           "end": null
         }
       },
@@ -790,7 +790,7 @@ export const mockData = {
           "color": "red"
         },
         "due_date": {
-          "start": "2026-03-24",
+          "start": "2026-03-26",
           "end": null
         }
       },
@@ -886,7 +886,7 @@ export const mockData = {
           "color": "red"
         },
         "due_date": {
-          "start": "2026-03-10",
+          "start": "2026-03-25",
           "end": null
         }
       },
@@ -916,7 +916,7 @@ export const mockData = {
           "color": "yellow"
         },
         "due_date": {
-          "start": "2026-03-20",
+          "start": "2026-03-26",
           "end": null
         }
       },
@@ -946,7 +946,7 @@ export const mockData = {
           "color": "red"
         },
         "due_date": {
-          "start": "2026-03-15",
+          "start": "2026-03-27",
           "end": null
         }
       },
@@ -1146,7 +1146,7 @@ export const mockData = {
           "id": "notion%3A%2F%2Ftasks%2Fdue_date_property",
           "type": "date",
           "date": {
-            "start": "2026-03-03T12:30:00.000+01:00",
+            "start": "2026-03-23T12:30:00.000+01:00",
             "end": null,
             "time_zone": null
           }
@@ -1311,7 +1311,7 @@ export const mockData = {
           "id": "notion%3A%2F%2Ftasks%2Fdue_date_property",
           "type": "date",
           "date": {
-            "start": "2026-03-04T17:30:00.000+01:00",
+            "start": "2026-03-23T17:30:00.000+01:00",
             "end": null,
             "time_zone": null
           }
@@ -1476,7 +1476,7 @@ export const mockData = {
           "id": "notion%3A%2F%2Ftasks%2Fdue_date_property",
           "type": "date",
           "date": {
-            "start": "2026-03-23",
+            "start": "2026-03-24",
             "end": null,
             "time_zone": null
           }
@@ -1641,7 +1641,7 @@ export const mockData = {
           "id": "notion%3A%2F%2Ftasks%2Fdue_date_property",
           "type": "date",
           "date": {
-            "start": "2026-03-24T12:00:00.000+01:00",
+            "start": "2026-03-25T12:00:00.000+01:00",
             "end": null,
             "time_zone": null
           }
@@ -1795,7 +1795,7 @@ export const mockData = {
           "id": "notion%3A%2F%2Ftasks%2Fdue_date_property",
           "type": "date",
           "date": {
-            "start": "2026-03-24",
+            "start": "2026-03-26",
             "end": null,
             "time_zone": null
           }
