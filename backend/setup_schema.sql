@@ -32,6 +32,7 @@ CREATE TABLE client_links (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
     external_client_id VARCHAR(100) NOT NULL, -- The ID/Tag in Notion/Main DB
+    logo_url TEXT DEFAULT NULL,               -- URL to the client's company logo
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

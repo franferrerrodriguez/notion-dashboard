@@ -58,7 +58,16 @@ class ProjectController {
              exit;
         }
 
-        echo json_encode(['data' => $projects, 'debug_client' => $clientId]);
+        // Fetch client logo if available
+        $stmt = $pdo->prepare("SELECT logo_url FROM client_links WHERE external_client_id = ? LIMIT 1");
+        $stmt->execute([$clientId]);
+        $logoUrl = $stmt->fetchColumn();
+
+        echo json_encode([
+            'data' => $projects, 
+            'debug_client' => $clientId,
+            'client_logo' => $logoUrl
+        ]);
     }
 
     public function detail($projectId) {

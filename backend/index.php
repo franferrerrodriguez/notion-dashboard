@@ -138,13 +138,28 @@ if ($action === 'settings_save' && $method === 'POST') {
 // --- AUTH ---
 if ($action === 'login' && $method === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
-    $stmt = $pdo->prepare("SELECT u.*, r.name as role_name FROM users u JOIN roles r ON u.role_id = r.id WHERE u.email = ? AND u.is_active = 1");
+    $stmt = $pdo->prepare("
+        SELECT u.*, r.name as role_name, cl.external_client_id, cl.logo_url 
+        FROM users u 
+        JOIN roles r ON u.role_id = r.id 
+        LEFT JOIN client_links cl ON u.id = cl.user_id
+        WHERE u.email = ? AND u.is_active = 1
+    ");
     $stmt->execute([$input['email'] ?? '']);
     $user = $stmt->fetch();
     if ($user && password_verify($input['password'] ?? '', $user['password_hash'])) {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_role'] = $user['role_name'];
-        echo json_encode(['success' => true, 'user' => ['id' => $user['id'], 'email' => $user['email'], 'role' => $user['role_name']]]);
+        echo json_encode([
+            'success' => true, 
+            'user' => [
+                'id' => $user['id'], 
+                'email' => $user['email'], 
+                'role' => $user['role_name'],
+                'external_client_id' => $user['external_client_id'],
+                'logo_url' => $user['logo_url']
+            ]
+        ]);
     } else {
         http_response_code(401);
         echo json_encode(['error' => 'Invalid credentials']);
@@ -161,7 +176,7 @@ if ($action === 'logout') {
 if ($action === 'me') {
     if (isset($_SESSION['user_id'])) {
         $stmt = $pdo->prepare("
-            SELECT u.id, u.email, r.name as role, cl.external_client_id
+            SELECT u.id, u.email, r.name as role, cl.external_client_id, cl.logo_url
             FROM users u 
             JOIN roles r ON u.role_id = r.id 
             LEFT JOIN client_links cl ON u.id = cl.user_id
@@ -205,7 +220,7 @@ if (strpos($action, 'users') === 0) {
 
     if ($action === 'users_list' && $method === 'GET') {
         $stmt = $pdo->query("
-            SELECT u.id, u.email, u.is_active, u.last_login, r.name as role, cl.external_client_id 
+            SELECT u.id, u.email, u.is_active, u.last_login, r.name as role, cl.external_client_id, cl.logo_url 
             FROM users u 
             JOIN roles r ON u.role_id = r.id 
             LEFT JOIN client_links cl ON u.id = cl.user_id 
@@ -225,8 +240,8 @@ if (strpos($action, 'users') === 0) {
             $stmt->execute([$input['email'], $hash, $input['role_id'], $isActive]);
             $userId = $pdo->lastInsertId();
             if (!empty($input['external_client_id'])) {
-                $stmt = $pdo->prepare("INSERT INTO client_links (user_id, external_client_id) VALUES (?, ?)");
-                $stmt->execute([$userId, $input['external_client_id']]);
+                $stmt = $pdo->prepare("INSERT INTO client_links (user_id, external_client_id, logo_url) VALUES (?, ?, ?)");
+                $stmt->execute([$userId, $input['external_client_id'], $input['logo_url'] ?? null]);
             }
             $pdo->commit();
             echo json_encode(['success' => true, 'id' => $userId]);
@@ -273,8 +288,8 @@ if (strpos($action, 'users') === 0) {
                 $stmt = $pdo->prepare("DELETE FROM client_links WHERE user_id = ?");
                 $stmt->execute([$id]);
                 if (!empty($input['external_client_id'])) {
-                    $stmt = $pdo->prepare("INSERT INTO client_links (user_id, external_client_id) VALUES (?, ?)");
-                    $stmt->execute([$id, $input['external_client_id']]);
+                    $stmt = $pdo->prepare("INSERT INTO client_links (user_id, external_client_id, logo_url) VALUES (?, ?, ?)");
+                    $stmt->execute([$id, $input['external_client_id'], $input['logo_url'] ?? null]);
                 }
             }
             $pdo->commit();
@@ -338,6 +353,23 @@ if ($action === 'mark_all_read' && $method === 'POST') {
 }
 if ($action === 'unread_status') {
     $projectController->unreadStatus();
+    exit;
+}
+if ($action === 'client_info') {
+    $clientId = $_GET['client_id'] ?? null;
+    if (empty($clientId) && isset($_SESSION['user_id'])) {
+        $stmt = $pdo->prepare("SELECT external_client_id FROM client_links WHERE user_id = ?");
+        $stmt->execute([$_SESSION['user_id']]);
+        $clientId = $stmt->fetchColumn();
+    }
+    
+    if ($clientId) {
+        $stmt = $pdo->prepare("SELECT external_client_id as id, logo_url FROM client_links WHERE external_client_id = ? LIMIT 1");
+        $stmt->execute([$clientId]);
+        echo json_encode($stmt->fetch() ?: ['id' => $clientId, 'logo_url' => null]);
+    } else {
+        echo json_encode(['error' => 'No client found']);
+    }
     exit;
 }
 if ($action === 'client_options') {

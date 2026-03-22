@@ -12,6 +12,7 @@ import {
   Pencil,
   Settings,
   AlertTriangle,
+  Mail,
 } from 'lucide-react';
 import UserDropdown from './components/UserDropdown';
 import UserModal from './components/UserModal';
@@ -152,10 +153,10 @@ const AdminPanel = () => {
             </button>
           </div>
         </div>
-        <div className="overflow-hidden rounded-3xl bg-white dark:bg-white/[0.02] border border-notion-border dark:border-notion-border-dark backdrop-blur-md shadow-2xl transition-colors">
+        <div className="overflow-hidden rounded-3xl bg-white dark:bg-white/2 border border-notion-border dark:border-notion-border-dark backdrop-blur-md shadow-2xl transition-colors">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-notion-border dark:border-notion-border-dark bg-notion-bg-light dark:bg-white/[0.03]">
+              <tr className="border-b border-notion-border dark:border-notion-border-dark bg-notion-bg-light dark:bg-white/3">
                 <th className="py-5 px-8 text-[11px] font-black text-notion-text-secondary dark:text-white/40 uppercase tracking-widest">
                   {t('col_email')}
                 </th>
@@ -175,14 +176,25 @@ const AdminPanel = () => {
             </thead>
             <tbody className="divide-y divide-notion-border dark:divide-white/5">
               {users.map((u) => (
-                <tr
-                  key={u.id}
-                  className="hover:bg-black/[0.02] dark:hover:bg-white/[0.04] transition-all group"
-                >
+                  <tr
+                    key={u.id}
+                    className="hover:bg-black/2 dark:hover:bg-white/4 transition-all group"
+                  >
                   <td className="py-6 px-8">
-                    <span className="font-bold text-sm text-notion-text dark:text-white/90">
-                      {u.email}
-                    </span>
+                    <div className="flex items-center gap-4">
+                      {u.logo_url ? (
+                        <div className="w-10 h-10 rounded-xl overflow-hidden border border-notion-border dark:border-white/5 bg-white flex items-center justify-center shrink-0 shadow-sm">
+                          <img src={u.logo_url} alt="Logo" className="max-w-full max-h-full object-contain p-1" />
+                        </div>
+                      ) : (
+                        <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-white/5 border border-notion-border dark:border-white/5 flex items-center justify-center shrink-0">
+                          <Mail className="w-4 h-4 text-notion-text-secondary dark:text-gray-500" />
+                        </div>
+                      )}
+                      <span className="font-bold text-sm text-notion-text dark:text-white/90">
+                        {u.email}
+                      </span>
+                    </div>
                   </td>
                   <td className="py-6 px-4 text-center">
                     <span

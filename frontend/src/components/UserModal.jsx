@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Shield, Mail, Lock, Link as LinkIcon, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { X, Shield, Mail, Lock, Link as LinkIcon, RefreshCw, Eye, EyeOff, ExternalLink } from 'lucide-react';
 import { ROLE_IDS, ROLES } from '../constants/auth';
 import { projectService } from '../services/api';
 
@@ -9,6 +9,7 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
     password: '',
     role_id: ROLE_IDS.CLIENT,
     external_client_id: '',
+    logo_url: '',
     is_active: true
   });
   const [clientOptions, setClientOptions] = useState([]);
@@ -40,6 +41,7 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
         password: '', // Don't show old hash
         role_id: editingUser.role === ROLES.ADMIN ? ROLE_IDS.ADMIN : ROLE_IDS.CLIENT,
         external_client_id: editingUser.external_client_id || '',
+        logo_url: editingUser.logo_url || '',
         is_active: !!editingUser.is_active
       });
     } else {
@@ -48,6 +50,7 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
         password: '',
         role_id: ROLE_IDS.CLIENT,
         external_client_id: '',
+        logo_url: '',
         is_active: true
       });
     }
@@ -201,6 +204,30 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
                      <p className="text-[9px] text-notion-text-secondary font-medium pl-1 italic">
                        * Este ID filtrará automáticamente sus proyectos de Notion.
                      </p>
+                  </div>
+                )}
+
+                {/* Logo URL - Client Only */}
+                {formData.role_id === ROLE_IDS.CLIENT && (
+                  <div className="space-y-1.5 pt-2">
+                    <label className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest pl-1 flex items-center gap-2">
+                      <ExternalLink className="w-3 h-3" /> URL del Logotipo
+                    </label>
+                    <input 
+                      type="url" 
+                      value={formData.logo_url}
+                      onChange={(e) => setFormData({...formData, logo_url: e.target.value})}
+                      className="w-full bg-white dark:bg-notion-dark border border-notion-border dark:border-white/5 rounded-xl px-4 py-3 text-sm text-notion-text dark:text-white placeholder:text-notion-text-secondary/30 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/30 transition-all font-medium"
+                      placeholder="https://ejemplo.com/logo.png"
+                    />
+                    {formData.logo_url && (
+                      <div className="mt-2 flex items-center gap-3 p-3 bg-white dark:bg-white/5 rounded-xl border border-notion-border dark:border-white/5">
+                        <div className="w-10 h-10 rounded-lg overflow-hidden border border-notion-border dark:border-white/10 bg-white flex items-center justify-center shrink-0">
+                          <img src={formData.logo_url} alt="Preview" className="max-w-full max-h-full object-contain" />
+                        </div>
+                        <span className="text-[9px] font-black text-notion-text-secondary uppercase tracking-widest">Vista previa del logotipo</span>
+                      </div>
+                    )}
                   </div>
                 )}
 

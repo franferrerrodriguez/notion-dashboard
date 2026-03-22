@@ -15,7 +15,7 @@ export const projectService = {
     const response = await fetch(url, fetchConfig);
     if (!response.ok) throw new Error(`Failed to fetch ${type}`);
     const data = await response.json();
-    return data.data || [];
+    return data;
   },
 
   async getById(id) {
@@ -49,6 +49,12 @@ export const projectService = {
     const url = `${BASE_URL}/index.php?action=unread_status${clientId ? `&client_id=${encodeURIComponent(clientId)}` : ''}`;
     const response = await fetch(url, fetchConfig);
     if (!response.ok) throw new Error('Failed to fetch unread status');
+    return await response.json();
+  },
+  async getClientInfo(clientId) {
+    const url = `${BASE_URL}/index.php?action=client_info${clientId ? `&client_id=${encodeURIComponent(clientId)}` : ''}`;
+    const response = await fetch(url, fetchConfig);
+    if (!response.ok) throw new Error('Failed to fetch client info');
     return await response.json();
   },
 };

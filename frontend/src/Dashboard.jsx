@@ -134,22 +134,31 @@ const Dashboard = () => {
   // TanStack Query for projects - Parallel prefetching for all tabs
   const effectiveClientId = user?.role === ROLES.ADMIN && clientId ? clientId : null;
 
-  const { data: projects = [], isLoading: loadingProjects } = useQuery({
+  const { data: projectsResponse, isLoading: loadingProjects } = useQuery({
     queryKey: ['notion_data', user?.id, effectiveClientId, TABS.PROJECTS],
     queryFn: () => projectService.getAll(effectiveClientId, TABS.PROJECTS.toLowerCase()),
     enabled: !!user && (activeTab === TABS.PROJECTS || activeTab === TABS.INVOICES),
   });
+  const projects = projectsResponse?.data || [];
 
-  const { data: offers = [], isLoading: loadingOffers } = useQuery({
+  const { data: offersResponse, isLoading: loadingOffers } = useQuery({
     queryKey: ['notion_data', user?.id, effectiveClientId, TABS.OFFERS],
     queryFn: () => projectService.getAll(effectiveClientId, TABS.OFFERS.toLowerCase()),
     enabled: !!user && (activeTab === TABS.OFFERS || activeTab === TABS.INVOICES),
   });
+  const offers = offersResponse?.data || [];
 
-  const { data: invoices = [], isLoading: loadingInvoices } = useQuery({
+  const { data: invoicesResponse, isLoading: loadingInvoices } = useQuery({
     queryKey: ['notion_data', user?.id, effectiveClientId, TABS.INVOICES],
     queryFn: () => projectService.getAll(effectiveClientId, TABS.INVOICES.toLowerCase()),
     enabled: !!user && (activeTab === TABS.INVOICES || activeTab === TABS.OFFERS),
+  });
+  const invoices = invoicesResponse?.data || [];
+
+  const { data: clientInfo } = useQuery({
+    queryKey: ['client_info', effectiveClientId || user?.id],
+    queryFn: () => projectService.getClientInfo(effectiveClientId),
+    enabled: !!user,
   });
 
   const refetchUnread = async () => {
@@ -318,13 +327,19 @@ const Dashboard = () => {
     </div>
   );
 
+        const displayLogo = clientInfo?.logo_url || user?.logo_url;
+
   return (
     <div className="min-h-screen bg-notion-light dark:bg-notion-dark text-notion-text dark:text-white p-8 font-sans selection:bg-blue-500/30 transition-colors">
       <header className="max-w-full mx-auto mb-8 animate-in fade-in slide-in-from-top-4 duration-700 px-6 lg:px-12">
         <div className="flex justify-between items-end mb-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20 shadow-inner">
-              <FolderRoot className="w-8 h-8 text-blue-500" />
+          <div className="flex items-center gap-6">
+            <div className={`rounded-2xl border shadow-inner flex items-center justify-center overflow-hidden transition-all duration-500 hover:scale-105 ${displayLogo ? 'w-24 h-24 p-2 bg-white dark:bg-white/5 border-notion-border dark:border-white/10' : 'w-14 h-14 p-3 bg-blue-500/10 border-blue-500/20'}`}>
+              {displayLogo ? (
+                <img src={displayLogo} alt="Logo" className="max-w-full max-h-full object-contain" />
+              ) : (
+                <FolderRoot className="w-8 h-8 text-blue-500" />
+              )}
             </div>
             <div>
               <h1 className="text-4xl font-black tracking-tight mb-1 uppercase flex items-center gap-3">
