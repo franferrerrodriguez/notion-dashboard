@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
   BarChart3,
@@ -6,7 +5,6 @@ import {
   CalendarDays,
   Castle,
   ChevronRight,
-  Clock,
   FileText,
   FolderRoot,
   Loader2,
@@ -19,7 +17,6 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ROLES } from './constants/auth';
 import { PHASE_COLORS } from './constants/theme';
-import { useAuth } from './context/AuthContext';
 import { useLanguage } from './context/LanguageContext';
 import { useTheme } from './context/ThemeContext';
 import { useDashboardData } from './hooks/useDashboardData';
@@ -112,7 +109,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState(TABS.CALENDAR);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [loadingNotificationId, setLoadingNotificationId] = useState(null);
-  const [isMarkingAll, setIsMarkingAll] = useState(false);
+  const isMarkingAll = false;
 
   // Extract heavy data loading logic into custom hook
   const {
@@ -128,7 +125,7 @@ const Dashboard = () => {
     loadingUnread,
     isTabLoading,
     handleMarkAllRead,
-    refetchUnread
+    markNotificationAsRead
   } = useDashboardData(activeTab);
 
   // REVERSE LOOKUP: Group invoices by their related offer ID
@@ -348,23 +345,13 @@ const Dashboard = () => {
                                         onClick={async (e) => {
                                           e.stopPropagation();
                                           
-                                          // Mark as read immediately (optimistic)
-                                          const previousItems = [...unreadItems];
-                                          const previousCount = unreadCount;
-                                          setUnreadItems(unreadItems.filter(i => i.id !== item.id));
-                                          setUnreadCount(prev => Math.max(0, prev - 1));
-                                          
-                                          setSelectedProject(item.parent_id);
-                                          setIsNotificationOpen(false);
-
                                           try {
-                                            await projectService.markRead(item.id, item.last_edited_time);
+                                            await markNotificationAsRead(item);
                                           } catch (err) {
                                             console.error('Failed to mark as read on navigation:', err);
-                                            // Optional rollback if navigation fails or mark fails
-                                            setUnreadItems(previousItems);
-                                            setUnreadCount(previousCount);
                                           }
+                                          setSelectedProject(item.parent_id);
+                                          setIsNotificationOpen(false);
                                         }}
                                         className="text-[9px] font-bold text-blue-500 dark:text-blue-400 hover:underline mb-0.5 block truncate uppercase tracking-wider text-left cursor-pointer"
                                       >
@@ -385,24 +372,11 @@ const Dashboard = () => {
                                   onClick={async (e) => {
                                     e.stopPropagation();
                                     
-                                    // Optimistic update
-                                    const previousItems = [...unreadItems];
-                                    const previousCount = unreadCount;
-                                    
-                                    setUnreadItems(unreadItems.filter(i => i.id !== item.id));
-                                    setUnreadCount(prev => Math.max(0, prev - 1));
-
+                                    setLoadingNotificationId(item.id);
                                     try {
-                                      // The backend expects the composite ID as it appears in the unread items list
-                                      await projectService.markRead(item.id, item.last_edited_time);
-                                      // Optional: refetch to ensure server sync if needed, 
-                                      // but better to just trust the optimistic update for now
-                                      // refetchUnread(); 
-                                    } catch (err) {
-                                      console.error('Failed to mark as read:', err);
-                                      // Rollback on error
-                                      setUnreadItems(previousItems);
-                                      setUnreadCount(previousCount);
+                                      await markNotificationAsRead(item);
+                                    } finally {
+                                      setLoadingNotificationId(null);
                                     }
                                   }}
                                   className="shrink-0 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white rounded-lg text-[9px] font-black uppercase tracking-tight transition-all flex items-center gap-2 whitespace-nowrap active:scale-95 disabled:opacity-50"

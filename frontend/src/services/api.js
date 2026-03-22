@@ -8,44 +8,44 @@ const fetchConfig = {
 };
 
 export const projectService = {
-  async getAll(clientId = null, type = 'projects') {
+  async getAll(clientId = null, type = 'projects', signal) {
     let url = `${BASE_URL}/index.php?action=list&type=${type}`;
     if (clientId) url += `&clientId=${clientId}`;
     
-    const response = await fetch(url, fetchConfig);
+    const response = await fetch(url, { ...fetchConfig, signal });
     if (!response.ok) throw new Error(`Failed to fetch ${type}`);
     const data = await response.json();
     return data;
   },
 
-  async getById(id) {
-    const response = await fetch(`${BASE_URL}/index.php?action=detail&id=${id}`, fetchConfig);
+  async getById(id, signal) {
+    const response = await fetch(`${BASE_URL}/index.php?action=detail&id=${id}`, { ...fetchConfig, signal });
     if (!response.ok) throw new Error(`Failed to fetch project ${id}`);
     return await response.json();
   },
-  async getTasks(id) {
-    const response = await fetch(`${BASE_URL}/index.php?action=detail_tasks&id=${id}`, fetchConfig);
+  async getTasks(id, signal) {
+    const response = await fetch(`${BASE_URL}/index.php?action=detail_tasks&id=${id}`, { ...fetchConfig, signal });
     if (!response.ok) throw new Error(`Failed to fetch project tasks ${id}`);
     return await response.json();
   },
-  async getInteractions(id) {
-    const response = await fetch(`${BASE_URL}/index.php?action=detail_interactions&id=${id}`, fetchConfig);
+  async getInteractions(id, signal) {
+    const response = await fetch(`${BASE_URL}/index.php?action=detail_interactions&id=${id}`, { ...fetchConfig, signal });
     if (!response.ok) throw new Error(`Failed to fetch project interactions ${id}`);
     return await response.json();
   },
-  async getDeliveries(id) {
-    const response = await fetch(`${BASE_URL}/index.php?action=detail_deliveries&id=${id}`, fetchConfig);
+  async getDeliveries(id, signal) {
+    const response = await fetch(`${BASE_URL}/index.php?action=detail_deliveries&id=${id}`, { ...fetchConfig, signal });
     if (!response.ok) throw new Error(`Failed to fetch project deliveries ${id}`);
     return await response.json();
   },
-  async getContacts(id) {
-    const response = await fetch(`${BASE_URL}/index.php?action=detail_contacts&id=${id}`, fetchConfig);
+  async getContacts(id, signal) {
+    const response = await fetch(`${BASE_URL}/index.php?action=detail_contacts&id=${id}`, { ...fetchConfig, signal });
     if (!response.ok) throw new Error(`Failed to fetch project contacts ${id}`);
     return await response.json();
   },
 
-  async getClientOptions() {
-    const response = await fetch(`${BASE_URL}/index.php?action=client_options`, fetchConfig);
+  async getClientOptions(signal) {
+    const response = await fetch(`${BASE_URL}/index.php?action=client_options`, { ...fetchConfig, signal });
     if (!response.ok) throw new Error('Failed to fetch client options');
     return await response.json();
   },
@@ -65,15 +65,15 @@ export const projectService = {
     if (!response.ok) throw new Error('Failed to mark all as read');
     return await response.json();
   },
-  async getUnreadStatus(clientId) {
+  async getUnreadStatus(clientId, signal) {
     const url = `${BASE_URL}/index.php?action=unread_status${clientId ? `&client_id=${encodeURIComponent(clientId)}` : ''}`;
-    const response = await fetch(url, fetchConfig);
+    const response = await fetch(url, { ...fetchConfig, signal });
     if (!response.ok) throw new Error('Failed to fetch unread status');
     return await response.json();
   },
-  async getClientInfo(clientId) {
+  async getClientInfo(clientId, signal) {
     const url = `${BASE_URL}/index.php?action=client_info${clientId ? `&client_id=${encodeURIComponent(clientId)}` : ''}`;
-    const response = await fetch(url, fetchConfig);
+    const response = await fetch(url, { ...fetchConfig, signal });
     if (!response.ok) throw new Error('Failed to fetch client info');
     return await response.json();
   },

@@ -30,4 +30,6 @@ const ProgressBar = React.memo(({ value, color, showText }) => {
   );
 });
 
+ProgressBar.displayName = 'ProgressBar';
+
 export default ProgressBar;

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { ROLES } from '../constants/auth';
 import { useAuth } from '../context/AuthContext';
@@ -28,32 +28,32 @@ export const useDashboardData = (activeTab) => {
 
   const { data: projectsResponse, isLoading: loadingProjects } = useQuery({
     queryKey: ['notion_data', user?.id, effectiveClientId, TABS.PROJECTS],
-    queryFn: () => projectService.getAll(effectiveClientId, TABS.PROJECTS.toLowerCase()),
+    queryFn: ({ signal }) => projectService.getAll(effectiveClientId, TABS.PROJECTS.toLowerCase(), signal),
     enabled: !!user,
   });
   const projects = projectsResponse?.data || [];
 
   const { data: offersResponse, isLoading: loadingOffers } = useQuery({
     queryKey: ['notion_data', user?.id, effectiveClientId, TABS.OFFERS],
-    queryFn: () => projectService.getAll(effectiveClientId, TABS.OFFERS.toLowerCase()),
+    queryFn: ({ signal }) => projectService.getAll(effectiveClientId, TABS.OFFERS.toLowerCase(), signal),
     enabled: !!user && (activeTab === TABS.OFFERS || activeTab === TABS.INVOICES),
   });
   const offers = offersResponse?.data || [];
 
   const { data: invoicesResponse, isLoading: loadingInvoices } = useQuery({
     queryKey: ['notion_data', user?.id, effectiveClientId, TABS.INVOICES],
-    queryFn: () => projectService.getAll(effectiveClientId, TABS.INVOICES.toLowerCase()),
+    queryFn: ({ signal }) => projectService.getAll(effectiveClientId, TABS.INVOICES.toLowerCase(), signal),
     enabled: !!user && (activeTab === TABS.INVOICES || activeTab === TABS.OFFERS),
   });
   const invoices = invoicesResponse?.data || [];
 
   const { data: clientInfo } = useQuery({
     queryKey: ['client_info', effectiveClientId || user?.id],
-    queryFn: () => projectService.getClientInfo(effectiveClientId),
+    queryFn: ({ signal }) => projectService.getClientInfo(effectiveClientId, signal),
     enabled: !!user,
   });
 
-  const refetchUnread = async () => {
+  const refetchUnread = useCallback(async () => {
     setLoadingUnread(true);
     try {
       const status = await projectService.getUnreadStatus(effectiveClientId);
@@ -64,6 +64,23 @@ export const useDashboardData = (activeTab) => {
       console.error('Failed to refetch unread:', err);
     } finally {
       setLoadingUnread(false);
+    }
+  }, [effectiveClientId]);
+
+  const markNotificationAsRead = async (item) => {
+    const previousItems = [...unreadItems];
+    const previousCount = unreadCount;
+    
+    setUnreadItems(unreadItems.filter(i => i.id !== item.id));
+    setUnreadCount(prev => Math.max(0, prev - 1));
+
+    try {
+      await projectService.markRead(item.id, item.last_edited_time);
+    } catch (err) {
+      console.error('Failed to mark as read:', err);
+      setUnreadItems(previousItems);
+      setUnreadCount(previousCount);
+      throw err;
     }
   };
 
@@ -93,7 +110,7 @@ export const useDashboardData = (activeTab) => {
 
   useEffect(() => {
     if (user) refetchUnread();
-  }, [user, effectiveClientId]);
+  }, [user, effectiveClientId, refetchUnread]);
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -136,6 +153,7 @@ export const useDashboardData = (activeTab) => {
     loadingUnread,
     isTabLoading,
     handleMarkAllRead,
+    markNotificationAsRead,
     refetchUnread
   };
 };

@@ -1,5 +1,3 @@
-import { CHART_COLORS } from '../constants/theme';
-
 const DoughnutChart = ({ data, total }) => {
   const size = 100;
   const strokeWidth = 12;
@@ -15,32 +13,37 @@ const DoughnutChart = ({ data, total }) => {
     );
   }
 
-  let accumulated = 0;
+  const segments = data.reduce((acc, segment, index) => {
+    const segmentLength = (segment.count / total) * circumference;
+    const offset = -acc.accumulated;
+    acc.items.push({
+      ...segment,
+      segmentLength,
+      offset,
+      index
+    });
+    acc.accumulated += segmentLength;
+    return acc;
+  }, { items: [], accumulated: 0 }).items;
 
   return (
     <svg viewBox={`0 0 ${size} ${size}`} className="transform -rotate-90 drop-shadow-2xl">
       {/* Background circle */}
       <circle cx={center} cy={center} r={radius} fill="none" stroke="#222" strokeWidth={strokeWidth} />
       
-      {data.map((segment, index) => {
-        const segmentLength = (segment.count / total) * circumference;
-        const offset = -accumulated;
-        accumulated += segmentLength;
-
-        return (
-          <circle 
-            key={segment.name}
-            cx={center} cy={center} r={radius} fill="none" 
-            stroke={segment.color} strokeWidth={strokeWidth}
-            strokeDasharray={`${segmentLength} ${circumference}`}
-            strokeDashoffset={offset}
-            style={{ 
-              transition: 'all 1s cubic-bezier(0.4, 0, 0.2, 1)',
-              transitionDelay: `${index * 0.05}s`
-            }}
-          />
-        );
-      })}
+      {segments.map((segment) => (
+        <circle 
+          key={segment.name}
+          cx={center} cy={center} r={radius} fill="none" 
+          stroke={segment.color} strokeWidth={strokeWidth}
+          strokeDasharray={`${segment.segmentLength} ${circumference}`}
+          strokeDashoffset={segment.offset}
+          style={{ 
+            transition: 'all 1s cubic-bezier(0.4, 0, 0.2, 1)',
+            transitionDelay: `${segment.index * 0.05}s`
+          }}
+        />
+      ))}
     </svg>
   );
 };

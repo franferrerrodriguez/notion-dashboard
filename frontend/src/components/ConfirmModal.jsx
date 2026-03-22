@@ -78,4 +78,6 @@ const ConfirmModal = React.memo(({ isOpen, onClose, onConfirm, title, message, c
   );
 });
 
+ConfirmModal.displayName = 'ConfirmModal';
+
 export default ConfirmModal;

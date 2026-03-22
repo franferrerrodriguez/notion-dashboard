@@ -40,7 +40,6 @@ const AdminPanel = () => {
     handleOpenCreate,
     handleOpenEdit,
     handleModalSubmit,
-    isDeleting,
     deleteUser
   } = useAdminUsers();
 

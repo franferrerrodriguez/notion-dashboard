@@ -1,11 +1,8 @@
 import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { useTheme } from '../context/ThemeContext';
-
 const Calendar = ({ tasks = [], projects = [], onSelectTask }) => {
   const { t, lang } = useLanguage();
-  const { theme } = useTheme();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [hoveredTask, setHoveredTask] = useState(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -14,19 +11,6 @@ const Calendar = ({ tasks = [], projects = [], onSelectTask }) => {
     const nextDate = new Date(currentDate);
     nextDate.setDate(currentDate.getDate() + weeks * 7);
     setCurrentDate(nextDate);
-  };
-
-  const getStatusStyles = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'completado':
-      case 'completed':
-        return 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20';
-      case 'en progreso':
-      case 'in progress':
-        return 'bg-blue-500/10 text-blue-500 border border-blue-500/20';
-      default:
-        return 'bg-gray-500/10 text-gray-500 border border-gray-500/20';
-    }
   };
 
   const getPriorityStyles = (priority) => {
@@ -93,7 +77,7 @@ const Calendar = ({ tasks = [], projects = [], onSelectTask }) => {
       monthYearLabel: monthLabel,
       todayStr,
     };
-  }, [currentDate, tasks, projects, lang]);
+  }, [currentDate, tasks, lang]);
   return (
     <div className="w-full bg-white dark:bg-notion-dark text-notion-text dark:text-white font-sans rounded-3xl mb-12 select-none border-2 border-notion-border dark:border-white/10 shadow-xl overflow-hidden transition-all duration-300">
       {/* Notion Top Header */}
