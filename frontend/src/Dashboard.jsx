@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   BarChart3,
   Bell,
+  CalendarDays,
   Castle,
   ChevronRight,
   Clock,
@@ -116,16 +117,6 @@ const Dashboard = () => {
   const [loadingUnread, setLoadingUnread] = useState(false);
   const [loadingNotificationId, setLoadingNotificationId] = useState(null);
   const [isMarkingAll, setIsMarkingAll] = useState(false);
-  const [expandedNotifications, setExpandedNotifications] = useState(new Set());
-  
-  const toggleNotification = (id) => {
-    setExpandedNotifications(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
 
   // Tasks state
   const [tasks, setTasks] = useState([]);
@@ -397,7 +388,7 @@ const Dashboard = () => {
                     className="fixed inset-0 z-40"
                     onClick={() => setIsNotificationOpen(false)}
                   ></div>
-                  <div className="absolute top-full mt-3 right-0 w-80 bg-white dark:bg-[#1e1e1e] border border-notion-border dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                  <div className="absolute top-full mt-3 right-0 w-[500px] bg-white dark:bg-[#1e1e1e] border border-notion-border dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                     <div className="p-4 border-b border-notion-border dark:border-white/5 flex justify-between items-center bg-gray-50/50 dark:bg-white/2">
                       <h3 className="text-[10px] font-black uppercase tracking-widest text-notion-text-secondary dark:text-gray-400">
                         {t('notifications')}
@@ -447,11 +438,8 @@ const Dashboard = () => {
                                   <div className="p-2 bg-blue-500/10 rounded-xl group-hover:bg-blue-500 group-hover:text-white transition-all shrink-0 mt-0.5">
                                     <FileText className="w-3.5 h-3.5" />
                                   </div>
-                                  <div 
-                                    className="text-left overflow-hidden grow cursor-pointer"
-                                    onClick={() => toggleNotification(item.id)}
-                                  >
-                                    <p className={`text-xs font-bold text-notion-text dark:text-gray-200 mb-1 transition-all ${expandedNotifications.has(item.id) ? '' : 'line-clamp-3'}`}>
+                                  <div className="text-left overflow-hidden grow">
+                                    <p className="text-xs font-bold text-notion-text dark:text-gray-200 mb-1 leading-relaxed">
                                       {item.text || item.identification?.name || 'Item sin nombre'}
                                     </p>
                                     <p className="text-[10px] text-notion-text-secondary dark:text-gray-500 flex items-center gap-1.5 uppercase font-black">
@@ -498,7 +486,7 @@ const Dashboard = () => {
           <TabButton
             active={activeTab === TABS.CALENDAR}
             onClick={() => setActiveTab(TABS.CALENDAR)}
-            icon={<Clock className="w-4 h-4" />}
+            icon={<CalendarDays className="w-4 h-4" />}
             label={t('tab_calendar') || 'Calendario'}
           />
           <TabButton
