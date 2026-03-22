@@ -7,7 +7,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
   const { t } = useLanguage();
   const [settings, setSettings] = useState({
     notion_integration_token: '',
-    notion_database_id: '',
+    notion_projects_database_id: '',
     notion_offers_database_id: '',
     notion_invoices_database_id: '',
     notion_tasks_database_id: ''
@@ -124,8 +124,8 @@ const SettingsModal = ({ isOpen, onClose }) => {
                   </label>
                   <input 
                     type="text"
-                    value={settings.notion_database_id || ''}
-                    onChange={(e) => setSettings({...settings, notion_database_id: e.target.value})}
+                    value={settings.notion_projects_database_id || ''}
+                    onChange={(e) => setSettings({...settings, notion_projects_database_id: e.target.value})}
                     className="w-full bg-white dark:bg-notion-dark border border-notion-border dark:border-white/5 rounded-2xl px-5 py-3.5 text-sm text-notion-text dark:text-white placeholder:text-notion-text-secondary/20 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
                     placeholder={t('settings_db_id_placeholder')}
                   />
@@ -169,7 +169,6 @@ const SettingsModal = ({ isOpen, onClose }) => {
                     value={settings.notion_tasks_database_id || ''}
                     onChange={(e) => setSettings({...settings, notion_tasks_database_id: e.target.value})}
                     className="w-full bg-white dark:bg-notion-dark border border-notion-border dark:border-white/5 rounded-2xl px-5 py-3.5 text-sm text-notion-text dark:text-white placeholder:text-notion-text-secondary/20 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
-                    placeholder={t('settings_db_id_placeholder')}
                   />
                 </div>
               </div>

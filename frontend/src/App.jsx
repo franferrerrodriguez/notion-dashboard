@@ -1,12 +1,11 @@
-
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 
 // Pages/Views
-import Dashboard from './Dashboard.jsx';
 import AdminPanel from './AdminPanel.jsx';
 import Login from './components/Login.jsx';
 import { ROLES } from './constants/auth';
+import Dashboard from './Dashboard.jsx';
 
 const App = () => {
   const { user, loading } = useAuth();
@@ -19,8 +18,7 @@ const App = () => {
     );
   }
 
-  const isProd = import.meta.env.PROD;
-  const basename = isProd ? '/test/frontend' : '/';
+  const basename = import.meta.env.VITE_ROUTER_BASENAME || '/';
 
   return (
     <BrowserRouter basename={basename}>

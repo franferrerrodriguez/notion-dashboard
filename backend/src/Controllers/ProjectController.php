@@ -194,11 +194,11 @@ class ProjectController {
         }
 
         // Fetch DB IDs from settings
-        $stmt = $pdo->query("SELECT `key`, `value` FROM settings WHERE `key` IN ('notion_database_id', 'notion_offers_database_id', 'notion_invoices_database_id', 'notion_tasks_database_id')");
+        $stmt = $pdo->query("SELECT `key`, `value` FROM settings WHERE `key` IN ('notion_projects_database_id', 'notion_offers_database_id', 'notion_invoices_database_id', 'notion_tasks_database_id')");
         $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
         
         $types = [
-            'projects' => $settings['notion_database_id'] ?? null,
+            'projects' => $settings['notion_projects_database_id'] ?? null,
             'offers' => $settings['notion_offers_database_id'] ?? null,
             'invoices' => $settings['notion_invoices_database_id'] ?? null,
             'tasks' => $settings['notion_tasks_database_id'] ?? null,

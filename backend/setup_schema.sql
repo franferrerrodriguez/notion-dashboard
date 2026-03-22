@@ -60,7 +60,10 @@ INSERT INTO roles (id, name) VALUES (1, 'Admin'), (2, 'Client');
 -- Note: Replace empty values with your actual Notion credentials
 INSERT INTO settings (`key`, `value`, description) VALUES 
 ('notion_integration_token', '', 'Secret Notion API Token'),
-('notion_database_id', '', 'Main Notion Database ID');
+('notion_projects_database_id', '', 'Main Notion Projects Database ID'),
+('notion_offers_database_id', '', 'Notion Offers Database ID'),
+('notion_invoices_database_id', '', 'Notion Invoices Database ID'),
+('notion_tasks_database_id', '', 'Notion Tasks Database ID');
 
 -- Create Default Root User (password: root)
 INSERT INTO users (email, password_hash, role_id) VALUES 

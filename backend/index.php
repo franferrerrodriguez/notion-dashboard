@@ -6,31 +6,6 @@ require_once __DIR__ . '/config/secrets.php';
 require_once __DIR__ . '/src/Services/NotionService.php';
 require_once __DIR__ . '/src/Controllers/ProjectController.php';
 
-session_start([
-    'cookie_httponly' => true,
-    'cookie_secure' => true, 
-    'use_only_cookies' => true,
-    'cookie_samesite' => 'None',
-]);
-
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-$allowed_origins = ['http://localhost:5173', 'https://info.frandiabolo.es', 'http://info.frandiabolo.es'];
-
-if (in_array($origin, $allowed_origins)) {
-    header("Access-Control-Allow-Origin: $origin");
-} else {
-    header("Access-Control-Allow-Origin: https://info.frandiabolo.es");
-}
-
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE, PUT');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
-header('Access-Control-Allow-Credentials: true');
-header('Content-Type: application/json');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit;
-}
-
 try {
     $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
     $pdo = new PDO($dsn, DB_USER, DB_PASS, [
@@ -39,14 +14,11 @@ try {
     ]);
 } catch (\PDOException $e) {
     http_response_code(500);
+    header('Content-Type: application/json');
     echo json_encode(['error' => 'Database connection failed']);
     exit;
 }
 
-$method = $_SERVER['REQUEST_METHOD'];
-$action = $_GET['action'] ?? '';
-
-// --- SETTINGS HELPER ---
 function getSetting($pdo, $key, $default = '') {
     $stmt = $pdo->prepare("SELECT `value` FROM settings WHERE `key` = ?");
     $stmt->execute([$key]);
@@ -54,23 +26,56 @@ function getSetting($pdo, $key, $default = '') {
     return $row ? $row['value'] : $default;
 }
 
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+
+if (in_array($origin, ALLOWED_ORIGINS)) {
+    header("Access-Control-Allow-Origin: $origin");
+    header('Access-Control-Allow-Credentials: true');
+}
+
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE, PUT');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept, Origin');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
+
+session_start([
+    'cookie_httponly' => true,
+    'cookie_secure' => true, 
+    'use_only_cookies' => true,
+    'cookie_samesite' => 'None',
+]);
+
+header('Content-Type: application/json');
+
+$method = $_SERVER['REQUEST_METHOD'];
+$action = $_GET['action'] ?? '';
+
 // Load Notion Config ONLY from DB
 define('NOTION_API_KEY', getSetting($pdo, 'notion_integration_token', ''));
-define('NOTION_DATABASE_ID', getSetting($pdo, 'notion_database_id', '329b2935ab688045ae4cd0f7143b595c'));
-define('NOTION_OFFERS_DATABASE_ID', getSetting($pdo, 'notion_offers_database_id', '30ab2935ab6880518f79f8e6c6b3c5e2'));
-define('NOTION_INVOICES_DATABASE_ID', getSetting($pdo, 'notion_invoices_database_id', '30bb2935ab68802dbf6fc7f546228475'));
-define('NOTION_TASKS_DATABASE_ID', getSetting($pdo, 'notion_tasks_database_id', '30ab2935ab68811c8edcea5820d644ac'));
+define('NOTION_PROJECTS_DATABASE_ID', getSetting($pdo, 'notion_projects_database_id', ''));
+define('NOTION_OFFERS_DATABASE_ID', getSetting($pdo, 'notion_offers_database_id', ''));
+define('NOTION_INVOICES_DATABASE_ID', getSetting($pdo, 'notion_invoices_database_id', ''));
+define('NOTION_TASKS_DATABASE_ID', getSetting($pdo, 'notion_tasks_database_id', ''));
 
 // --- CONFIGURATION GUARD ---
 // Define which actions are "safe" to run even without configuration
 $safe_actions = ['login', 'logout', 'me', 'settings_save']; 
-$config_error = (empty(NOTION_API_KEY) || empty(NOTION_DATABASE_ID));
+$config_error = (
+    empty(NOTION_API_KEY) || 
+    empty(NOTION_PROJECTS_DATABASE_ID) ||
+    empty(NOTION_OFFERS_DATABASE_ID) ||
+    empty(NOTION_INVOICES_DATABASE_ID) ||
+    empty(NOTION_TASKS_DATABASE_ID)
+);
 
 if ($config_error && !in_array($action, $safe_actions)) {
     http_response_code(412); // Precondition Failed
     echo json_encode([
         'error' => 'Configuration Missing',
-        'message' => 'Notion API Key or Database ID not found in database settings.',
+        'message' => 'Uno o más IDs de Notion no están configurados en los ajustes.',
         'needs_setup' => true
     ]);
     exit;
@@ -109,7 +114,7 @@ if ($action === 'settings_save' && $method === 'POST') {
     // Map frontend keys to database keys
     $mappings = [
         'notion_token' => 'notion_integration_token',
-        'database_id'  => 'notion_database_id',
+        'notion_projects_database_id' => 'notion_projects_database_id',
         'offers_database_id' => 'notion_offers_database_id',
         'invoices_database_id' => 'notion_invoices_database_id',
         'tasks_database_id' => 'notion_tasks_database_id'
@@ -324,7 +329,7 @@ if (strpos($action, 'users') === 0) {
 // --- PROJECTS / OFFERS / INVOICES ---
 if ($action === 'list') {
     $type = $_GET['type'] ?? 'projects';
-    $dbId = NOTION_DATABASE_ID;
+    $dbId = NOTION_PROJECTS_DATABASE_ID;
     
     if ($type === 'offers') $dbId = NOTION_OFFERS_DATABASE_ID;
     if ($type === 'invoices') $dbId = NOTION_INVOICES_DATABASE_ID;
@@ -394,7 +399,7 @@ if ($action === 'client_options') {
         echo json_encode(['error' => 'Forbidden']);
         exit;
     }
-    $options = fetchNotionClientOptions(NOTION_DATABASE_ID);
+    $options = fetchNotionClientOptions(NOTION_PROJECTS_DATABASE_ID);
     echo json_encode($options);
     exit;
 }

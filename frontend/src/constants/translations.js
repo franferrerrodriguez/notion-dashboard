@@ -89,6 +89,9 @@ export const translations = {
     settings_offers_db_id: 'ID Base de Datos Ofertas',
     settings_invoices_db_id: 'ID Base de Datos Facturas',
     settings_tasks_db_id: 'ID Base de Datos Tareas',
+    settings_allowed_origins: 'Orígenes Permitidos (CORS)',
+    settings_origins_hint: 'Separados por coma. Ej: https://mi-app.com, http://localhost:5173',
+    settings_frontend_url: 'URL del Frontend (para impersonación)',
 
     // Calendar
     calendar_title: 'Calendario de Tareas',
@@ -263,6 +266,9 @@ export const translations = {
     settings_offers_db_id: 'Offers Database ID',
     settings_invoices_db_id: 'Invoices Database ID',
     settings_tasks_db_id: 'Tasks Database ID',
+    settings_allowed_origins: 'Allowed Origins (CORS)',
+    settings_origins_hint: 'Comma separated. Ex: https://my-app.com, http://localhost:5173',
+    settings_frontend_url: 'Frontend URL (for impersonation)',
 
     // Calendar
     calendar_title: 'Tasks Calendar',

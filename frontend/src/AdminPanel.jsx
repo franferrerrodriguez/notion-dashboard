@@ -1,25 +1,25 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { userService, settingsService } from './services/api';
-import { useLanguage } from './context/LanguageContext';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  UserPlus,
-  Trash2,
-  Shield,
-  ExternalLink,
+  AlertTriangle,
   CheckCircle2,
-  XCircle,
+  ExternalLink,
+  Mail,
   Pencil,
   Settings,
-  AlertTriangle,
-  Mail,
+  Shield,
+  Trash2,
+  UserPlus,
+  XCircle,
 } from 'lucide-react';
+import { useState } from 'react';
+import ConfirmModal from './components/ConfirmModal';
+import SettingsModal from './components/SettingsModal';
+import ThemeToggle from './components/ThemeToggle';
 import UserDropdown from './components/UserDropdown';
 import UserModal from './components/UserModal';
-import SettingsModal from './components/SettingsModal';
-import ConfirmModal from './components/ConfirmModal';
-import ThemeToggle from './components/ThemeToggle';
 import { ROLES } from './constants/auth';
+import { useLanguage } from './context/LanguageContext';
+import { settingsService, userService } from './services/api';
 
 const AdminPanel = () => {
   const queryClient = useQueryClient();
@@ -40,7 +40,12 @@ const AdminPanel = () => {
     queryFn: settingsService.get,
   });
 
-  const isConfigured = settings?.notion_integration_token && settings?.notion_database_id;
+  const isConfigured = 
+    settings?.notion_integration_token && 
+    settings?.notion_projects_database_id &&
+    settings?.notion_offers_database_id &&
+    settings?.notion_invoices_database_id &&
+    settings?.notion_tasks_database_id;
 
   const createMutation = useMutation({
     mutationFn: userService.create,
@@ -176,15 +181,19 @@ const AdminPanel = () => {
             </thead>
             <tbody className="divide-y divide-notion-border dark:divide-white/5">
               {users.map((u) => (
-                  <tr
-                    key={u.id}
-                    className="hover:bg-black/2 dark:hover:bg-white/4 transition-all group"
-                  >
+                <tr
+                  key={u.id}
+                  className="hover:bg-black/2 dark:hover:bg-white/4 transition-all group"
+                >
                   <td className="py-6 px-8">
                     <div className="flex items-center gap-4">
                       {u.logo_url ? (
                         <div className="w-10 h-10 rounded-xl overflow-hidden border border-notion-border dark:border-white/5 bg-white flex items-center justify-center shrink-0 shadow-sm">
-                          <img src={u.logo_url} alt="Logo" className="max-w-full max-h-full object-contain p-1" />
+                          <img
+                            src={u.logo_url}
+                            alt="Logo"
+                            className="max-w-full max-h-full object-contain p-1"
+                          />
                         </div>
                       ) : (
                         <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-white/5 border border-notion-border dark:border-white/5 flex items-center justify-center shrink-0">
@@ -236,10 +245,9 @@ const AdminPanel = () => {
                       {u.role === ROLES.CLIENT && u.external_client_id && (
                         <button
                           onClick={() => {
-                            const isProd = import.meta.env.PROD;
-                            const path = isProd
-                              ? `/test/frontend/view-as/${u.external_client_id}`
-                              : `/view-as/${u.external_client_id}`;
+                            const baseUrl = window.location.origin;
+                            const routerBasename = import.meta.env.VITE_ROUTER_BASENAME || '';
+                            const path = `${baseUrl}${routerBasename.endsWith('/') ? routerBasename.slice(0, -1) : routerBasename}/view-as/${u.external_client_id}`;
                             window.open(path, '_blank');
                           }}
                           title={t('view_as_client')}
