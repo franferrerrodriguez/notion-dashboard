@@ -119,9 +119,45 @@ const Login = () => {
           </button>
         </form>
 
+        {new URLSearchParams(window.location.search).get('demo') === 'true' && (
+          <>
+            <div className="mt-8 relative flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-notion-border dark:border-white/10"></div>
+              </div>
+              <div className="relative bg-notion-bg-light dark:bg-notion-dark px-4 text-[10px] font-bold text-notion-text-secondary uppercase tracking-widest">
+                {t('login_or_separator')}
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <button 
+                type="button"
+                onClick={() => {
+                  setEmail('test@test.com');
+                  setPassword('demo123');
+                  setIsLoading(true);
+                  login('test@test.com', 'demo123').catch(() => {
+                    setError(t('login_error'));
+                  }).finally(() => {
+                    setIsLoading(false);
+                  });
+                }}
+                disabled={isLoading}
+                className="w-full py-3.5 bg-white dark:bg-white/5 hover:bg-black/5 dark:hover:bg-white/10 border border-notion-border dark:border-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-notion-text dark:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2"
+              >
+                {t('login_demo_button')}
+              </button>
+              <p className="text-center mt-3 text-[10px] text-notion-text-secondary font-medium px-4">
+                {t('login_demo_desc')}
+              </p>
+            </div>
+          </>
+        )}
+
         <div className="mt-12 text-center">
            <p className="text-[10px] text-notion-text-secondary font-bold uppercase tracking-widest opacity-30">
-             © 2026 • Notion-Client Dashboard
+             © {new Date().getFullYear()} {t('login_copyright')}
            </p>
         </div>
       </div>

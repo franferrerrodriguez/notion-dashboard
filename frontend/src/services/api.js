@@ -1,3 +1,5 @@
+import { isDemoMode, getDemoResponse, getDemoDetail } from './demoInterceptor';
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const fetchConfig = {
@@ -9,36 +11,45 @@ const fetchConfig = {
 
 export const projectService = {
   async getAll(clientId = null, type = 'projects', signal) {
+    if (isDemoMode()) return getDemoResponse('projects', { type, delay: 400 });
     let url = `${BASE_URL}/index.php?action=list&type=${type}`;
     if (clientId) url += `&clientId=${clientId}`;
-    
+
     const response = await fetch(url, { ...fetchConfig, signal });
     if (!response.ok) throw new Error(`Failed to fetch ${type}`);
-    const data = await response.json();
-    return data;
+    return await response.json();
   },
 
   async getById(id, signal) {
+    if (isDemoMode()) return getDemoDetail(id);
     const response = await fetch(`${BASE_URL}/index.php?action=detail&id=${id}`, { ...fetchConfig, signal });
     if (!response.ok) throw new Error(`Failed to fetch project ${id}`);
     return await response.json();
   },
+
   async getTasks(id, signal) {
+    if (isDemoMode()) return getDemoResponse('detail_tasks');
     const response = await fetch(`${BASE_URL}/index.php?action=detail_tasks&id=${id}`, { ...fetchConfig, signal });
     if (!response.ok) throw new Error(`Failed to fetch project tasks ${id}`);
     return await response.json();
   },
+
   async getInteractions(id, signal) {
+    if (isDemoMode()) return getDemoResponse('detail_interactions');
     const response = await fetch(`${BASE_URL}/index.php?action=detail_interactions&id=${id}`, { ...fetchConfig, signal });
     if (!response.ok) throw new Error(`Failed to fetch project interactions ${id}`);
     return await response.json();
   },
+
   async getDeliveries(id, signal) {
+    if (isDemoMode()) return getDemoResponse('detail_deliveries', { delay: 200 });
     const response = await fetch(`${BASE_URL}/index.php?action=detail_deliveries&id=${id}`, { ...fetchConfig, signal });
     if (!response.ok) throw new Error(`Failed to fetch project deliveries ${id}`);
     return await response.json();
   },
+
   async getContacts(id, signal) {
+    if (isDemoMode()) return getDemoResponse('detail_contacts', { delay: 200 });
     const response = await fetch(`${BASE_URL}/index.php?action=detail_contacts&id=${id}`, { ...fetchConfig, signal });
     if (!response.ok) throw new Error(`Failed to fetch project contacts ${id}`);
     return await response.json();
@@ -49,7 +60,9 @@ export const projectService = {
     if (!response.ok) throw new Error('Failed to fetch client options');
     return await response.json();
   },
+
   async markRead(id) {
+    if (isDemoMode()) return getDemoResponse('mark_read', { delay: 200 });
     const response = await fetch(`${BASE_URL}/index.php?action=mark_read&id=${encodeURIComponent(id)}`, {
       ...fetchConfig,
       method: 'POST',
@@ -57,7 +70,9 @@ export const projectService = {
     if (!response.ok) throw new Error(`Failed to mark as read ${id}`);
     return await response.json();
   },
+
   async markAllRead() {
+    if (isDemoMode()) return getDemoResponse('mark_all_read');
     const response = await fetch(`${BASE_URL}/index.php?action=mark_all_read`, {
       ...fetchConfig,
       method: 'POST',
@@ -65,13 +80,17 @@ export const projectService = {
     if (!response.ok) throw new Error('Failed to mark all as read');
     return await response.json();
   },
+
   async getUnreadStatus(clientId, signal) {
+    if (isDemoMode()) return getDemoResponse('unread_status');
     const url = `${BASE_URL}/index.php?action=unread_status${clientId ? `&client_id=${encodeURIComponent(clientId)}` : ''}`;
     const response = await fetch(url, { ...fetchConfig, signal });
     if (!response.ok) throw new Error('Failed to fetch unread status');
     return await response.json();
   },
+
   async getClientInfo(clientId, signal) {
+    if (isDemoMode()) return getDemoResponse('client_info', { delay: 200 });
     const url = `${BASE_URL}/index.php?action=client_info${clientId ? `&client_id=${encodeURIComponent(clientId)}` : ''}`;
     const response = await fetch(url, { ...fetchConfig, signal });
     if (!response.ok) throw new Error('Failed to fetch client info');
@@ -81,6 +100,11 @@ export const projectService = {
 
 export const authService = {
   async login(email, password) {
+    if (email === 'test@test.com') {
+      localStorage.setItem('demo_mode', 'true');
+      return getDemoResponse('login', { delay: 600 });
+    }
+
     const response = await fetch(`${BASE_URL}/index.php?action=login`, {
       ...fetchConfig,
       method: 'POST',
@@ -91,6 +115,8 @@ export const authService = {
   },
 
   async logout() {
+    if (isDemoMode()) return getDemoResponse('logout', { delay: 400 });
+
     const response = await fetch(`${BASE_URL}/index.php?action=logout`, {
       ...fetchConfig,
       method: 'POST',
@@ -99,6 +125,8 @@ export const authService = {
   },
 
   async me() {
+    if (isDemoMode()) return getDemoResponse('me', { delay: 200 });
+
     const response = await fetch(`${BASE_URL}/index.php?action=me`, fetchConfig);
     if (!response.ok) throw new Error('Not authenticated');
     return await response.json();
@@ -117,6 +145,7 @@ export const authService = {
 
 export const settingsService = {
   async get() {
+    if (isDemoMode()) return getDemoResponse('settings');
     const response = await fetch(`${BASE_URL}/index.php?action=settings_get`, fetchConfig);
     if (!response.ok) throw new Error('Failed to fetch settings');
     return await response.json();
@@ -134,6 +163,7 @@ export const settingsService = {
 
 export const userService = {
   async getAll() {
+    if (isDemoMode()) return getDemoResponse('users_list');
     const response = await fetch(`${BASE_URL}/index.php?action=users_list`, fetchConfig);
     if (!response.ok) throw new Error('Forbidden');
     return await response.json();
