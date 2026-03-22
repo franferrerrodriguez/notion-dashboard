@@ -41,6 +41,16 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [] }) => {
   const [isDeliveriesOpen, setIsDeliveriesOpen] = useState(false);
   const [isContactsOpen, setIsContactsOpen] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState({});
+  const [expandedItems, setExpandedItems] = useState(new Set());
+
+  const toggleItem = (id) => {
+    setExpandedItems(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const toggleGroup = (status) => {
     setCollapsedGroups(prev => ({ ...prev, [status]: !prev[status] }));
@@ -77,7 +87,7 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [] }) => {
             groups.push(currentGroup);
          }
          const cleanText = text.replace(/^[•\-*]\s?/, '');
-         if (cleanText) currentGroup.items.push(cleanText);
+         if (cleanText) currentGroup.items.push({ id: block.id, text: cleanText });
       }
     });
 
@@ -97,8 +107,12 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [] }) => {
               )}
               
               <div className="grid gap-3">
-                {group.items.map((itemText, i) => (
-                  <div key={i} className="group/card relative p-4 rounded-2xl bg-white/40 dark:bg-white/5 border border-notion-border dark:border-white/5 hover:border-blue-500/30 hover:bg-white dark:hover:bg-white/10 transition-all duration-500 shadow-sm hover:shadow-xl hover:-translate-y-0.5">
+                {group.items.map((item, i) => (
+                  <div 
+                    key={item.id || i} 
+                    onClick={() => item.id && toggleItem(item.id)}
+                    className="group/card relative p-4 rounded-2xl bg-white/40 dark:bg-white/5 border border-notion-border dark:border-white/5 hover:border-blue-500/30 hover:bg-white dark:hover:bg-white/10 transition-all duration-500 shadow-sm hover:shadow-xl hover:-translate-y-0.5 cursor-pointer"
+                  >
                     <div className="flex items-start gap-3">
                       <div className="mt-1 p-1 rounded-lg bg-gray-100 dark:bg-white/5 opacity-40 group-hover/card:opacity-100 group-hover/card:bg-blue-500/10 transition-all duration-500">
                         {sectionIcon === '🔄' ? 
@@ -107,8 +121,8 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [] }) => {
                         }
                       </div>
                       <div className="grow space-y-1">
-                        <p className="text-[13px] text-notion-text dark:text-white/90 leading-relaxed font-medium">
-                          {renderTextWithLinks(itemText)}
+                        <p className={`text-[13px] text-notion-text dark:text-white/90 leading-relaxed font-medium transition-all ${expandedItems.has(item.id) ? '' : 'line-clamp-3'}`}>
+                          {renderTextWithLinks(item.text)}
                         </p>
                       </div>
                     </div>
@@ -187,6 +201,7 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [] }) => {
                   <>
                     <PropertyRow icon={<User className="w-4 h-4" />} label={t('prop_client')} value={client.details?.name} isTag tagColor={client.details?.color} isDark={isDark} />
                     <PropertyRow icon={<Target className="w-4 h-4" />} label={t('prop_status')} value={status.main?.name} isTag tagColor={status.main?.color} isDark={isDark} />
+                    <PropertyRow icon={<Castle className="w-4 h-4" />} label={t('prop_phase')} value={status.phase?.name} isTag tagColor={status.phase?.color} isDark={isDark} />
                     
                     {/* Progress Row */}
                     <div className="flex items-start gap-4 py-1.5 group/prop">
@@ -219,7 +234,6 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [] }) => {
                       </div>
                     </div>
 
-                    <PropertyRow icon={<Castle className="w-4 h-4" />} label={t('prop_phase')} value={status.phase?.name} isTag tagColor={status.phase?.color} isDark={isDark} />
                     <PropertyRow icon={<Target className="w-4 h-4" />} label={t('prop_offer_ref')} value={assets.offerLink} isLink />
                   </>
                 )}
@@ -317,7 +331,20 @@ const renderTasksTable = (tasks, collapsedGroups, toggleGroup, t, isDark) => {
       return acc;
     }, {});
 
-    return Object.values(groups).map((group) => {
+    const statusOrder = {
+      'Bloqueado': 1,
+      'Por hacer': 2,
+      'Programado': 3,
+      'En espera': 4,
+      'Completado': 5,
+      'Sin estado': 6
+    };
+
+    const sortedGroups = Object.values(groups).sort((a, b) => {
+      return (statusOrder[a.name] || 99) - (statusOrder[b.name] || 99);
+    });
+
+    return sortedGroups.map((group) => {
       const isCollapsed = collapsedGroups[group.name];
       return (
         <div key={group.name} className="ml-4">

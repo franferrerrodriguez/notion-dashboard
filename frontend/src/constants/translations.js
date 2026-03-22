@@ -165,8 +165,9 @@ export const translations = {
     select_lang: 'Idioma',
     spanish: 'Español',
     english: 'Inglés',
-    notifications: 'Novedades',
+    notifications: 'Notificaciones',
     mark_all_read_btn: 'Marcar todo como leído',
+    mark_read_btn: 'Marcar como leída',
     refresh: 'Refrescar',
   },
   en: {
@@ -340,6 +341,7 @@ export const translations = {
     english: 'English',
     notifications: 'Updates',
     mark_all_read_btn: 'Mark all as read',
+    mark_read_btn: 'Mark as read',
     refresh: 'Refresh',
   },
 };

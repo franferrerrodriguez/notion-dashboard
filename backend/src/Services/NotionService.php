@@ -775,6 +775,7 @@ function fetchPageContentRecursive($pageId) {
             }
             if ($text || $type === 'divider') {
                 $content[] = [
+                    'id' => $block['id'],
                     'type' => $type,
                     'text' => $text
                 ];
