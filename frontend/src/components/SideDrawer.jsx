@@ -138,9 +138,6 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [] }) => {
         {/* Header */}
         <div className="sticky top-0 z-10 bg-white/95 dark:bg-notion-dark/95 backdrop-blur-sm border-b border-notion-border dark:border-white/10 px-8 py-6 flex justify-between items-center text-notion-text dark:text-white">
           <div className="flex items-center gap-3">
-             <span className="text-2xl grayscale dark:brightness-150">
-                {isTask ? '✅' : '📄'}
-             </span>
              <h2 className="text-xl font-bold truncate max-w-md">
                {loading ? t('loading') : (identification.name || (isTask ? t('linked_task') : 'Details'))}
              </h2>
@@ -172,11 +169,11 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [] }) => {
               <div className="space-y-1.5">
                 {isTask ? (
                   <>
-                    <PropertyRow icon="🔆" label={t('task_status')} value={status.main?.name} isTag tagColor={status.main?.color} isDark={isDark} />
-                    <PropertyRow icon="⊙" label={t('task_priority')} value={status.priority?.name} isTag tagColor={status.priority?.color} isDark={isDark} />
-                    <PropertyRow icon="📅" label={t('task_due_date')} value={item.date} />
+                    <PropertyRow icon={<Castle className="w-4 h-4" />} label={t('task_status')} value={status.main?.name} isTag tagColor={status.main?.color} isDark={isDark} />
+                    <PropertyRow icon={<Target className="w-4 h-4" />} label={t('task_priority')} value={status.priority?.name} isTag tagColor={status.priority?.color} isDark={isDark} />
+                    <PropertyRow icon={<CalendarDays className="w-4 h-4" />} label={t('task_due_date')} value={item.date} />
                     <PropertyRow 
-                        icon="🏰" 
+                        icon={<Castle className="w-4 h-4" />} 
                         label={t('col_project')} 
                         value={(() => {
                             const projectIds = identification.project_relation;
@@ -188,13 +185,12 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [] }) => {
                   </>
                 ) : (
                   <>
-                    <PropertyRow icon="👥" label={t('prop_client')} value={client.details?.name} isTag tagColor={client.details?.color} isDark={isDark} />
-                    <PropertyRow icon="⚙️" label={t('prop_status')} value={status.main?.name} isTag tagColor={status.main?.color} isDark={isDark} />
+                    <PropertyRow icon={<User className="w-4 h-4" />} label={t('prop_client')} value={client.details?.name} isTag tagColor={client.details?.color} isDark={isDark} />
+                    <PropertyRow icon={<Target className="w-4 h-4" />} label={t('prop_status')} value={status.main?.name} isTag tagColor={status.main?.color} isDark={isDark} />
                     
                     {/* Progress Row */}
                     <div className="flex items-start gap-4 py-1.5 group/prop">
                       <div className="flex items-center gap-2 w-36 shrink-0 text-notion-text-secondary dark:text-gray-400">
-                        <span className="text-sm opacity-70">📈</span>
                         <span className="text-xs font-medium">{t('prop_progress')}</span>
                       </div>
                       <div className="grow flex items-center gap-4">
@@ -205,16 +201,14 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [] }) => {
                       </div>
                     </div>
 
-                    <PropertyRow icon="🔍" label={t('prop_offer_code')} value={assets.offerCode} isLink />
-                    <PropertyRow icon="📄" label={t('prop_project_sheet')} value={assets.projectSheet} isNotionFile t={t} />
-                    <PropertyRow icon="📄" label={t('prop_offer')} value={assets.offerFile} isNotionFile t={t} />
-                    <PropertyRow icon="💰" label={t('prop_total_offered')} value={formatCurrency(financials.totalOffered)} isCurrency />
-                    <PropertyRow icon="💰" label={t('prop_total_billed')} value={formatCurrency(financials.totalBilled)} isCurrency />
-                    <PropertyRow icon="Σ" label={t('prop_total_pend')} value={formatCurrency(financials.totalPending)} isCurrency />
+                    <PropertyRow icon={<FileText className="w-4 h-4" />} label={t('prop_project_sheet')} value={assets.projectSheet} isNotionFile t={t} />
+                    <PropertyRow icon={<FileText className="w-4 h-4" />} label={t('prop_offer')} value={assets.offerFile} isNotionFile t={t} />
+                    <PropertyRow icon={<Receipt className="w-4 h-4" />} label={t('prop_total_offered')} value={formatCurrency(financials.totalOffered)} isCurrency />
+                    <PropertyRow icon={<Receipt className="w-4 h-4" />} label={t('prop_total_billed')} value={formatCurrency(financials.totalBilled)} isCurrency />
+                    <PropertyRow icon={<Receipt className="w-4 h-4" />} label={t('prop_total_pend')} value={formatCurrency(financials.totalPending)} isCurrency />
                     
                     <div className="flex items-start gap-4 py-1.5 group/prop">
                       <div className="flex items-center gap-2 w-36 shrink-0 text-notion-text-secondary dark:text-gray-400">
-                        <span className="text-sm opacity-70">Σ</span>
                         <span className="text-xs font-medium">{t('prop_billed_pct')}</span>
                       </div>
                       <div className="grow flex items-center gap-4">
@@ -225,16 +219,18 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [] }) => {
                       </div>
                     </div>
 
-                    <PropertyRow icon="⚖️" label={t('prop_phase')} value={status.phase?.name} isTag tagColor={status.phase?.color} isDark={isDark} />
-                    <PropertyRow icon="↗️" label={t('prop_offer_ref')} value={assets.offerLink} isLink />
+                    <PropertyRow icon={<Castle className="w-4 h-4" />} label={t('prop_phase')} value={status.phase?.name} isTag tagColor={status.phase?.color} isDark={isDark} />
+                    <PropertyRow icon={<Target className="w-4 h-4" />} label={t('prop_offer_ref')} value={assets.offerLink} isLink />
                   </>
                 )}
 
                 <div className="pt-4 space-y-1.5 border-t border-notion-border dark:border-white/10 mt-4 animate-in fade-in slide-in-from-top-1 duration-500">
-                  {metadata.map((prop) => (
+                  {metadata
+                    .filter(prop => !['margen (€)', 'coste interno (€)'].includes(prop.label.toLowerCase()))
+                    .map((prop) => (
                     <PropertyRow 
                       key={prop.label} 
-                      icon="📄" 
+                      icon={<FileText className="w-4 h-4" />} 
                       label={prop.label} 
                       value={Array.isArray(prop.value) ? prop.value.join(', ') : prop.value} 
                       t={t}
@@ -253,7 +249,6 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [] }) => {
                     <section className="mt-6 border-t border-notion-border dark:border-white/10 pt-6">
                       <button onClick={() => setIsInteractionsOpen(!isInteractionsOpen)} className="flex items-center gap-2 mb-8 group w-full text-left">
                         <ChevronRight className={`w-4 h-4 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isInteractionsOpen ? 'rotate-90' : 'rotate-0'}`} />
-                        <span className="text-xl">🔄</span>
                         <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight">{t('interactions')}</h3>
                       </button>
                       {isInteractionsOpen && renderUnifiedTimeline(data.interactions_content, '🔄')}
@@ -265,7 +260,6 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [] }) => {
                     <section className="mt-6 border-t border-notion-border dark:border-white/10 pt-6">
                       <button onClick={() => setIsDeliveriesOpen(!isDeliveriesOpen)} className="flex items-center gap-2 mb-8 group w-full text-left">
                         <ChevronRight className={`w-4 h-4 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isDeliveriesOpen ? 'rotate-90' : 'rotate-0'}`} />
-                        <span className="text-xl">📦</span>
                         <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight">{t('prop_deliveries')}</h3>
                       </button>
                       {isDeliveriesOpen && renderUnifiedTimeline(data.deliveries_content, '📦')}
@@ -277,7 +271,6 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [] }) => {
                     <section className="mt-6 border-t border-notion-border dark:border-white/10 pt-6">
                       <button onClick={() => setIsTasksOpen(!isTasksOpen)} className="flex items-center gap-2 mb-6 group w-full text-left">
                         <ChevronRight className={`w-4 h-4 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isTasksOpen ? 'rotate-90' : 'rotate-0'}`} />
-                        <span className="text-xl">✅</span>
                         <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight">{t('tasks')}</h3>
                       </button>
                       {isTasksOpen && (
@@ -293,7 +286,6 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [] }) => {
                     <section className="mt-6 border-t border-notion-border dark:border-white/10 pt-6">
                       <button onClick={() => setIsContactsOpen(!isContactsOpen)} className="flex items-center gap-2 mb-8 group w-full text-left">
                         <ChevronRight className={`w-4 h-4 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isContactsOpen ? 'rotate-90' : 'rotate-0'}`} />
-                        <span className="text-xl">👥</span>
                         <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight">{t('contacts')}</h3>
                       </button>
                       {isContactsOpen && renderContactsTable(data.project_contacts, t, isDark)}
@@ -438,12 +430,12 @@ const PropertyRow = ({ icon, label, value, isTag, tagColor, isLink, isCurrency, 
           </div>
         ) : isNotionFile ? (
           <a 
-            href={value?.file?.url || value?.external?.url} 
+            href={value?.url || value?.file?.url || value?.external?.url} 
             target="_blank" 
             rel="noopener noreferrer"
             className="text-[11px] font-bold bg-notion-bg-light dark:bg-white/5 border border-notion-border dark:border-white/10 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all px-3 py-1.5 rounded-lg flex items-center gap-2 text-notion-text-secondary dark:text-gray-400 hover:text-blue-500"
           >
-            <span>📄</span>
+            <FileText className="w-3 h-3" />
             <span className="truncate max-w-[180px]">{value?.name || t('view_file')}</span>
           </a>
         ) : isLink ? (

@@ -32,6 +32,7 @@ import ThemeToggle from './components/ThemeToggle';
 import UserDropdown from './components/UserDropdown';
 
 const TABS = {
+  CALENDAR: 'CALENDAR',
   PROJECTS: 'PROJECTS',
   OFFERS: 'OFFERS',
   INVOICES: 'INVOICES',
@@ -52,9 +53,7 @@ const TabButton = ({ active, onClick, icon, label }) => (
       {icon}
     </span>
     <span className="text-xs font-black uppercase tracking-widest">{label}</span>
-    {active && (
-      <span className="absolute inset-0 bg-blue-500/5 blur-xl -z-10 rounded-full animate-pulse"></span>
-    )}
+    
   </button>
 );
 
@@ -108,18 +107,42 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
   const { clientId } = useParams();
+  
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedTask, setSelectedTask] = useState(null);
-  const [activeTab, setActiveTab] = useState(TABS.PROJECTS);
+  const [activeTab, setActiveTab] = useState(TABS.CALENDAR);
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadItems, setUnreadItems] = useState([]);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [loadingUnread, setLoadingUnread] = useState(false);
   const [loadingNotificationId, setLoadingNotificationId] = useState(null);
   const [isMarkingAll, setIsMarkingAll] = useState(false);
+  
+  // Tasks state
+  const [tasks, setTasks] = useState([]);
+  const [loadingTasks, setLoadingTasks] = useState(false);
 
   // TanStack Query for projects - Parallel prefetching for all tabs
   const effectiveClientId = user?.role === ROLES.ADMIN && clientId ? clientId : null;
+
+  const { data: projects = [], isLoading: loadingProjects } = useQuery({
+    queryKey: ['notion_data', user?.id, effectiveClientId, TABS.PROJECTS],
+    queryFn: () => projectService.getAll(effectiveClientId, TABS.PROJECTS.toLowerCase()),
+    enabled: !!user && (activeTab === TABS.PROJECTS || activeTab === TABS.INVOICES),
+  });
+
+  const { data: offers = [], isLoading: loadingOffers } = useQuery({
+    queryKey: ['notion_data', user?.id, effectiveClientId, TABS.OFFERS],
+    queryFn: () => projectService.getAll(effectiveClientId, TABS.OFFERS.toLowerCase()),
+    enabled: !!user && (activeTab === TABS.OFFERS || activeTab === TABS.INVOICES),
+  });
+
+  const { data: invoices = [], isLoading: loadingInvoices } = useQuery({
+    queryKey: ['notion_data', user?.id, effectiveClientId, TABS.INVOICES],
+    queryFn: () => projectService.getAll(effectiveClientId, TABS.INVOICES.toLowerCase()),
+    enabled: !!user && (activeTab === TABS.INVOICES || activeTab === TABS.OFFERS),
+  });
+
 
   const refetchUnread = async () => {
     setLoadingUnread(true);
@@ -153,27 +176,33 @@ const Dashboard = () => {
     }
   }, [user, effectiveClientId]);
 
-  const { data: projects = [], isLoading: loadingProjects } = useQuery({
-    queryKey: ['notion_data', effectiveClientId, TABS.PROJECTS],
-    queryFn: () => projectService.getAll(effectiveClientId, TABS.PROJECTS.toLowerCase()),
-  });
+  // Handle tasks fetch manually since useQuery is being stubborn
+  useEffect(() => {
+    const fetchTasks = async () => {
+      setLoadingTasks(true);
+      try {
+        console.log('Fetching tasks manually for:', effectiveClientId);
+        const response = await projectService.getAll(effectiveClientId, 'tasks');
+        // Handle { data: [...] } wrapper from the API
+        const taskList = response?.data || response || [];
+        setTasks(taskList);
+      } catch (err) {
+        console.error('Failed to fetch tasks manually:', err);
+      } finally {
+        setLoadingTasks(false);
+      }
+    };
 
-  const { data: offers = [], isLoading: loadingOffers } = useQuery({
-    queryKey: ['notion_data', effectiveClientId, TABS.OFFERS],
-    queryFn: () => projectService.getAll(effectiveClientId, TABS.OFFERS.toLowerCase()),
-  });
+    if (user) {
+      fetchTasks();
+    }
+  }, [user, effectiveClientId]);
 
-  const { data: invoices = [], isLoading: loadingInvoices } = useQuery({
-    queryKey: ['notion_data', effectiveClientId, TABS.INVOICES],
-    queryFn: () => projectService.getAll(effectiveClientId, TABS.INVOICES.toLowerCase()),
-  });
-
-  const { data: tasks = [], isLoading: loadingTasks } = useQuery({
-    queryKey: ['notion_data', effectiveClientId, 'tasks'],
-    queryFn: () => projectService.getAll(effectiveClientId, 'tasks'),
-  });
-
-  const isLoading = loadingProjects || loadingOffers || loadingInvoices || loadingTasks;
+  const isTabLoading = 
+    activeTab === TABS.CALENDAR ? loadingTasks :
+    activeTab === TABS.PROJECTS ? loadingProjects :
+    activeTab === TABS.OFFERS ? (loadingOffers || loadingInvoices) :
+    activeTab === TABS.INVOICES ? (loadingInvoices || loadingOffers || loadingProjects) : false;
 
   const resolveRelationNames = (ids, type) => {
     if (!ids || ids.length === 0) return '-';
@@ -236,16 +265,6 @@ const Dashboard = () => {
     return all.length > 0 ? all.join(', ') : '-';
   };
 
-  if (isLoading)
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-notion-light dark:bg-notion-dark gap-4 transition-colors">
-        <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
-        <p className="text-sm font-medium text-notion-text-secondary animate-pulse uppercase tracking-widest">
-          {t('notion_query')}
-        </p>
-      </div>
-    );
-
   // Select data based on active tab
   const activeData =
     activeTab === TABS.PROJECTS ? projects : activeTab === TABS.OFFERS ? offers : invoices;
@@ -273,6 +292,18 @@ const Dashboard = () => {
     count: items.length,
     color: PHASE_COLORS[name] || '#64748b',
   }));
+
+  const renderLoadingState = () => (
+    <div className="flex flex-col items-center justify-center py-24 gap-6 text-notion-text-secondary animate-in fade-in duration-700">
+       <div className="relative">
+          <div className="absolute inset-0 w-16 h-16 border-4 border-blue-500/10 rounded-full animate-ping"></div>
+          <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin relative z-10"></div>
+       </div>
+       <p className="text-[10px] font-black text-notion-text-secondary dark:text-gray-400 uppercase tracking-[0.3em] animate-pulse">
+          {t('notion_query')}
+       </p>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-notion-light dark:bg-notion-dark text-notion-text dark:text-white p-8 font-sans selection:bg-blue-500/30 transition-colors">
@@ -447,10 +478,14 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Global Tasks Calendar */}
-        <Calendar tasks={tasks} projects={projects} onSelectTask={setSelectedTask} />
 
         <div className="flex items-center gap-10 mb-10 border-b border-notion-border dark:border-white/5">
+          <TabButton
+            active={activeTab === TABS.CALENDAR}
+            onClick={() => setActiveTab(TABS.CALENDAR)}
+            icon={<Clock className="w-4 h-4" />}
+            label={t('tab_calendar') || 'Calendario'}
+          />
           <TabButton
             active={activeTab === TABS.PROJECTS}
             onClick={() => setActiveTab(TABS.PROJECTS)}
@@ -471,48 +506,56 @@ const Dashboard = () => {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <div className="bg-white dark:bg-linear-to-br dark:from-[#202020] dark:to-[#1a1a1a] rounded-3xl p-10 border border-notion-border dark:border-white/10 shadow-2xl flex items-center justify-around relative overflow-hidden group transition-colors">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-32 -mt-32 transition-transform duration-1000 group-hover:scale-150"></div>
+        {isTabLoading ? renderLoadingState() : (
+          activeTab === TABS.CALENDAR ? (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <Calendar tasks={tasks} projects={projects} onSelectTask={setSelectedTask} />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <div className="bg-white dark:bg-linear-to-br dark:from-[#202020] dark:to-[#1a1a1a] rounded-3xl p-10 border border-notion-border dark:border-white/10 shadow-2xl flex items-center justify-around relative overflow-hidden group transition-colors">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-32 -mt-32 transition-transform duration-1000 group-hover:scale-150"></div>
 
-            <div className="relative w-40 h-40">
-              <DoughnutChart data={phaseStats} total={activeData.length} />
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-4xl font-black tracking-tighter text-notion-text dark:text-white/90">
-                  {activeData.length}
-                </span>
-                <span className="text-[9px] text-notion-text-secondary uppercase tracking-[0.2em] font-bold flex items-center gap-1.5">
-                  <BarChart3 className="w-2 h-2" />
-                  {t('total')}
-                </span>
+                <div className="relative w-40 h-40">
+                  <DoughnutChart data={phaseStats} total={activeData.length} />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-4xl font-black tracking-tighter text-notion-text dark:text-white/90">
+                      {activeData.length}
+                    </span>
+                    <span className="text-[9px] text-notion-text-secondary uppercase tracking-[0.2em] font-bold flex items-center gap-1.5">
+                      <BarChart3 className="w-2 h-2" />
+                      {t('total')}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-12 gap-y-5">
+                  {phaseStats.map((stat) => (
+                    <LegendItem
+                      key={stat.name}
+                      icon={<PieChart className="w-3 h-3" />}
+                      color={stat.color}
+                      label={stat.name}
+                      count={stat.count}
+                      t={t}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
-
-            <div className="grid grid-cols-2 gap-x-12 gap-y-5">
-              {phaseStats.map((stat) => (
-                <LegendItem
-                  key={stat.name}
-                  icon={<PieChart className="w-3 h-3" />}
-                  color={stat.color}
-                  label={stat.name}
-                  count={stat.count}
-                  t={t}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
+          )
+        )}
       </header>
 
       <main className="max-w-full mx-auto space-y-20 pb-20 animate-in fade-in duration-700 delay-200 px-6 lg:px-12">
-        {Object.entries(grouped).map(([phaseName, items]) => {
+        {activeTab !== TABS.CALENDAR &&
+          Object.entries(grouped).map(([phaseName, items]) => {
           const getColumns = () => {
             if (activeTab === TABS.OFFERS) {
               return [
                 {
                   key: 'code',
                   label: t('col_code'),
-                  icon: <FileText className="w-3 h-3" />,
                   align: 'left',
                   width: 'w-[220px]',
                 },
@@ -551,7 +594,6 @@ const Dashboard = () => {
                 {
                   key: 'code',
                   label: t('col_code'),
-                  icon: <FileText className="w-3 h-3" />,
                   align: 'left',
                   width: 'w-[150px]',
                 },
@@ -582,13 +624,12 @@ const Dashboard = () => {
               {
                 key: 'project',
                 label: t('col_project'),
-                icon: <FileText className="w-3 h-3" />,
                 align: 'left',
-                width: 'min-w-[250px]',
+                width: 'w-[40%]',
               },
-              { key: 'phase', label: t('col_phase'), align: 'center', width: 'w-[150px]' },
-              { key: 'status', label: t('col_status'), align: 'center', width: 'w-[160px]' },
-              { key: 'billing', label: t('col_billing'), align: 'center', width: 'w-[160px]' },
+              { key: 'phase', label: t('col_phase'), align: 'center', width: 'w-[20%]' },
+              { key: 'status', label: t('col_status'), align: 'center', width: 'w-[20%]' },
+              { key: 'billing', label: t('col_billing'), align: 'center', width: 'w-[20%]' },
             ];
           };
 
@@ -646,19 +687,11 @@ const Dashboard = () => {
                           if (col.key === 'project' || col.key === 'code') {
                             return (
                               <td key={col.key} className="py-6 px-8 overflow-hidden">
-                                <div className="flex items-center gap-4">
-                                  <div className="p-2 bg-black/5 dark:bg-white/5 rounded-lg border border-notion-border dark:border-white/5 group-hover:border-blue-500/30 transition-colors shrink-0">
-                                    <FileText className="w-4 h-4 text-notion-text-secondary dark:text-white/30 group-hover:text-blue-500 transition-colors" />
-                                  </div>
                                   <div className="flex items-center gap-2 overflow-hidden grow">
                                     <span className="font-bold text-sm text-notion-text dark:text-white/90 group-hover:text-blue-500 transition-colors truncate">
                                       {p.identification?.name || t('unnamed')}
                                     </span>
-                                    {p.has_unread_interactions && (
-                                      <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.6)] shrink-0"></span>
-                                    )}
                                   </div>
-                                </div>
                               </td>
                             );
                           }
@@ -710,12 +743,11 @@ const Dashboard = () => {
                                 className="py-6 px-4 truncate max-w-[220px]"
                                 title={name}
                               >
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm grayscale brightness-150">📄</span>
-                                  <span className="text-sm text-notion-text dark:text-white/70 truncate uppercase tracking-tight font-medium">
-                                    {name}
-                                  </span>
-                                </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm text-notion-text dark:text-white/70 truncate uppercase tracking-tight font-medium">
+                                      {name}
+                                    </span>
+                                  </div>
                               </td>
                             );
                           }

@@ -37,6 +37,7 @@ export const translations = {
     tab_projects: 'Proyectos',
     tab_offers: 'Ofertas',
     tab_invoices: 'Facturas',
+    tab_calendar: 'Calendario',
     no_project: 'Sin proyecto vinculante',
 
     // Admin Panel
@@ -209,6 +210,7 @@ export const translations = {
     tab_projects: 'Projects',
     tab_offers: 'Offers',
     tab_invoices: 'Invoices',
+    tab_calendar: 'Calendar',
     no_project: 'No linked project',
 
     // Admin Panel
