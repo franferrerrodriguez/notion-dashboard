@@ -104,7 +104,6 @@ class ProjectController {
     public function markRead($itemId) {
         $pdo = $GLOBALS['pdo'];
         $userId = $_SESSION['user_id'] ?? 0;
-        $notionTime = $_GET['time'] ?? null;
         
         if (!$userId) {
             http_response_code(401);
@@ -112,20 +111,15 @@ class ProjectController {
             return;
         }
 
-        if ($notionTime) {
-            // Convert ISO8601 to MySQL DATETIME format
-            $dbTime = date('Y-m-d H:i:s', strtotime($notionTime));
-            $stmt = $pdo->prepare("INSERT INTO interaction_reads (user_id, item_id, last_read_at) 
-                                   VALUES (?, ?, ?) 
-                                   ON DUPLICATE KEY UPDATE last_read_at = ?");
-            $stmt->execute([$userId, $itemId, $dbTime, $dbTime]);
-        } else {
-            $stmt = $pdo->prepare("INSERT INTO interaction_reads (user_id, item_id, last_read_at) 
-                                   VALUES (?, ?, UTC_TIMESTAMP()) 
-                                   ON DUPLICATE KEY UPDATE last_read_at = UTC_TIMESTAMP()");
-            $stmt->execute([$userId, $itemId]);
-        }
-        echo json_encode(['success' => true]);
+        // We use the itemId exactly as provided.
+        // For interactions, it's 'notion_id:date'.
+        // For projects, it's just 'notion_id'.
+        $stmt = $pdo->prepare("INSERT INTO interaction_reads (user_id, item_id, last_read_at) 
+                               VALUES (?, ?, UTC_TIMESTAMP()) 
+                               ON DUPLICATE KEY UPDATE last_read_at = UTC_TIMESTAMP()");
+        $stmt->execute([$userId, $itemId]);
+
+        echo json_encode(['success' => true, 'id_marked' => $itemId]);
     }
 
     public function markAllRead() {
@@ -215,6 +209,12 @@ class ProjectController {
         $searchResults = searchRecentNotionEdits();
         $flatInteractions = []; 
         $projectIds = array_keys($allProjectsMap);
+        
+        // Prepare project names map for easier lookup
+        $projectNamesMap = [];
+        foreach ($allProjectsMap as $pid => $pname) {
+            $projectNamesMap[$pid] = $pname;
+        }
 
         foreach ($searchResults as $item) {
             if ($item['object'] === 'database') continue;
@@ -249,6 +249,24 @@ class ProjectController {
             }
 
             if ($isRelated && ($name === 'Interacciones' || $name === 'Interacción')) {
+                // Determine the project name for this interaction set
+                $projectName = 'Proyecto';
+                if ($parentPageId && isset($projectNamesMap[$parentPageId])) {
+                    $projectName = $projectNamesMap[$parentPageId];
+                } else {
+                    // Fallback to searching relations if parent isn't the project itself
+                    foreach ($item['properties'] ?? [] as $prop) {
+                        if (($prop['type'] ?? '') === 'relation') {
+                            foreach ($prop['relation'] ?? [] as $rel) {
+                                if (isset($projectNamesMap[$rel['id']])) {
+                                    $projectName = $projectNamesMap[$rel['id']];
+                                    break 2;
+                                }
+                            }
+                        }
+                    }
+                }
+
                 $blocks = fetchBlocks($itemId);
                 $currentDate = ''; $currentLines = [];
                 
@@ -262,16 +280,22 @@ class ProjectController {
 
                     if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $line) || preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $line)) {
                         if ($currentDate && count($currentLines) > 0) {
-                            $granularId = $itemId . ':' . $currentDate;
-                            $readTime = strtotime(($reads[$granularId] ?? '1970-01-01 00:00:00') . ' UTC');
-                            $isSubUnread = ($notionEditTS > $readTime);
+                            $text = implode("\n", $currentLines);
+                            // Generate a short hash of the text to ensure uniqueness 
+                            // if there are multiple interactions on the same day.
+                            $textHash = substr(dechex(crc32($text)), 0, 8);
+                            $granularId = $itemId . ':' . $currentDate . ':' . $textHash;
+
+                            // Simply check if this specific interaction ID exists in our reads table
+                            $isSubUnread = !isset($reads[$granularId]);
 
                             $flatInteractions[] = [
                                 'id' => $granularId,
                                 'parent_id' => $parentPageId,
-                                'identification' => ['name' => mb_substr(implode("\n", $currentLines), 0, 100)],
+                                'project_name' => $projectName,
+                                'identification' => ['name' => mb_substr($text, 0, 100)],
                                 'last_edited_time' => $currentDate,
-                                'text' => implode("\n", $currentLines),
+                                'text' => $text,
                                 'is_unread' => $isSubUnread,
                                 'type' => 'interacción'
                             ];
@@ -280,16 +304,20 @@ class ProjectController {
                     } else { $currentLines[] = $line; }
                 }
                 if ($currentDate && count($currentLines) > 0) {
-                    $granularId = $itemId . ':' . $currentDate;
-                    $readTime = strtotime(($reads[$granularId] ?? '1970-01-01 00:00:00') . ' UTC');
-                    $isSubUnread = ($notionEditTS > $readTime);
+                    $text = implode("\n", $currentLines);
+                    $textHash = substr(dechex(crc32($text)), 0, 8);
+                    $granularId = $itemId . ':' . $currentDate . ':' . $textHash;
+                    
+                    // Simply check if this specific interaction ID exists in our reads table
+                    $isSubUnread = !isset($reads[$granularId]);
 
                     $flatInteractions[] = [
                         'id' => $granularId,
                         'parent_id' => $parentPageId,
-                        'identification' => ['name' => mb_substr(implode("\n", $currentLines), 0, 100)],
+                        'project_name' => $projectName,
+                        'identification' => ['name' => mb_substr($text, 0, 100)],
                         'last_edited_time' => $currentDate,
-                        'text' => implode("\n", $currentLines),
+                        'text' => $text,
                         'is_unread' => $isSubUnread,
                         'type' => 'interacción'
                     ];

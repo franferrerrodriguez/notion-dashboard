@@ -49,11 +49,6 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [] }) => {
     enabled: !!itemId,
   });
 
-  useEffect(() => {
-    if (data?.has_unread_interactions && itemId) {
-      projectService.markRead(itemId, data.last_edited_time).catch(console.error);
-    }
-  }, [data, itemId]);
 
   const [isTasksOpen, setIsTasksOpen] = useState(false); // Default tasks closed as requested
   const [isInteractionsOpen, setIsInteractionsOpen] = useState(false);

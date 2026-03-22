@@ -167,14 +167,28 @@ const Dashboard = () => {
   };
 
   const handleMarkAllRead = async () => {
-    setIsMarkingAll(true);
+    // Optimistic update
+    const previousUnreadItems = [...unreadItems];
+    const previousUnreadCount = unreadCount;
+    
+    // Calculate maxTime (latest edited time among current notifications)
+    const maxTime = unreadItems.reduce((latest, item) => {
+      if (!latest) return item.last_edited_time;
+      return new Date(item.last_edited_time) > new Date(latest) ? item.last_edited_time : latest;
+    }, null);
+
+    setUnreadItems([]);
+    setUnreadCount(0);
+    
     try {
-      await projectService.markAllRead();
+      await projectService.markAllRead(maxTime);
+      // No need to refetch if we're confident, but let's keep it for sync
       refetchUnread();
     } catch (err) {
       console.error('Failed to mark all as read:', err);
-    } finally {
-      setIsMarkingAll(false);
+      // Rollback on error
+      setUnreadItems(previousUnreadItems);
+      setUnreadCount(previousUnreadCount);
     }
   };
 
@@ -439,6 +453,34 @@ const Dashboard = () => {
                                     <FileText className="w-3.5 h-3.5" />
                                   </div>
                                   <div className="text-left overflow-hidden grow">
+                                    {item.project_name && (
+                                      <button 
+                                        onClick={async (e) => {
+                                          e.stopPropagation();
+                                          
+                                          // Mark as read immediately (optimistic)
+                                          const previousItems = [...unreadItems];
+                                          const previousCount = unreadCount;
+                                          setUnreadItems(unreadItems.filter(i => i.id !== item.id));
+                                          setUnreadCount(prev => Math.max(0, prev - 1));
+                                          
+                                          setSelectedProject(item.parent_id);
+                                          setIsNotificationOpen(false);
+
+                                          try {
+                                            await projectService.markRead(item.id, item.last_edited_time);
+                                          } catch (err) {
+                                            console.error('Failed to mark as read on navigation:', err);
+                                            // Optional rollback if navigation fails or mark fails
+                                            setUnreadItems(previousItems);
+                                            setUnreadCount(previousCount);
+                                          }
+                                        }}
+                                        className="text-[9px] font-bold text-blue-500 dark:text-blue-400 hover:underline mb-0.5 block truncate uppercase tracking-wider text-left cursor-pointer"
+                                      >
+                                        {item.project_name}
+                                      </button>
+                                    )}
                                     <p className="text-xs font-bold text-notion-text dark:text-gray-200 mb-1 leading-relaxed">
                                       {item.text || item.identification?.name || 'Item sin nombre'}
                                     </p>
@@ -452,21 +494,30 @@ const Dashboard = () => {
                                   disabled={loadingNotificationId === item.id}
                                   onClick={async (e) => {
                                     e.stopPropagation();
-                                    setLoadingNotificationId(item.id);
+                                    
+                                    // Optimistic update
+                                    const previousItems = [...unreadItems];
+                                    const previousCount = unreadCount;
+                                    
+                                    setUnreadItems(unreadItems.filter(i => i.id !== item.id));
+                                    setUnreadCount(prev => Math.max(0, prev - 1));
+
                                     try {
-                                      await projectService.markRead(item.id);
-                                      refetchUnread();
-                                    } finally {
-                                      setLoadingNotificationId(null);
+                                      // The backend expects the composite ID as it appears in the unread items list
+                                      await projectService.markRead(item.id, item.last_edited_time);
+                                      // Optional: refetch to ensure server sync if needed, 
+                                      // but better to just trust the optimistic update for now
+                                      // refetchUnread(); 
+                                    } catch (err) {
+                                      console.error('Failed to mark as read:', err);
+                                      // Rollback on error
+                                      setUnreadItems(previousItems);
+                                      setUnreadCount(previousCount);
                                     }
                                   }}
                                   className="shrink-0 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white rounded-lg text-[9px] font-black uppercase tracking-tight transition-all flex items-center gap-2 whitespace-nowrap active:scale-95 disabled:opacity-50"
                                 >
-                                  {loadingNotificationId === item.id ? (
-                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                  ) : (
-                                    t('mark_read_btn')
-                                  )}
+                                  {t('mark_read_btn')}
                                 </button>
                               </div>
                             ))}

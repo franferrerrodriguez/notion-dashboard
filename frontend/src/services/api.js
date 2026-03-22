@@ -29,16 +29,16 @@ export const projectService = {
     if (!response.ok) throw new Error('Failed to fetch client options');
     return await response.json();
   },
-  async markRead(id, lastEditedTime) {
-    const response = await fetch(`${BASE_URL}/index.php?action=mark_read&id=${id}${lastEditedTime ? `&time=${encodeURIComponent(lastEditedTime)}` : ''}`, {
+  async markRead(id) {
+    const response = await fetch(`${BASE_URL}/index.php?action=mark_read&id=${encodeURIComponent(id)}`, {
       ...fetchConfig,
       method: 'POST',
     });
     if (!response.ok) throw new Error(`Failed to mark as read ${id}`);
     return await response.json();
   },
-  async markAllRead(maxTime) {
-    const response = await fetch(`${BASE_URL}/index.php?action=mark_all_read${maxTime ? `&time=${encodeURIComponent(maxTime)}` : ''}`, {
+  async markAllRead() {
+    const response = await fetch(`${BASE_URL}/index.php?action=mark_all_read`, {
       ...fetchConfig,
       method: 'POST',
     });
