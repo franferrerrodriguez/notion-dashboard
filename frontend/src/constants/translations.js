@@ -15,12 +15,16 @@ export const translations = {
     delete: 'Eliminar',
 
     // Login
+    login_title: 'Bienvenido',
+    login_subtitle: 'Panel de Cliente',
+    login_email: 'Correo electrónico',
+    login_password: 'Contraseña',
     login_button: 'Entrar',
     login_error: 'Credenciales inválidas o error de conexión',
     login_or_separator: 'O',
     login_demo_button: 'Ver Demo Interactiva',
     login_demo_desc: 'Entra como cliente y prueba todas las gráficas, sin base de datos real.',
-    login_copyright: '• Notion-Client Dashboard',
+    login_copyright: '• Client Dashboard',
 
     // Logout Modal
     logout_confirm_title: '¿Cerrar sesión ahora?',
@@ -192,6 +196,10 @@ export const translations = {
     delete: 'Delete',
 
     // Login
+    login_title: 'Welcome',
+    login_subtitle: 'Client Dashboard',
+    login_email: 'Email',
+    login_password: 'Password',
     login_button: 'Sign In',
     login_error: 'Invalid credentials or connection error',
     login_or_separator: 'OR',
