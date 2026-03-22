@@ -49,6 +49,32 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [], onProjec
     enabled: !!itemId,
   });
 
+  const item = data?.project || {};
+
+  const { data: tasksData, isLoading: loadingTasks } = useQuery({
+    queryKey: ['project_tasks', itemId],
+    queryFn: () => projectService.getTasks(itemId),
+    enabled: !!itemId && type !== 'task' && !!data?.has_tasks,
+  });
+
+  const { data: interactionsData, isLoading: loadingInteractions } = useQuery({
+    queryKey: ['project_interactions', itemId],
+    queryFn: () => projectService.getInteractions(itemId),
+    enabled: !!itemId && type !== 'task' && !!data?.has_interactions,
+  });
+
+  const { data: deliveriesData, isLoading: loadingDeliveries } = useQuery({
+    queryKey: ['project_deliveries', itemId],
+    queryFn: () => projectService.getDeliveries(itemId),
+    enabled: !!itemId && type !== 'task' && !!data?.has_deliveries,
+  });
+
+  const { data: contactsData, isLoading: loadingContacts } = useQuery({
+    queryKey: ['project_contacts', itemId],
+    queryFn: () => projectService.getContacts(itemId),
+    enabled: !!itemId && type !== 'task' && !!data?.has_contacts,
+  });
+
 
   const [isTasksOpen, setIsTasksOpen] = useState(false); // Default tasks closed as requested
   const [isInteractionsOpen, setIsInteractionsOpen] = useState(false);
@@ -72,7 +98,6 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [], onProjec
 
   if (!itemId) return null;
 
-  const item = data?.project || {}; // Backend still uses 'project' as key but content is generic
   const {
     identification = {},
     status = {},
@@ -374,7 +399,7 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [], onProjec
                 {!isTask && (
                   <>
                     {/* Interacciones */}
-                    {data.interactions_content?.length > 0 && (
+                    {data?.has_interactions && (
                       <section className="mt-6 border-t border-notion-border dark:border-white/10 pt-6">
                         <button
                           onClick={() => setIsInteractionsOpen(!isInteractionsOpen)}
@@ -383,17 +408,20 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [], onProjec
                           <ChevronRight
                             className={`w-4 h-4 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isInteractionsOpen ? 'rotate-90' : 'rotate-0'}`}
                           />
-                          <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight">
+                          <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight flex items-center gap-2">
                             {t('interactions')}
+                            {loadingInteractions && (
+                              <div className="w-3 h-3 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+                            )}
                           </h3>
                         </button>
-                        {isInteractionsOpen &&
-                          renderUnifiedTimeline(data.interactions_content, '🔄')}
+                        {isInteractionsOpen && !loadingInteractions &&
+                          renderUnifiedTimeline(interactionsData?.content || [], '🔄')}
                       </section>
                     )}
 
                     {/* Entregas */}
-                    {data.deliveries_content?.length > 0 && (
+                    {data?.has_deliveries && (
                       <section className="mt-6 border-t border-notion-border dark:border-white/10 pt-6">
                         <button
                           onClick={() => setIsDeliveriesOpen(!isDeliveriesOpen)}
@@ -402,16 +430,20 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [], onProjec
                           <ChevronRight
                             className={`w-4 h-4 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isDeliveriesOpen ? 'rotate-90' : 'rotate-0'}`}
                           />
-                          <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight">
+                          <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight flex items-center gap-2">
                             {t('prop_deliveries')}
+                            {loadingDeliveries && (
+                              <div className="w-3 h-3 border-2 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />
+                            )}
                           </h3>
                         </button>
-                        {isDeliveriesOpen && renderUnifiedTimeline(data.deliveries_content, '📦')}
+                        {isDeliveriesOpen && !loadingDeliveries && 
+                          renderUnifiedTimeline(deliveriesData || [], '📦')}
                       </section>
                     )}
 
                     {/* Related Tasks */}
-                    {data.related_tasks?.length > 0 && (
+                    {data?.has_tasks && (
                       <section className="mt-6 border-t border-notion-border dark:border-white/10 pt-6">
                         <button
                           onClick={() => setIsTasksOpen(!isTasksOpen)}
@@ -420,14 +452,17 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [], onProjec
                           <ChevronRight
                             className={`w-4 h-4 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isTasksOpen ? 'rotate-90' : 'rotate-0'}`}
                           />
-                          <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight">
+                          <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight flex items-center gap-2">
                             {t('tasks')}
+                            {loadingTasks && (
+                              <div className="w-3 h-3 border-2 border-green-500/20 border-t-green-500 rounded-full animate-spin" />
+                            )}
                           </h3>
                         </button>
-                        {isTasksOpen && (
+                        {isTasksOpen && !loadingTasks && (
                           <div className="space-y-6 animate-in fade-in slide-in-from-left-2 duration-500">
                             {renderTasksTable(
-                              data.related_tasks,
+                              tasksData || [],
                               collapsedGroups,
                               toggleGroup,
                               t,
@@ -439,7 +474,7 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [], onProjec
                     )}
 
                     {/* Related Contacts */}
-                    {data.project_contacts?.length > 0 && (
+                    {data?.has_contacts && (
                       <section className="mt-6 border-t border-notion-border dark:border-white/10 pt-6">
                         <button
                           onClick={() => setIsContactsOpen(!isContactsOpen)}
@@ -448,11 +483,15 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [], onProjec
                           <ChevronRight
                             className={`w-4 h-4 text-notion-text-secondary dark:text-gray-500 transition-transform duration-200 ${isContactsOpen ? 'rotate-90' : 'rotate-0'}`}
                           />
-                          <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight">
+                          <h3 className="text-sm font-bold text-notion-text dark:text-white/80 tracking-tight flex items-center gap-2">
                             {t('contacts')}
+                            {loadingContacts && (
+                              <div className="w-3 h-3 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
+                            )}
                           </h3>
                         </button>
-                        {isContactsOpen && renderContactsTable(data.project_contacts, t, isDark)}
+                        {isContactsOpen && !loadingContacts && 
+                          renderContactsTable(contactsData || [], t, isDark)}
                       </section>
                     )}
                   </>

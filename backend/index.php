@@ -343,6 +343,22 @@ if ($action === 'detail' && isset($_GET['id'])) {
     $projectController->detail($_GET['id']);
     exit;
 }
+if ($action === 'detail_tasks' && isset($_GET['id'])) {
+    $projectController->detailTasks($_GET['id']);
+    exit;
+}
+if ($action === 'detail_interactions' && isset($_GET['id'])) {
+    $projectController->detailInteractions($_GET['id']);
+    exit;
+}
+if ($action === 'detail_deliveries' && isset($_GET['id'])) {
+    $projectController->detailDeliveries($_GET['id']);
+    exit;
+}
+if ($action === 'detail_contacts' && isset($_GET['id'])) {
+    $projectController->detailContacts($_GET['id']);
+    exit;
+}
 if ($action === 'mark_read' && isset($_GET['id']) && $method === 'POST') {
     $projectController->markRead($_GET['id']);
     exit;

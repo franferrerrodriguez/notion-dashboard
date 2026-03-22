@@ -545,22 +545,27 @@ function fetchNotionPageDetail($pageId) {
     $deliveriesContent = [];
     $contactsDatabaseId = null;
 
+    $has_tasks = !empty($properties['Tareas']['relation']);
+    $has_interactions = !empty($properties['Interacciones']['relation']) || !empty($properties['Interacción']['relation']) || !empty($properties['Control de horas']['relation']);
+    $has_deliveries = false;
+    $has_contacts = !empty($contactsDatabaseId) || !empty($properties['Contactos Proyecto']['relation']) || !empty($properties['Contactos']['relation']);
+
     foreach ($blocks as $block) {
         $type = $block['type'];
         
         if ($type === 'child_page') {
             $title = $block[$type]['title'] ?? '';
             if ($title === 'Interacciones' || $title === 'Interacción') {
-                $interactionsContent = fetchPageContentRecursive($block['id']);
+                $has_interactions = true;
             } elseif ($title === 'Entregas' || $title === 'Entrega') {
-                $deliveriesContent = fetchPageContentRecursive($block['id']);
+                $has_deliveries = true;
             } else {
                 $pageContent[] = ['type' => $type, 'text' => $title];
             }
         } elseif ($type === 'child_database') {
             $title = $block[$type]['title'] ?? '';
             if ($title === 'Contactos Proyecto' || $title === 'Contactos') {
-                $contactsDatabaseId = $block['id'];
+                $has_contacts = true;
             }
         } elseif (isset($block[$type]['rich_text'])) {
             $text = "";
@@ -576,28 +581,89 @@ function fetchNotionPageDetail($pageId) {
         }
     }
 
-    // Fetch related Tareas
+    return [
+        'id' => $pageId,
+        'last_edited_time' => $data['last_edited_time'] ?? null,
+        'project' => transformProject($properties),
+        'page_content' => $pageContent,
+        'has_tasks' => $has_tasks,
+        'has_interactions' => $has_interactions,
+        'has_deliveries' => $has_deliveries,
+        'has_contacts' => $has_contacts
+    ];
+}
+
+function fetchProjectTasks($pageId) {
+    if (!$pageId) return [];
+    $data = fetchSimplePageDetail($pageId);
+    $properties = $data ? ($data['properties'] ?? []) : [];
+    
     $relatedTasks = [];
     if (isset($properties['Tareas']['relation'])) {
         foreach ($properties['Tareas']['relation'] as $rel) {
-            if (count($relatedTasks) >= 10) break;
             $taskDetail = fetchSimplePageDetail($rel['id']);
             if ($taskDetail) $relatedTasks[] = $taskDetail;
         }
     }
+    return $relatedTasks;
+}
 
-    // Fetch related Interacciones (backwards compatibility for page properties)
+function fetchProjectInteractions($pageId) {
+    if (!$pageId) return ['content' => [], 'related' => []];
+    $blocks = fetchBlocks($pageId);
+    $interactionsContent = [];
+    foreach ($blocks as $block) {
+        if ($block['type'] === 'child_page') {
+            $title = $block['child_page']['title'] ?? '';
+            if ($title === 'Interacciones' || $title === 'Interacción') {
+                $interactionsContent = fetchPageContentRecursive($block['id']);
+            }
+        }
+    }
+
+    $data = fetchSimplePageDetail($pageId);
+    $properties = $data ? ($data['properties'] ?? []) : [];
     $relatedInteractions = [];
     $intRels = $properties['Interacciones']['relation'] ?? $properties['Interacción']['relation'] ?? $properties['Control de horas']['relation'] ?? [];
     foreach ($intRels as $rel) {
-        if (count($relatedInteractions) >= 10) break;
         $intDetail = fetchSimplePageDetail($rel['id']);
         if ($intDetail) $relatedInteractions[] = $intDetail;
     }
 
-    // Fetch Project Contacts (Priority 1: Child Database found in blocks)
-    $projectContacts = [];
+    return ['content' => $interactionsContent, 'related' => $relatedInteractions];
+}
+
+function fetchProjectDeliveries($pageId) {
+    if (!$pageId) return [];
+    $blocks = fetchBlocks($pageId);
+    $deliveriesContent = [];
+    foreach ($blocks as $block) {
+        if ($block['type'] === 'child_page') {
+            $title = $block['child_page']['title'] ?? '';
+            if ($title === 'Entregas' || $title === 'Entrega') {
+                $deliveriesContent = fetchPageContentRecursive($block['id']);
+            }
+        }
+    }
+    return $deliveriesContent;
+}
+
+function fetchProjectContacts($pageId) {
+    if (!$pageId) return [];
+    $blocks = fetchBlocks($pageId);
+    $contactsDatabaseId = null;
     
+    foreach ($blocks as $block) {
+        if ($block['type'] === 'child_database') {
+            $title = $block['child_database']['title'] ?? '';
+            if ($title === 'Contactos Proyecto' || $title === 'Contactos') {
+                $contactsDatabaseId = $block['id'];
+                break;
+            }
+        }
+    }
+
+    $projectContacts = [];
     if ($contactsDatabaseId) {
         $contactPages = queryDatabase($contactsDatabaseId);
         if (!isset($contactPages['error'])) {
@@ -607,13 +673,9 @@ function fetchNotionPageDetail($pageId) {
         }
     }
 
-    // Fallback/Priority 2: Global Database (12e95a89...) filtered by current Project
     if (empty($projectContacts)) {
         $globalContactsDbId = '12e95a89fc5547fb82ff33fc904eb78a';
-        $filter = [
-            'property' => 'Proyectos', 
-            'relation' => ['contains' => $pageId]
-        ];
+        $filter = ['property' => 'Proyectos', 'relation' => ['contains' => $pageId]];
         $contactPages = queryDatabase($globalContactsDbId, $filter);
         if (!isset($contactPages['error'])) {
             foreach ($contactPages as $page) {
@@ -622,8 +684,9 @@ function fetchNotionPageDetail($pageId) {
         }
     }
 
-    // Fallback/Priority 2: Relation property (Existing logic)
     if (empty($projectContacts)) {
+        $data = fetchSimplePageDetail($pageId);
+        $properties = $data ? ($data['properties'] ?? []) : [];
         $contactRels = $properties['Contactos Proyecto']['relation'] ?? $properties['Contactos']['relation'] ?? [];
         foreach ($contactRels as $rel) {
             if (count($projectContacts) >= 15) break;
@@ -641,19 +704,8 @@ function fetchNotionPageDetail($pageId) {
             }
         }
     }
-    return [
-        'id' => $pageId,
-        'last_edited_time' => $data['last_edited_time'] ?? null,
-        'project' => transformProject($properties),
-        'page_content' => $pageContent,
-        'interactions_content' => $interactionsContent,
-        'deliveries_content' => $deliveriesContent,
-        'related_tasks' => $relatedTasks,
-        'related_interactions' => $relatedInteractions,
-        'project_contacts' => $projectContacts
-    ];
+    return $projectContacts;
 }
-
 /**
  * Fetch basic properties for any Notion Page with Timeout
  */

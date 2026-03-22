@@ -23,6 +23,26 @@ export const projectService = {
     if (!response.ok) throw new Error(`Failed to fetch project ${id}`);
     return await response.json();
   },
+  async getTasks(id) {
+    const response = await fetch(`${BASE_URL}/index.php?action=detail_tasks&id=${id}`, fetchConfig);
+    if (!response.ok) throw new Error(`Failed to fetch project tasks ${id}`);
+    return await response.json();
+  },
+  async getInteractions(id) {
+    const response = await fetch(`${BASE_URL}/index.php?action=detail_interactions&id=${id}`, fetchConfig);
+    if (!response.ok) throw new Error(`Failed to fetch project interactions ${id}`);
+    return await response.json();
+  },
+  async getDeliveries(id) {
+    const response = await fetch(`${BASE_URL}/index.php?action=detail_deliveries&id=${id}`, fetchConfig);
+    if (!response.ok) throw new Error(`Failed to fetch project deliveries ${id}`);
+    return await response.json();
+  },
+  async getContacts(id) {
+    const response = await fetch(`${BASE_URL}/index.php?action=detail_contacts&id=${id}`, fetchConfig);
+    if (!response.ok) throw new Error(`Failed to fetch project contacts ${id}`);
+    return await response.json();
+  },
 
   async getClientOptions() {
     const response = await fetch(`${BASE_URL}/index.php?action=client_options`, fetchConfig);

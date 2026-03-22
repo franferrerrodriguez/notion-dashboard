@@ -100,6 +100,25 @@ class ProjectController {
             echo json_encode(['error' => 'Project not found']);
         }
     }
+    public function detailTasks($projectId) {
+        $data = fetchProjectTasks($projectId);
+        echo json_encode($data);
+    }
+
+    public function detailInteractions($projectId) {
+        $data = fetchProjectInteractions($projectId);
+        echo json_encode($data);
+    }
+
+    public function detailDeliveries($projectId) {
+        $data = fetchProjectDeliveries($projectId);
+        echo json_encode($data);
+    }
+
+    public function detailContacts($projectId) {
+        $data = fetchProjectContacts($projectId);
+        echo json_encode($data);
+    }
 
     public function markRead($itemId) {
         $pdo = $GLOBALS['pdo'];
