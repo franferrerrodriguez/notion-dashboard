@@ -1,6 +1,22 @@
-import { X, LogOut } from 'lucide-react';
+import { X, LogOut, Loader2 } from 'lucide-react';
+import React from 'react';
 
-const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText, cancelText }) => {
+/**
+ * A reusable, accessible confirmation modal component.
+ * Optimized with React.memo to avoid unnecessary re-renders.
+ * 
+ * @param {Object} props
+ * @param {boolean} props.isOpen - Controls the visibility of the modal.
+ * @param {function} props.onClose - Callback fired when the cancel button or background is clicked.
+ * @param {function} props.onConfirm - Callback fired when the confirm button is clicked.
+ * @param {string} props.title - The title heading of the modal.
+ * @param {string} props.message - The detailed description text.
+ * @param {string} props.confirmText - The text displayed on the primary action button.
+ * @param {string} props.cancelText - The text displayed on the secondary action button.
+ * @param {boolean} [props.isLoading=false] - Disable interactions and show spinner during async operations.
+ * @returns {React.ReactElement|null} The modal component or null if closed.
+ */
+const ConfirmModal = React.memo(({ isOpen, onClose, onConfirm, title, message, confirmText, cancelText, isLoading = false }) => {
   if (!isOpen) return null;
 
   return (
@@ -35,14 +51,17 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText,
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-3.5 px-4 rounded-xl text-xs font-bold text-notion-text-secondary dark:text-gray-400 bg-notion-bg-light dark:bg-white/5 border border-notion-border dark:border-white/5 hover:bg-black/5 dark:hover:bg-white/10 transition-all active:scale-95"
+            disabled={isLoading}
+            className="flex-1 py-3.5 px-4 rounded-xl text-xs font-bold text-notion-text-secondary dark:text-gray-400 bg-notion-bg-light dark:bg-white/5 border border-notion-border dark:border-white/5 hover:bg-black/5 dark:hover:bg-white/10 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
           >
             {cancelText}
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 py-3.5 px-4 rounded-xl text-xs font-black uppercase tracking-widest text-white bg-red-600 hover:bg-red-500 transition-all shadow-lg shadow-red-500/20 active:scale-95"
+            disabled={isLoading}
+            className="flex-1 py-3.5 px-4 flex items-center justify-center gap-2 rounded-xl text-xs font-black uppercase tracking-widest text-white bg-red-600 hover:bg-red-500 transition-all shadow-lg shadow-red-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
             {confirmText}
           </button>
         </div>
@@ -57,6 +76,6 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText,
       </div>
     </div>
   );
-};
+});
 
 export default ConfirmModal;

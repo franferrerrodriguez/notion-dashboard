@@ -22,18 +22,18 @@ describe('ThemeToggle Component', () => {
     renderWithProvider(<ThemeToggle />);
     const button = screen.getByRole('button');
 
-    // Initial state is 'dark' (from ThemeContext.jsx)
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    // Initial state is 'light' (from ThemeContext.jsx with mocked matchMedia)
+    expect(document.documentElement.classList.contains('light')).toBe(true);
 
-    // Toggle to 'light'
+    // Toggle to 'dark'
+    fireEvent.click(button);
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(document.documentElement.classList.contains('light')).toBe(false);
+    expect(localStorage.getItem('theme')).toBe('dark');
+
+    // Toggle back to 'light'
     fireEvent.click(button);
     expect(document.documentElement.classList.contains('light')).toBe(true);
-    expect(document.documentElement.classList.contains('dark')).toBe(false);
     expect(localStorage.getItem('theme')).toBe('light');
-
-    // Toggle back to 'dark'
-    fireEvent.click(button);
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
-    expect(localStorage.getItem('theme')).toBe('dark');
   });
 });

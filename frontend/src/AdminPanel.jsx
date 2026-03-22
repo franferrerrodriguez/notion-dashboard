@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -19,21 +19,30 @@ import UserDropdown from './components/UserDropdown';
 import UserModal from './components/UserModal';
 import { ROLES } from './constants/auth';
 import { useLanguage } from './context/LanguageContext';
-import { settingsService, userService } from './services/api';
+import { settingsService } from './services/api';
+import { useAdminUsers } from './hooks/useAdminUsers';
 
 const AdminPanel = () => {
   const queryClient = useQueryClient();
   const { t } = useLanguage();
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
-  const [userToDelete, setUserToDelete] = useState(null);
 
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: ['users'],
-    queryFn: userService.getAll,
-  });
+  const {
+    users,
+    isLoading,
+    isModalOpen,
+    setIsModalOpen,
+    isDeleteModalOpen,
+    setIsDeleteModalOpen,
+    editingUser,
+    userToDelete,
+    setUserToDelete,
+    handleOpenCreate,
+    handleOpenEdit,
+    handleModalSubmit,
+    isDeleting,
+    deleteUser
+  } = useAdminUsers();
 
   const { data: settings } = useQuery({
     queryKey: ['settings'],
@@ -47,45 +56,7 @@ const AdminPanel = () => {
     settings?.notion_invoices_database_id &&
     settings?.notion_tasks_database_id;
 
-  const createMutation = useMutation({
-    mutationFn: userService.create,
-    onSuccess: () => {
-      queryClient.invalidateQueries(['users']);
-      setIsModalOpen(false);
-    },
-  });
 
-  const updateMutation = useMutation({
-    mutationFn: (data) => userService.update(editingUser.id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['users']);
-      setIsModalOpen(false);
-      setEditingUser(null);
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: userService.delete,
-    onSuccess: () => queryClient.invalidateQueries(['users']),
-  });
-
-  const handleOpenCreate = () => {
-    setEditingUser(null);
-    setIsModalOpen(true);
-  };
-
-  const handleOpenEdit = (user) => {
-    setEditingUser(user);
-    setIsModalOpen(true);
-  };
-
-  const handleModalSubmit = (data) => {
-    if (editingUser) {
-      updateMutation.mutate(data);
-    } else {
-      createMutation.mutate(data);
-    }
-  };
 
   if (isLoading)
     return (
@@ -303,13 +274,7 @@ const AdminPanel = () => {
           setIsDeleteModalOpen(false);
           setUserToDelete(null);
         }}
-        onConfirm={() => {
-          if (userToDelete) {
-            deleteMutation.mutate(userToDelete.id);
-            setIsDeleteModalOpen(false);
-            setUserToDelete(null);
-          }
-        }}
+        onConfirm={() => deleteUser(userToDelete?.id)}
         title={t('delete_user_title')}
         message={t('delete_user_confirm').replace('{email}', userToDelete?.email || '')}
         confirmText={t('delete')}

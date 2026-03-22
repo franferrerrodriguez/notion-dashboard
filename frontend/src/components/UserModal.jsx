@@ -73,11 +73,11 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="bg-notion-light dark:bg-[#202020] border border-notion-border dark:border-white/10 rounded-3xl w-full max-w-[480px] shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 bg-black/40 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="bg-notion-light dark:bg-[#202020] border border-notion-border dark:border-white/10 rounded-3xl w-full max-w-[480px] max-h-[90vh] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
         
         {/* Header */}
-        <div className="px-8 py-6 border-b border-notion-border dark:border-white/5 flex justify-between items-center bg-notion-bg-light dark:bg-white/2">
+        <div className="px-8 py-6 border-b border-notion-border dark:border-white/5 flex justify-between items-center bg-notion-bg-light dark:bg-white/2 shrink-0">
           <div className="flex items-center gap-3">
              <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/20">
                 <Shield className="w-5 h-5 text-blue-500" />
@@ -105,7 +105,7 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-8 space-y-6" autoComplete="off">
+          <form onSubmit={handleSubmit} className="p-8 space-y-6 overflow-y-auto custom-scrollbar" autoComplete="off">
             {/* Hidden fake fields to trick some password managers */}
             <input type="text" style={{display:'none'}} />
             <input type="password" style={{display:'none'}} />

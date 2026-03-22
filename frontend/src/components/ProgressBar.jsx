@@ -1,5 +1,16 @@
+import React from 'react';
 
-const ProgressBar = ({ value, color, showText }) => {
+/**
+ * A reusable progress bar component with animated widths.
+ * Optimized with React.memo for performance.
+ * 
+ * @param {Object} props
+ * @param {number} props.value - Percentage value (0-100).
+ * @param {string} props.color - CSS color code for the filled progress.
+ * @param {boolean} props.showText - Whether to display the percentage text.
+ * @returns {React.ReactElement}
+ */
+const ProgressBar = React.memo(({ value, color, showText }) => {
   const safeValue = Math.min(100, Math.max(0, value || 0));
   
   return (
@@ -17,6 +28,6 @@ const ProgressBar = ({ value, color, showText }) => {
       </div>
     </div>
   );
-};
+});
 
 export default ProgressBar;

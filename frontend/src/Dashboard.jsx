@@ -15,14 +15,15 @@ import {
   ShieldAlert,
   Target,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ROLES } from './constants/auth';
 import { PHASE_COLORS } from './constants/theme';
 import { useAuth } from './context/AuthContext';
 import { useLanguage } from './context/LanguageContext';
 import { useTheme } from './context/ThemeContext';
-import { projectService } from './services/api';
+import { useDashboardData } from './hooks/useDashboardData';
+import { getMetaValue, resolveRelationNames } from './utils/notionHelpers';
 
 // Components
 import Calendar from './components/Calendar';
@@ -104,148 +105,31 @@ const LegendItem = ({ color, label, count, icon, t }) => {
 };
 
 const Dashboard = () => {
-  const { user } = useAuth();
   const { t } = useLanguage();
-  const { clientId } = useParams();
 
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedTask, setSelectedTask] = useState(null);
   const [activeTab, setActiveTab] = useState(TABS.CALENDAR);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [unreadItems, setUnreadItems] = useState([]);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [loadingUnread, setLoadingUnread] = useState(false);
   const [loadingNotificationId, setLoadingNotificationId] = useState(null);
   const [isMarkingAll, setIsMarkingAll] = useState(false);
 
-  // Tasks state
-  const [tasks, setTasks] = useState([]);
-  const [loadingTasks, setLoadingTasks] = useState(false);
-
-  // TanStack Query for projects - Parallel prefetching for all tabs
-  const effectiveClientId = user?.role === ROLES.ADMIN && clientId ? clientId : null;
-
-  const { data: projectsResponse, isLoading: loadingProjects } = useQuery({
-    queryKey: ['notion_data', user?.id, effectiveClientId, TABS.PROJECTS],
-    queryFn: () => projectService.getAll(effectiveClientId, TABS.PROJECTS.toLowerCase()),
-    enabled: !!user,
-  });
-  const projects = projectsResponse?.data || [];
-
-  const { data: offersResponse, isLoading: loadingOffers } = useQuery({
-    queryKey: ['notion_data', user?.id, effectiveClientId, TABS.OFFERS],
-    queryFn: () => projectService.getAll(effectiveClientId, TABS.OFFERS.toLowerCase()),
-    enabled: !!user && (activeTab === TABS.OFFERS || activeTab === TABS.INVOICES),
-  });
-  const offers = offersResponse?.data || [];
-
-  const { data: invoicesResponse, isLoading: loadingInvoices } = useQuery({
-    queryKey: ['notion_data', user?.id, effectiveClientId, TABS.INVOICES],
-    queryFn: () => projectService.getAll(effectiveClientId, TABS.INVOICES.toLowerCase()),
-    enabled: !!user && (activeTab === TABS.INVOICES || activeTab === TABS.OFFERS),
-  });
-  const invoices = invoicesResponse?.data || [];
-
-  const { data: clientInfo } = useQuery({
-    queryKey: ['client_info', effectiveClientId || user?.id],
-    queryFn: () => projectService.getClientInfo(effectiveClientId),
-    enabled: !!user,
-  });
-
-  const refetchUnread = async () => {
-    setLoadingUnread(true);
-    try {
-      const status = await projectService.getUnreadStatus(effectiveClientId);
-      const items = status.items || [];
-      setUnreadItems(items);
-      setUnreadCount(items.filter((i) => i.is_unread).length);
-    } catch (err) {
-      console.error('Failed to refetch unread:', err);
-    } finally {
-      setLoadingUnread(false);
-    }
-  };
-
-  const handleMarkAllRead = async () => {
-    // Optimistic update
-    const previousUnreadItems = [...unreadItems];
-    const previousUnreadCount = unreadCount;
-    
-    // Calculate maxTime (latest edited time among current notifications)
-    const maxTime = unreadItems.reduce((latest, item) => {
-      if (!latest) return item.last_edited_time;
-      return new Date(item.last_edited_time) > new Date(latest) ? item.last_edited_time : latest;
-    }, null);
-
-    setUnreadItems([]);
-    setUnreadCount(0);
-    
-    try {
-      await projectService.markAllRead(maxTime);
-      // No need to refetch if we're confident, but let's keep it for sync
-      refetchUnread();
-    } catch (err) {
-      console.error('Failed to mark all as read:', err);
-      // Rollback on error
-      setUnreadItems(previousUnreadItems);
-      setUnreadCount(previousUnreadCount);
-    }
-  };
-
-  useEffect(() => {
-    if (user) {
-      refetchUnread();
-    }
-  }, [user, effectiveClientId]);
-
-  // Handle tasks fetch manually since useQuery is being stubborn
-  useEffect(() => {
-    const fetchTasks = async () => {
-      setLoadingTasks(true);
-      try {
-        console.log('Fetching tasks manually for:', effectiveClientId);
-        const response = await projectService.getAll(effectiveClientId, 'tasks');
-        // Handle { data: [...] } wrapper from the API
-        const taskList = response?.data || response || [];
-        setTasks(taskList);
-      } catch (err) {
-        console.error('Failed to fetch tasks manually:', err);
-      } finally {
-        setLoadingTasks(false);
-      }
-    };
-
-    if (user) {
-      fetchTasks();
-    }
-  }, [user, effectiveClientId]);
-
-  const isTabLoading =
-    activeTab === TABS.CALENDAR
-      ? loadingTasks
-      : activeTab === TABS.PROJECTS
-        ? loadingProjects
-        : activeTab === TABS.OFFERS
-          ? loadingOffers || loadingInvoices
-          : activeTab === TABS.INVOICES
-            ? loadingInvoices || loadingOffers || loadingProjects
-            : false;
-
-  const resolveRelationNames = (ids, type) => {
-    if (!ids || ids.length === 0) return '-';
-    const source = type === 'project' ? projects : offers;
-    return ids
-      .map((id) => {
-        const found = source.find((item) => item.id === id);
-        return found?.identification?.name || '...';
-      })
-      .join(', ');
-  };
-
-  const getMetaValue = (p, label) => {
-    const m = p.metadata?.find((m) => m.label.toLowerCase() === label.toLowerCase());
-    return m?.value;
-  };
+  // Extract heavy data loading logic into custom hook
+  const {
+    effectiveClientId,
+    user,
+    projects,
+    offers,
+    invoices,
+    tasks,
+    clientInfo,
+    unreadItems,
+    unreadCount,
+    loadingUnread,
+    isTabLoading,
+    handleMarkAllRead,
+    refetchUnread
+  } = useDashboardData(activeTab);
 
   // REVERSE LOOKUP: Group invoices by their related offer ID
   const reverseInvoiceMap = useMemo(() => {
@@ -297,28 +181,34 @@ const Dashboard = () => {
     activeTab === TABS.PROJECTS ? projects : activeTab === TABS.OFFERS ? offers : invoices;
 
   // Sort alphabetically (descending)
-  const sortedData = [...activeData].sort((a, b) =>
-    (b.identification?.name || '').localeCompare(a.identification?.name || '')
-  );
+  const sortedData = useMemo(() => {
+    return [...activeData].sort((a, b) =>
+      (b.identification?.name || '').localeCompare(a.identification?.name || '')
+    );
+  }, [activeData]);
 
   // Group by Phase (Projects) or Status (Offers/Invoices)
-  const grouped = sortedData.reduce((acc, p) => {
-    const groupKey =
-      activeTab === TABS.PROJECTS
-        ? p.status?.phase?.name || 'Sin Fase'
-        : p.status?.main?.name || 'Sin Estado';
+  const grouped = useMemo(() => {
+    return sortedData.reduce((acc, p) => {
+      const groupKey =
+        activeTab === TABS.PROJECTS
+          ? p.status?.phase?.name || 'Sin Fase'
+          : p.status?.main?.name || 'Sin Estado';
 
-    if (!acc[groupKey]) acc[groupKey] = [];
-    acc[groupKey].push(p);
-    return acc;
-  }, {});
+      if (!acc[groupKey]) acc[groupKey] = [];
+      acc[groupKey].push(p);
+      return acc;
+    }, {});
+  }, [sortedData, activeTab]);
 
   // Stats for Chart - Dynamic by groupKey
-  const phaseStats = Object.entries(grouped).map(([name, items]) => ({
-    name,
-    count: items.length,
-    color: PHASE_COLORS[name] || '#64748b',
-  }));
+  const phaseStats = useMemo(() => {
+    return Object.entries(grouped).map(([name, items]) => ({
+      name,
+      count: items.length,
+      color: PHASE_COLORS[name] || '#64748b',
+    }));
+  }, [grouped]);
 
   const renderLoadingState = () => (
     <div className="flex flex-col items-center justify-center py-24 gap-6 text-notion-text-secondary animate-in fade-in duration-700">
@@ -790,7 +680,7 @@ const Dashboard = () => {
                                 type === 'offer'
                                   ? p.identification?.offer_relation
                                   : p.identification?.project_relation;
-                              const name = resolveRelationNames(ids, type);
+                              const name = resolveRelationNames(ids, type, projects, offers);
                               return (
                                 <td
                                   key={col.key}

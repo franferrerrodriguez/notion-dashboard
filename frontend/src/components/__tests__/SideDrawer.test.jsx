@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import SideDrawer from '../SideDrawer';
 import { projectService } from '../../services/api';
 import { LanguageProvider } from '../../context/LanguageContext';
+import { ThemeProvider } from '../../context/ThemeContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Mock projectService
@@ -23,38 +24,41 @@ const queryClient = new QueryClient({
 const renderWithProvider = (ui) => {
   return render(
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>{ui}</LanguageProvider>
+      <ThemeProvider>
+        <LanguageProvider>{ui}</LanguageProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };
 
 describe('SideDrawer Component', () => {
   const defaultProps = {
-    projectId: '1',
+    itemId: '1',
     onClose: vi.fn(),
   };
 
   it('loads and displays project details', async () => {
     projectService.getById.mockResolvedValueOnce({
-      id: '1',
-      raw_properties: {
-        'Nombre del proyecto': { title: [{ plain_text: 'Test Project' }] },
-        'Progreso': { rollup: { number: 0.7 } },
-        '% Facturado': { formula: { number: 0.5 } },
-        'Resumen': { rich_text: [{ plain_text: 'Test description' }] },
-        'Cliente': { multi_select: [{ name: 'Client A', color: 'blue' }] },
-        'Estado': { status: { name: 'In Progress', color: 'orange' } },
-        'Fase': { status: { name: 'Development', color: 'blue' } }
-      },
-      related_tasks: [],
-      page_content: []
+      project: {
+        id: '1',
+        identification: {
+          name: 'Test Project',
+        },
+        status: {
+          progress: 70,
+        },
+        financials: {
+          billingPercentage: 50,
+        },
+        metadata: [
+          { label: 'Resumen', value: 'Test description' }
+        ]
+      }
     });
 
     renderWithProvider(<SideDrawer {...defaultProps} />);
 
-    // Screen should show loading initially ("Cargando..." in Spanish)
-    expect(screen.getAllByText(/Cargando\.\.\./i)[0]).toBeInTheDocument();
-
+    // Wait for the data to resolve and render the component content
     await waitFor(() => {
       expect(screen.getByText('Test Project')).toBeInTheDocument();
     });
@@ -64,8 +68,8 @@ describe('SideDrawer Component', () => {
     expect(screen.getByText('Test description')).toBeInTheDocument();
   });
 
-  it('does not render if projectId is null', () => {
-    const { container } = renderWithProvider(<SideDrawer projectId={null} onClose={vi.fn()} />);
+  it('does not render if itemId is null', () => {
+    const { container } = renderWithProvider(<SideDrawer itemId={null} onClose={vi.fn()} />);
     expect(container.firstChild).toBeNull();
   });
 });

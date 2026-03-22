@@ -27,14 +27,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    // 1. Optimistic UI update: Clear local state immediately for instant feedback
+    setUser(null);
+    queryClient.clear();
+
     try {
+      // 2. Perform backend cleanup in the background
       await authService.logout();
     } catch (err) {
-      console.error('Logout error', err);
-    } finally {
-      // ALWAYS clear local state and cache regardless of backend success
-      setUser(null);
-      queryClient.clear();
+      // We log but don't block the UI, as the user is effectively "logged out" locally
+      console.error('Background logout error:', err);
     }
   };
 

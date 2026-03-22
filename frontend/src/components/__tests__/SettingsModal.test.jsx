@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import SettingsModal from '../SettingsModal';
 import { LanguageProvider } from '../../context/LanguageContext';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { settingsService } from '../../services/api';
 
 // Mock settingsService
@@ -12,8 +13,16 @@ vi.mock('../../services/api', () => ({
   },
 }));
 
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+});
+
 const renderWithProvider = (ui) => {
-  return render(<LanguageProvider>{ui}</LanguageProvider>);
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <LanguageProvider>{ui}</LanguageProvider>
+    </QueryClientProvider>
+  );
 };
 
 describe('SettingsModal Component', () => {
@@ -25,7 +34,7 @@ describe('SettingsModal Component', () => {
   it('loads settings on open', async () => {
     settingsService.get.mockResolvedValueOnce({
       notion_integration_token: 'secret_123',
-      notion_database_id: 'db_456',
+      notion_projects_database_id: 'db_456',
     });
 
     renderWithProvider(<SettingsModal {...defaultProps} />);
@@ -42,7 +51,7 @@ describe('SettingsModal Component', () => {
   it('calls save when form is submitted', async () => {
     settingsService.get.mockResolvedValueOnce({
       notion_integration_token: 'secret_123',
-      notion_database_id: 'db_456',
+      notion_projects_database_id: 'db_456',
     });
     settingsService.save.mockResolvedValueOnce({});
 
@@ -58,7 +67,7 @@ describe('SettingsModal Component', () => {
     await waitFor(() => {
       expect(settingsService.save).toHaveBeenCalledWith({
         notion_integration_token: 'secret_123',
-        notion_database_id: 'db_456',
+        notion_projects_database_id: 'db_456',
       });
       expect(screen.getByText(/Configuración guardada correctamente/i)).toBeInTheDocument();
     });
