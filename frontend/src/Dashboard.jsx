@@ -128,7 +128,7 @@ const Dashboard = () => {
   const { data: projectsResponse, isLoading: loadingProjects } = useQuery({
     queryKey: ['notion_data', user?.id, effectiveClientId, TABS.PROJECTS],
     queryFn: () => projectService.getAll(effectiveClientId, TABS.PROJECTS.toLowerCase()),
-    enabled: !!user && (activeTab === TABS.PROJECTS || activeTab === TABS.INVOICES),
+    enabled: !!user,
   });
   const projects = projectsResponse?.data || [];
 
@@ -958,6 +958,12 @@ const Dashboard = () => {
           type="task"
           onClose={() => setSelectedTask(null)}
           projects={projects}
+          onProjectClick={(projectId) => {
+            setSelectedTask(null);
+            setTimeout(() => {
+              setSelectedProject(projectId);
+            }, 100);
+          }}
         />
       )}
     </div>

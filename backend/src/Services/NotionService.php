@@ -130,7 +130,7 @@ function transformTask($props) {
     return [
         'identification' => [
             'name' => $name,
-            'project_relation' => $projectRelation
+            'project_relation' => $projectRelation,
         ],
         'status' => [
             'main' => $statusObj,
@@ -249,21 +249,10 @@ function extractText($prop) {
     if ($type === 'relation') {
         $rels = $prop['relation'] ?? [];
         if (empty($rels)) return null;
-        static $titleCache = [];
+        // Optimization: Do NOT fetch details for relations in list views.
+        // This avoids dozens of extra API calls that slow down the system and cause 500 errors.
         $id = $rels[0]['id'];
-        if (isset($titleCache[$id])) return $titleCache[$id];
-        
-        $detail = fetchSimplePageDetail($id);
-        if ($detail && isset($detail['properties'])) {
-            foreach ($detail['properties'] as $p) {
-                if (($p['type'] ?? '') === 'title') {
-                    $title = $p['title'][0]['plain_text'] ?? 'Sin título';
-                    $titleCache[$id] = $title;
-                    return $title;
-                }
-            }
-        }
-        return 'Relación: ' . substr($id, 0, 8);
+        return 'ID:' . substr($id, 0, 8);
     }
 
     if ($type === 'formula') {
@@ -452,7 +441,10 @@ function extractRemainingProperties($props) {
         'Tareas', 'Interacciones', 'Interacción', 'Control de horas', 'Entregas'
     ];
     
-    $blacklist = ['Responsable', 'Periodo', 'Resumen', 'Coste interno', 'Historial técnico', 'Margen'];
+    $blacklist = [
+        'Responsable', 'Periodo', 'Resumen', 'Coste interno', 'Historial técnico', 'Margen',
+        'Proyecto', 'Project', 'Nombre de la tarea', 'Task name', '↗ Proyecto'
+    ];
     
     $additional = [];
     foreach ($props as $key => $prop) {

@@ -38,7 +38,7 @@ const renderTextWithLinks = (text) => {
   );
 };
 
-const SideDrawer = ({ itemId, type = 'project', onClose, projects = [] }) => {
+const SideDrawer = ({ itemId, type = 'project', onClose, projects = [], onProjectClick }) => {
   const { t } = useLanguage();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -236,10 +236,22 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [] }) => {
                         label={t('col_project')}
                         value={(() => {
                           const projectIds = identification.project_relation;
-                          if (!projectIds || projectIds.length === 0) return null;
-                          const found = projects.find((p) => p.id === projectIds[0]);
-                          return found?.identification?.name || t('no_project');
+                          // Prioritize the direct project_name from backend
+                          if (identification.project_name) return identification.project_name;
+                          // Fallback to searching in the projects list if available
+                          if (projectIds && projectIds.length > 0) {
+                            const found = projects.find((p) => p.id === projectIds[0]);
+                            if (found?.identification?.name) return found.identification.name;
+                          }
+                          return t('no_project');
                         })()}
+                        isLink={!!identification.project_relation?.[0]}
+                        onClick={() => {
+                          const projectId = identification.project_relation?.[0];
+                          if (projectId && onProjectClick) {
+                            onProjectClick(projectId);
+                          }
+                        }}
                       />
                     </>
                   ) : (
@@ -344,12 +356,7 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [] }) => {
                   )}
 
                   <div className="pt-4 space-y-1.5 border-t border-notion-border dark:border-white/10 mt-4 animate-in fade-in slide-in-from-top-1 duration-500">
-                    {metadata
-                      .filter(
-                        (prop) =>
-                          !['margen (€)', 'coste interno (€)'].includes(prop.label.toLowerCase())
-                      )
-                      .map((prop) => (
+                    {metadata.map((prop) => (
                         <PropertyRow
                           key={prop.label}
                           icon={<FileText className="w-4 h-4" />}
@@ -629,6 +636,7 @@ const PropertyRow = ({
   isNotionFile,
   t,
   isDark,
+  onClick,
 }) => {
   if (!value && value !== 0 && value !== 'Empty') return null;
 
@@ -671,7 +679,10 @@ const PropertyRow = ({
             <span className="truncate max-w-[180px]">{value?.name || t('view_file')}</span>
           </a>
         ) : isLink ? (
-          <span className="text-[13px] text-notion-text dark:text-white/90 border-b border-notion-border dark:border-white/20 hover:border-notion-text dark:hover:border-white transition-colors cursor-pointer inline-flex items-center gap-1.5 font-bold">
+          <span
+            onClick={onClick}
+            className="text-[13px] text-notion-text dark:text-white/90 border-b border-notion-border dark:border-white/20 hover:border-notion-text dark:hover:border-white transition-colors cursor-pointer inline-flex items-center gap-1.5 font-bold"
+          >
             {value}
           </span>
         ) : (

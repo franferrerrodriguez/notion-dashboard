@@ -188,6 +188,28 @@ const Calendar = ({ tasks = [], projects = [], onSelectTask }) => {
                           </h3>
                         </div>
 
+                        {/* Project Row */}
+                        {(() => {
+                          const projectIds =
+                            task.identification?.project_relation ||
+                            task.properties?.Proyecto?.relation?.map((r) => r.id) ||
+                            task.properties?.Project?.relation?.map((r) => r.id) ||
+                            task.properties?.['↗ Proyecto']?.relation?.map((r) => r.id);
+
+                          const projectId = Array.isArray(projectIds) ? projectIds[0] : projectIds;
+                          if (!projectId) return null;
+
+                          const project = projects.find((p) => p.id === projectId);
+                          const projectName = project?.identification?.name;
+                          if (!projectName) return null;
+
+                          return (
+                            <div className="text-[7px] font-black uppercase text-blue-500/60 dark:text-blue-400/50 truncate tracking-tight">
+                              {projectName}
+                            </div>
+                          );
+                        })()}
+
                         {/* Priority Row */}
                         {task.status?.priority?.name && (
                           <div className="flex">
@@ -230,14 +252,35 @@ const Calendar = ({ tasks = [], projects = [], onSelectTask }) => {
           }}
         >
           <div className="bg-white/90 dark:bg-notion-dark/95 backdrop-blur-xl border border-notion-border dark:border-white/10 rounded-2xl p-4 shadow-2xl w-64">
-            <div className="flex items-center gap-2 mb-3">
-              <div
-                className="w-2 h-2 rounded-full"
-                style={{ backgroundColor: hoveredTask.status?.main?.color || '#3b82f6' }}
-              ></div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-notion-text-secondary dark:text-gray-400">
-                {hoveredTask.status?.main?.name}
-              </span>
+            <div className="flex flex-col gap-1 mb-3">
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: hoveredTask.status?.main?.color || '#3b82f6' }}
+                ></div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-notion-text-secondary dark:text-gray-400">
+                  {hoveredTask.status?.main?.name}
+                </span>
+              </div>
+              {(() => {
+                const projectIds =
+                  hoveredTask.identification?.project_relation ||
+                  hoveredTask.properties?.Proyecto?.relation?.map((r) => r.id) ||
+                  hoveredTask.properties?.Project?.relation?.map((r) => r.id) ||
+                  hoveredTask.properties?.['↗ Proyecto']?.relation?.map((r) => r.id);
+
+                const projectId = Array.isArray(projectIds) ? projectIds[0] : projectIds;
+                if (!projectId) return null;
+
+                const project = projects.find((p) => p.id === projectId);
+                return project?.identification?.name ? (
+                  <div className="flex">
+                    <span className="text-[8px] font-bold uppercase text-blue-500/80 dark:text-blue-400/60 tracking-tight px-2 py-0.5 bg-blue-500/5 dark:bg-blue-400/10 rounded-md border border-blue-500/10 dark:border-blue-400/10">
+                      {project.identification.name}
+                    </span>
+                  </div>
+                ) : null;
+              })()}
             </div>
 
             <h4 className="text-sm font-bold text-notion-text dark:text-gray-100 mb-4 leading-tight">
