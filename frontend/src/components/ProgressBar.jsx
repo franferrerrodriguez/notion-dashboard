@@ -20,7 +20,7 @@ const ProgressBar = React.memo(({ value, color, showText }) => {
           {safeValue.toFixed(1)}%
         </span>
       )}
-      <div className="h-full grow relative overflow-hidden rounded-full bg-gray-100 dark:bg-white/5 border border-notion-border dark:border-white/5 shadow-inner">
+      <div className="grow max-w-[100px] h-1.5 bg-gray-100 dark:bg-[#333] rounded-full overflow-hidden">
         <div 
           className="h-full transition-all duration-1000 ease-out" 
           style={{ width: `${safeValue}%`, background: color }}

@@ -10,8 +10,10 @@ import {
   Trash2,
   UserPlus,
   XCircle,
+  X,
+  Info,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ConfirmModal from './components/ConfirmModal';
 import SettingsModal from './components/SettingsModal';
 import ThemeToggle from './components/ThemeToggle';
@@ -21,11 +23,27 @@ import { ROLES } from './constants/auth';
 import { useLanguage } from './context/LanguageContext';
 import { settingsService } from './services/api';
 import { useAdminUsers } from './hooks/useAdminUsers';
+import { isDemoMode } from './services/demoInterceptor';
 
 const AdminPanel = () => {
   const queryClient = useQueryClient();
   const { t } = useLanguage();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [showDemoGuide, setShowDemoGuide] = useState(false);
+
+  useEffect(() => {
+    if (isDemoMode()) {
+      const hasSeenGuide = localStorage.getItem('demo_guide_seen');
+      if (!hasSeenGuide) {
+        setShowDemoGuide(true);
+      }
+    }
+  }, []);
+
+  const closeDemoGuide = () => {
+    setShowDemoGuide(false);
+    localStorage.setItem('demo_guide_seen', 'true');
+  };
 
   const {
     users,
@@ -54,8 +72,6 @@ const AdminPanel = () => {
     settings?.notion_offers_database_id &&
     settings?.notion_invoices_database_id &&
     settings?.notion_tasks_database_id;
-
-
 
   if (isLoading)
     return (
@@ -91,6 +107,28 @@ const AdminPanel = () => {
       </header>
 
       <main className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+        {showDemoGuide && (
+          <div className="mb-10 p-5 bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/20 rounded-3xl flex items-start gap-5 transition-all animate-in fade-in slide-in-from-top-4 duration-700 delay-300 group">
+            <div className="p-3 bg-blue-500/15 rounded-2xl shrink-0 shadow-inner group-hover:bg-blue-500/25 transition-colors duration-500">
+              <Info className="w-5 h-5 text-blue-500" />
+            </div>
+            <div className="flex-1 space-y-1.5">
+              <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">
+                {t('demo_guide_title')}
+              </h4>
+              <p className="text-xs font-bold text-notion-text-secondary dark:text-white/60 leading-relaxed max-w-4xl">
+                {t('demo_guide_desc')}
+              </p>
+            </div>
+            <button 
+              onClick={closeDemoGuide}
+              className="p-2.5 hover:bg-black/5 dark:hover:bg-white/10 rounded-xl transition-all text-notion-text-secondary dark:text-white/40 hover:text-notion-text dark:hover:text-white mt-1 shrink-0 active:scale-90"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
         <div className="flex justify-between items-center mb-6 px-4">
           <div className="flex items-center gap-2 overflow-hidden">
             <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
@@ -211,7 +249,7 @@ const AdminPanel = () => {
                     )}
                   </td>
                   <td className="py-6 px-8 text-right">
-                    <div className="flex justify-end gap-3 transition-all">
+                    <div className="flex justify-end gap-3 transition-all relative">
                       {u.role === ROLES.CLIENT && u.external_client_id && (
                         <button
                           onClick={() => {
@@ -219,6 +257,7 @@ const AdminPanel = () => {
                             const routerBasename = import.meta.env.VITE_ROUTER_BASENAME || '';
                             const path = `${baseUrl}${routerBasename.endsWith('/') ? routerBasename.slice(0, -1) : routerBasename}/view-as/${u.external_client_id}`;
                             window.open(path, '_blank');
+                            if (showDemoGuide) closeDemoGuide();
                           }}
                           title={t('view_as_client')}
                           className="p-2.5 bg-blue-500/5 hover:bg-blue-500/10 rounded-xl border border-blue-500/10 transition-colors text-blue-500/50 hover:text-blue-400"

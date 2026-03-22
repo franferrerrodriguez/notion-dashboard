@@ -176,6 +176,9 @@ export const translations = {
     mark_all_read_btn: 'Marcar todo como leído',
     mark_read_btn: 'Marcar como leída',
     refresh: 'Refrescar',
+    demo_guide_title: 'Panel de Gestión de Usuarios',
+    demo_guide_desc: 'Desde aquí puedes administrar los accesos al portal. Para comprobar la experiencia de un cliente, pulsa el botón de "flecha externa" (situado a la izquierda del icono de edición) y accederás a la vista que tendrá el cliente cuando acceda con sus credenciales.',
+    demo_guide_close: 'Entendido',
   },
   en: {
     // ... (skipping some for brevity, but I must provide full context or use multi_replace)
@@ -357,5 +360,8 @@ export const translations = {
     mark_all_read_btn: 'Mark all as read',
     mark_read_btn: 'Mark as read',
     refresh: 'Refresh',
+    demo_guide_title: 'User Management Panel',
+    demo_guide_desc: 'From here you can manage portal access. To check a client\'s experience, click the "external arrow" button (to the left of the edit icon) and you will see the view the client will have when logging in with their credentials.',
+    demo_guide_close: 'Got it',
   },
 };

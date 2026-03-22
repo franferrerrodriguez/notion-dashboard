@@ -4,7 +4,7 @@ export const mockData = {
     "success": true,
     "user": {
       "id": 1,
-      "email": "demo@demo-client.demo",
+      "email": "root@root.com",
       "role": "Admin",
       "external_client_id": null,
       "logo_url": null
@@ -13,7 +13,7 @@ export const mockData = {
   "users_list": [
     {
       "id": 2,
-      "email": "cliente@demo-client.demo",
+      "email": "cliente@demo-client.com",
       "is_active": 1,
       "last_login": null,
       "role": "Client",
@@ -22,7 +22,7 @@ export const mockData = {
     },
     {
       "id": 1,
-      "email": "demo@demo-client.demo",
+      "email": "root@root.com",
       "is_active": 1,
       "last_login": null,
       "role": "Admin",
@@ -39,7 +39,7 @@ export const mockData = {
   },
   "me": {
     "id": 1,
-    "email": "demo@demo-client.demo",
+    "email": "root@root.com",
     "role": "Admin",
     "external_client_id": null,
     "logo_url": null
@@ -80,11 +80,11 @@ export const mockData = {
         "assets": {
           "projectSheet": {
             "name": "PR0101_HOJA_PROYECTO.pdf",
-            "url": "https://demo-files.demo-client.demo/docs/PR0101_HOJA_PROYECTO.pdf"
+            "url": "https://demo-files.demo-client.com/docs/PR0101_HOJA_PROYECTO.pdf"
           },
           "offerFile": {
             "name": "OF-2026-001.pdf",
-            "url": "https://demo-files.demo-client.demo/offers/OF-2026-001.pdf"
+            "url": "https://demo-files.demo-client.com/offers/OF-2026-001.pdf"
           },
           "offerCode": "OF-2026-001",
           "offerLink": null
@@ -137,7 +137,7 @@ export const mockData = {
         "assets": {
           "projectSheet": {
             "name": "PR0102_HOJA_PROYECTO.pdf",
-            "url": "https://demo-files.demo-client.demo/docs/PR0102_HOJA_PROYECTO.pdf"
+            "url": "https://demo-files.demo-client.com/docs/PR0102_HOJA_PROYECTO.pdf"
           },
           "offerFile": null,
           "offerCode": "OF-2026-002",
@@ -191,7 +191,7 @@ export const mockData = {
         "assets": {
           "projectSheet": {
             "name": "PR0103_HOJA_PROYECTO.pdf",
-            "url": "https://demo-files.demo-client.demo/docs/PR0103_HOJA_PROYECTO.pdf"
+            "url": "https://demo-files.demo-client.com/docs/PR0103_HOJA_PROYECTO.pdf"
           },
           "offerFile": null,
           "offerCode": "OF-2026-003",
@@ -245,11 +245,11 @@ export const mockData = {
         "assets": {
           "projectSheet": {
             "name": "PR0104_HOJA_PROYECTO.pdf",
-            "url": "https://demo-files.demo-client.demo/docs/PR0104_HOJA_PROYECTO.pdf"
+            "url": "https://demo-files.demo-client.com/docs/PR0104_HOJA_PROYECTO.pdf"
           },
           "offerFile": {
             "name": "OF-2026-004.pdf",
-            "url": "https://demo-files.demo-client.demo/offers/OF-2026-004.pdf"
+            "url": "https://demo-files.demo-client.com/offers/OF-2026-004.pdf"
           },
           "offerCode": "OF-2026-004",
           "offerLink": null
@@ -302,7 +302,7 @@ export const mockData = {
         "assets": {
           "projectSheet": {
             "name": "PR0105_HOJA_PROYECTO.pdf",
-            "url": "https://demo-files.demo-client.demo/docs/PR0105_HOJA_PROYECTO.pdf"
+            "url": "https://demo-files.demo-client.com/docs/PR0105_HOJA_PROYECTO.pdf"
           },
           "offerFile": null,
           "offerCode": "OF-2026-005",
@@ -356,7 +356,7 @@ export const mockData = {
         "assets": {
           "projectSheet": {
             "name": "PR0106_HOJA_PROYECTO.pdf",
-            "url": "https://demo-files.demo-client.demo/docs/PR0106_HOJA_PROYECTO.pdf"
+            "url": "https://demo-files.demo-client.com/docs/PR0106_HOJA_PROYECTO.pdf"
           },
           "offerFile": null,
           "offerCode": "OF-2026-006",
@@ -410,11 +410,11 @@ export const mockData = {
         "assets": {
           "projectSheet": {
             "name": "PR0107_HOJA_PROYECTO.pdf",
-            "url": "https://demo-files.demo-client.demo/docs/PR0107_HOJA_PROYECTO.pdf"
+            "url": "https://demo-files.demo-client.com/docs/PR0107_HOJA_PROYECTO.pdf"
           },
           "offerFile": {
             "name": "OF-2026-007.pdf",
-            "url": "https://demo-files.demo-client.demo/offers/OF-2026-007.pdf"
+            "url": "https://demo-files.demo-client.com/offers/OF-2026-007.pdf"
           },
           "offerCode": "OF-2026-007",
           "offerLink": null
@@ -467,7 +467,7 @@ export const mockData = {
         "assets": {
           "projectSheet": {
             "name": "PR0108_HOJA_PROYECTO.pdf",
-            "url": "https://demo-files.demo-client.demo/docs/PR0108_HOJA_PROYECTO.pdf"
+            "url": "https://demo-files.demo-client.com/docs/PR0108_HOJA_PROYECTO.pdf"
           },
           "offerFile": null,
           "offerCode": "OF-2026-008",
@@ -1011,11 +1011,11 @@ export const mockData = {
       "assets": {
         "projectSheet": {
           "name": "PR0101_HOJA_PROYECTO.pdf",
-          "url": "https://demo-files.demo-client.demo/docs/PR0101_HOJA_PROYECTO.pdf"
+          "url": "https://demo-files.demo-client.com/docs/PR0101_HOJA_PROYECTO.pdf"
         },
         "offerFile": {
           "name": "OF-2026-001.pdf",
-          "url": "https://demo-files.demo-client.demo/offers/OF-2026-001.pdf"
+          "url": "https://demo-files.demo-client.com/offers/OF-2026-001.pdf"
         },
         "offerCode": "OF-2026-001",
         "offerLink": null
@@ -2303,6 +2303,84 @@ export const mockData = {
       "request_id": "demo-req-7"
     }
   ],
+  "offers": {
+    "data": [
+      {
+        "id": "o1b2c3d4-e5f6-7890-abcd-000100000000",
+        "last_edited_time": "2026-03-15T10:00:00.000Z",
+        "identification": {
+          "name": "OF-2026-001",
+          "project_relation": ["a1b2c3d4-e5f6-7890-abcd-000100000000"]
+        },
+        "status": {
+          "main": {
+            "name": "Aceptado",
+            "color": "green"
+          }
+        },
+        "financials": {
+          "totalOffered": 4500,
+          "totalBilled": 1800,
+          "billingPercentage": 40
+        },
+        "metadata": [
+          { "label": "Descripción", "value": "Instalación Solar Residencial 5kW", "type": "rich_text" },
+          { "label": "Fecha", "value": "2026-01-15", "type": "date" },
+          { "label": "Importe neto", "value": 3719.01, "type": "number" }
+        ]
+      },
+      {
+        "id": "o1b2c3d4-e5f6-7890-abcd-000200000000",
+        "last_edited_time": "2026-03-10T11:00:00.000Z",
+        "identification": {
+          "name": "OF-2026-002",
+          "project_relation": ["a1b2c3d4-e5f6-7890-abcd-000200000000"]
+        },
+        "status": {
+          "main": {
+            "name": "Pendiente",
+            "color": "yellow"
+          }
+        },
+        "financials": {
+          "totalOffered": 12500,
+          "totalBilled": 0,
+          "billingPercentage": 0
+        },
+        "metadata": [
+          { "label": "Descripción", "value": "Reforma Cuadro Eléctrico Industrial", "type": "rich_text" },
+          { "label": "Fecha", "value": "2026-02-01", "type": "date" },
+          { "label": "Importe neto", "value": 10330.58, "type": "number" }
+        ]
+      }
+    ]
+  },
+  "invoices": {
+    "data": [
+      {
+        "id": "i1b2c3d4-e5f6-7890-abcd-000100000000",
+        "last_edited_time": "2026-03-18T09:00:00.000Z",
+        "identification": {
+          "name": "INV-2026-001",
+          "offer_relation": ["o1b2c3d4-e5f6-7890-abcd-000100000000"],
+          "project_relation": ["a1b2c3d4-e5f6-7890-abcd-000100000000"]
+        },
+        "status": {
+          "main": {
+            "name": "Cobrada",
+            "color": "green"
+          }
+        },
+        "financials": {
+          "totalOffered": 1800
+        },
+        "metadata": [
+          { "label": "Fecha factura", "value": "2026-03-01", "type": "date" },
+          { "label": "Trimestre", "value": "Q1 2026", "type": "select" }
+        ]
+      }
+    ]
+  },
   "detail_interactions": {
     "content": [
       {
@@ -2566,7 +2644,7 @@ export const mockData = {
     {
       "id": "demo-del-03",
       "type": "paragraph",
-      "text": "https://demo-files.demo-client.demo/deliveries/informe-deficiencias.pdf"
+      "text": "https://demo-files.demo-client.com/deliveries/informe-deficiencias.pdf"
     },
     {
       "id": "demo-del-04",
@@ -2581,7 +2659,7 @@ export const mockData = {
     {
       "id": "demo-del-06",
       "type": "paragraph",
-      "text": "https://demo-files.demo-client.demo/deliveries/esquema-unifilar.pdf"
+      "text": "https://demo-files.demo-client.com/deliveries/esquema-unifilar.pdf"
     }
   ],
   "detail_contacts": [
