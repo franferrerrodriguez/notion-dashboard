@@ -24,7 +24,7 @@ export const translations = {
     login_or_separator: 'O',
     login_demo_button: 'Ver Demo Interactiva',
     login_demo_desc: 'Entra como cliente y prueba todas las gráficas, sin base de datos real.',
-    login_copyright: '• Client Dashboard',
+    login_copyright: '• Notion Client Dashboard',
 
     // Logout Modal
     logout_confirm_title: '¿Cerrar sesión ahora?',
@@ -197,7 +197,7 @@ export const translations = {
 
     // Login
     login_title: 'Welcome',
-    login_subtitle: 'Client Dashboard',
+    login_subtitle: 'Notion Client Dashboard',
     login_email: 'Email',
     login_password: 'Password',
     login_button: 'Sign In',
