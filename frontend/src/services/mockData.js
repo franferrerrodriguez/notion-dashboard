@@ -89,18 +89,7 @@ export const mockData = {
           "offerCode": "OF-2026-001",
           "offerLink": null
         },
-        "metadata": [
-          {
-            "label": "Margen (€)",
-            "value": 890.5,
-            "type": "formula"
-          },
-          {
-            "label": "Coste interno (€)",
-            "value": 909.5,
-            "type": "formula"
-          }
-        ],
+        "metadata": [],
         "has_unread_interactions": true
       },
       {
@@ -143,18 +132,7 @@ export const mockData = {
           "offerCode": "OF-2026-002",
           "offerLink": null
         },
-        "metadata": [
-          {
-            "label": "Margen (€)",
-            "value": 3200,
-            "type": "formula"
-          },
-          {
-            "label": "Coste interno (€)",
-            "value": 5410,
-            "type": "formula"
-          }
-        ],
+        "metadata": [],
         "has_unread_interactions": true
       },
       {
@@ -197,18 +175,7 @@ export const mockData = {
           "offerCode": "OF-2026-003",
           "offerLink": null
         },
-        "metadata": [
-          {
-            "label": "Margen (€)",
-            "value": 340,
-            "type": "formula"
-          },
-          {
-            "label": "Coste interno (€)",
-            "value": 500,
-            "type": "formula"
-          }
-        ],
+        "metadata": [],
         "has_unread_interactions": false
       },
       {
@@ -254,18 +221,7 @@ export const mockData = {
           "offerCode": "OF-2026-004",
           "offerLink": null
         },
-        "metadata": [
-          {
-            "label": "Margen (€)",
-            "value": 1100,
-            "type": "formula"
-          },
-          {
-            "label": "Coste interno (€)",
-            "value": 1150,
-            "type": "formula"
-          }
-        ],
+        "metadata": [],
         "has_unread_interactions": false
       },
       {
@@ -308,18 +264,7 @@ export const mockData = {
           "offerCode": "OF-2026-005",
           "offerLink": null
         },
-        "metadata": [
-          {
-            "label": "Margen (€)",
-            "value": 280,
-            "type": "formula"
-          },
-          {
-            "label": "Coste interno (€)",
-            "value": 440,
-            "type": "formula"
-          }
-        ],
+        "metadata": [],
         "has_unread_interactions": true
       },
       {
@@ -362,18 +307,7 @@ export const mockData = {
           "offerCode": "OF-2026-006",
           "offerLink": null
         },
-        "metadata": [
-          {
-            "label": "Margen (€)",
-            "value": 150,
-            "type": "formula"
-          },
-          {
-            "label": "Coste interno (€)",
-            "value": 230,
-            "type": "formula"
-          }
-        ],
+        "metadata": [],
         "has_unread_interactions": false
       },
       {
@@ -419,18 +353,7 @@ export const mockData = {
           "offerCode": "OF-2026-007",
           "offerLink": null
         },
-        "metadata": [
-          {
-            "label": "Margen (€)",
-            "value": 2400,
-            "type": "formula"
-          },
-          {
-            "label": "Coste interno (€)",
-            "value": 1700,
-            "type": "formula"
-          }
-        ],
+        "metadata": [],
         "has_unread_interactions": true
       },
       {
@@ -473,18 +396,7 @@ export const mockData = {
           "offerCode": "OF-2026-008",
           "offerLink": null
         },
-        "metadata": [
-          {
-            "label": "Margen (€)",
-            "value": 210,
-            "type": "formula"
-          },
-          {
-            "label": "Coste interno (€)",
-            "value": 310,
-            "type": "formula"
-          }
-        ],
+        "metadata": [],
         "has_unread_interactions": false
       }
     ]
@@ -1020,18 +932,7 @@ export const mockData = {
         "offerCode": "OF-2026-001",
         "offerLink": null
       },
-      "metadata": [
-        {
-          "label": "Margen (€)",
-          "value": 890.5,
-          "type": "formula"
-        },
-        {
-          "label": "Coste interno (€)",
-          "value": 909.5,
-          "type": "formula"
-        }
-      ]
+      "metadata": []
     },
     "page_content": [
       {

@@ -361,18 +361,20 @@ const SideDrawer = ({ itemId, type = 'project', onClose, projects = [], onProjec
                     </>
                   )}
 
-                  <div className="pt-4 space-y-1.5 border-t border-notion-border dark:border-white/10 mt-4 animate-in fade-in slide-in-from-top-1 duration-500">
-                    {metadata.map((prop) => (
-                        <PropertyRow
-                          key={prop.label}
-                          icon={<FileText className="w-4 h-4" />}
-                          label={prop.label}
-                          value={Array.isArray(prop.value) ? prop.value.join(', ') : prop.value}
-                          t={t}
-                          isDark={isDark}
-                        />
-                      ))}
-                  </div>
+                  {metadata && metadata.length > 0 && (
+                    <div className="pt-4 space-y-1.5 border-t border-notion-border dark:border-white/10 mt-4 animate-in fade-in slide-in-from-top-1 duration-500">
+                      {metadata.map((prop) => (
+                          <PropertyRow
+                            key={prop.label}
+                            icon={<FileText className="w-4 h-4" />}
+                            label={prop.label}
+                            value={Array.isArray(prop.value) ? prop.value.join(', ') : prop.value}
+                            t={t}
+                            isDark={isDark}
+                          />
+                        ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Dynamic Sections (Only for Projects usually, but generic based on data) */}

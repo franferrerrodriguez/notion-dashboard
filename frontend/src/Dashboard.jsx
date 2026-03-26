@@ -4,7 +4,6 @@ import {
   Bell,
   CalendarDays,
   Castle,
-  ChevronRight,
   FileText,
   FolderRoot,
   Loader2,
@@ -20,85 +19,26 @@ import { PHASE_COLORS } from './constants/theme';
 import { useLanguage } from './context/LanguageContext';
 import { useTheme } from './context/ThemeContext';
 import { useDashboardData } from './hooks/useDashboardData';
-import { getMetaValue, resolveRelationNames } from './utils/notionHelpers';
+import { resolveInvoiceMap } from './utils/notionHelpers';
 
 // Components
 import Calendar from './components/Calendar';
 import DoughnutChart from './components/DoughnutChart';
-import ProgressBar from './components/ProgressBar';
 import SideDrawer from './components/SideDrawer';
 import ThemeToggle from './components/ThemeToggle';
 import UserDropdown from './components/UserDropdown';
+
+// Dashboard Modular Components
+import { LegendItem, TabButton } from './components/dashboard/DashboardUI';
+import InvoicesListView from './components/dashboard/InvoicesListView';
+import OffersListView from './components/dashboard/OffersListView';
+import ProjectsListView from './components/dashboard/ProjectsListView';
 
 const TABS = {
   CALENDAR: 'CALENDAR',
   PROJECTS: 'PROJECTS',
   OFFERS: 'OFFERS',
   INVOICES: 'INVOICES',
-};
-
-const TabButton = ({ active, onClick, icon, label }) => (
-  <button
-    onClick={onClick}
-    className={`flex items-center gap-2.5 py-4 px-2 border-b-2 transition-all cursor-pointer relative ${
-      active
-        ? 'border-blue-500 text-blue-500'
-        : 'border-transparent text-notion-text-secondary hover:text-notion-text dark:hover:text-white'
-    }`}
-  >
-    <span
-      className={`transition-transform duration-300 ${active ? 'scale-110' : 'scale-100 opacity-50'}`}
-    >
-      {icon}
-    </span>
-    <span className="text-xs font-black uppercase tracking-widest">{label}</span>
-  </button>
-);
-
-const StatusBadge = ({ name, color, className = '' }) => {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-
-  return (
-    <span
-      className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border inline-flex items-center gap-2 whitespace-nowrap transition-all duration-300 ${className}`}
-      style={{
-        backgroundColor: isDark ? `${color}15` : `${color}10`,
-        color: isDark ? color : `color-mix(in srgb, ${color}, black 15%)`,
-        borderColor: isDark ? `${color}30` : `${color}25`,
-      }}
-    >
-      {name}
-    </span>
-  );
-};
-
-const LegendItem = ({ color, label, count, icon, t }) => {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-
-  return (
-    <div className="flex items-center gap-4 group cursor-default">
-      <div
-        className="w-10 h-10 rounded-2xl flex items-center justify-center transition-all border"
-        style={{
-          backgroundColor: isDark ? `${color}15` : `${color}10`,
-          color: isDark ? color : `color-mix(in srgb, ${color}, black 15%)`,
-          borderColor: isDark ? `${color}30` : `${color}25`,
-        }}
-      >
-        {icon}
-      </div>
-      <div className="flex flex-col">
-        <span className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest leading-none mb-1 group-hover:text-notion-text dark:group-hover:text-white/70 transition-colors">
-          {label}
-        </span>
-        <span className="text-xs font-bold text-notion-text-secondary/50 dark:text-white/50">
-          {count} {t('total').toLowerCase()}
-        </span>
-      </div>
-    </div>
-  );
 };
 
 const Dashboard = () => {
@@ -129,49 +69,7 @@ const Dashboard = () => {
   } = useDashboardData(activeTab);
 
   // REVERSE LOOKUP: Group invoices by their related offer ID
-  const reverseInvoiceMap = useMemo(() => {
-    const map = {};
-    if (!invoices || !offers) return map;
-
-    invoices.forEach((inv) => {
-      // Robustly identify relations that point to an Offer by checking the ID against the offers list
-      const relatedOfferIds =
-        inv.metadata
-          ?.filter((m) => m.type === 'relation')
-          ?.flatMap((m) => (Array.isArray(m.value) ? m.value : [m.value]))
-          ?.filter((id) => offers.some((o) => o.id === id)) || [];
-
-      relatedOfferIds.forEach((id) => {
-        if (!map[id]) map[id] = [];
-        if (inv.identification?.name) {
-          map[id].push(inv.identification.name);
-        }
-      });
-    });
-    return map;
-  }, [invoices, offers]);
-
-  const resolveAllLinkedInvoices = (p) => {
-    // 1. Direct relations (from Offer/Project to Invoice)
-    const directIds =
-      p.metadata
-        ?.filter((m) => m.type === 'relation')
-        ?.flatMap((m) => (Array.isArray(m.value) ? m.value : [m.value]))
-        ?.filter((id) => invoices.some((i) => i.id === id)) || [];
-
-    const directNames = directIds
-      .map((id) => {
-        return invoices.find((i) => i.id === id)?.identification?.name;
-      })
-      .filter(Boolean);
-
-    // 2. Reverse relations (from Invoices pointing to this Offer)
-    const reverseNames = reverseInvoiceMap[p.id] || [];
-
-    // Combine and unique
-    const all = [...new Set([...directNames, ...reverseNames])];
-    return all.length > 0 ? all.join(', ') : '-';
-  };
+  const reverseInvoiceMap = useMemo(() => resolveInvoiceMap(invoices, offers), [invoices, offers]);
 
   // Select data based on active tab
   const activeData =
@@ -465,338 +363,35 @@ const Dashboard = () => {
         )}
       </header>
 
-      <main className="max-w-full mx-auto space-y-10 pb-10 animate-in fade-in duration-700 delay-200 px-6 lg:px-12">
-        {activeTab !== TABS.CALENDAR &&
-          Object.entries(grouped).map(([phaseName, items]) => {
-            const getColumns = () => {
-              if (activeTab === TABS.OFFERS) {
-                return [
-                  {
-                    key: 'code',
-                    label: t('col_code'),
-                    align: 'left',
-                    width: 'w-[220px]',
-                  },
-                  {
-                    key: 'description',
-                    label: t('col_description'),
-                    align: 'left',
-                    width: 'w-[300px]',
-                  },
-                  { key: 'date', label: t('col_date'), align: 'center', width: 'w-[110px]' },
-                  { key: 'status', label: t('col_status'), align: 'center', width: 'w-[150px]' },
-                  {
-                    key: 'amount_net',
-                    label: t('col_amount_net'),
-                    align: 'right',
-                    width: 'w-[130px]',
-                  },
-                  { key: 'total', label: t('col_total'), align: 'right', width: 'w-[130px]' },
-                  {
-                    key: 'billed_amount',
-                    label: t('col_billed_amount'),
-                    align: 'right',
-                    width: 'w-[140px]',
-                  },
-                  { key: 'progress', label: '%', align: 'center', width: 'w-[120px]' },
-                  {
-                    key: 'linked_invoices',
-                    label: t('col_linked_invoices'),
-                    align: 'left',
-                    width: 'w-[250px]',
-                  },
-                ];
-              }
-              if (activeTab === TABS.INVOICES) {
-                return [
-                  {
-                    key: 'code',
-                    label: t('col_code'),
-                    align: 'left',
-                    width: 'w-[150px]',
-                  },
-                  {
-                    key: 'offer_link',
-                    label: t('col_offer_link'),
-                    align: 'left',
-                    width: 'w-[180px]',
-                  },
-                  {
-                    key: 'project_link',
-                    label: t('col_project_link'),
-                    align: 'left',
-                    width: 'w-[250px]',
-                  },
-                  { key: 'date', label: t('col_date'), align: 'center', width: 'w-[120px]' },
-                  {
-                    key: 'total',
-                    label: t('col_amount_invoice'),
-                    align: 'right',
-                    width: 'w-[130px]',
-                  },
-                  { key: 'status', label: t('col_status'), align: 'center', width: 'w-[150px]' },
-                  { key: 'quarter', label: t('col_quarter'), align: 'center', width: 'w-[120px]' },
-                ];
-              }
-              return [
-                {
-                  key: 'project',
-                  label: t('col_project'),
-                  align: 'left',
-                  width: 'w-[40%]',
-                },
-                { key: 'phase', label: t('col_phase'), align: 'center', width: 'w-[20%]' },
-                { key: 'status', label: t('col_status'), align: 'center', width: 'w-[20%]' },
-                { key: 'billing', label: t('col_billing'), align: 'center', width: 'w-[20%]' },
-              ];
-            };
+      <main className="max-w-full mx-auto space-y-12 pb-16 animate-in fade-in duration-700 delay-200 px-6 lg:px-12">
+        {activeTab === TABS.PROJECTS && (
+          <ProjectsListView 
+            grouped={grouped} 
+            onSelectProject={setSelectedProject} 
+            t={t} 
+          />
+        )}
+        
+        {activeTab === TABS.OFFERS && (
+          <OffersListView 
+            grouped={grouped} 
+            onSelectProject={setSelectedProject} 
+            projects={projects}
+            invoices={invoices}
+            reverseInvoiceMap={reverseInvoiceMap}
+            t={t} 
+          />
+        )}
 
-            const columns = getColumns();
-
-            return (
-              <section
-                key={phaseName}
-                className="relative animate-in fade-in slide-in-from-bottom-4 duration-700"
-              >
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="flex items-center gap-2">
-                    <StatusBadge name={phaseName} color={PHASE_COLORS[phaseName] || '#64748b'} />
-                    <span className="text-[10px] font-bold text-notion-text-secondary dark:text-white/20 bg-black/5 dark:bg-white/5 px-2 py-1 rounded border border-notion-border dark:border-white/5">
-                      {items.length}
-                    </span>
-                  </div>
-                  <div className="h-px bg-notion-border dark:bg-white/5 grow"></div>
-                  <ChevronRight className="w-4 h-4 text-notion-text-secondary/30 dark:text-white/10" />
-                </div>
-
-                <div className="overflow-x-auto rounded-2xl bg-white dark:bg-white/2 border border-notion-border dark:border-white/5 backdrop-blur-md shadow-sm scrollbar-thin scrollbar-thumb-notion-border/50">
-                  <table className="w-full text-left border-collapse table-fixed">
-                    <thead>
-                      <tr className="border-b border-notion-border dark:border-white/5 bg-notion-bg-light dark:bg-white/3">
-                        {columns.map((col) => (
-                          <th
-                            key={col.key}
-                            className={`py-3 ${col.key === 'code' || col.key === 'project' ? 'px-6' : 'px-4'} ${col.width} text-[11px] font-black text-notion-text-secondary dark:text-white/40 uppercase tracking-widest ${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : ''}`}
-                          >
-                            <div
-                              className={`flex items-center gap-2 ${col.align === 'center' ? 'justify-center' : col.align === 'right' ? 'justify-end' : ''}`}
-                            >
-                              {col.icon}
-                              {col.label}
-                            </div>
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-notion-border dark:divide-white/5">
-                      {items.map((p) => (
-                        <tr
-                          key={p.id}
-                          className="hover:bg-black/2 dark:hover:bg-white/5 cursor-pointer transition-all group"
-                          onClick={() => setSelectedProject(p.id)}
-                        >
-                          {columns.map((col) => {
-                            const metaValue = (label) => {
-                              const val = getMetaValue(p, label);
-                              if (!val) return null;
-                              return Array.isArray(val) ? val.join(', ') : val;
-                            };
-
-                            if (col.key === 'project' || col.key === 'code') {
-                              return (
-                                <td key={col.key} className="py-3.5 px-6 overflow-hidden">
-                                  <div className="flex items-center gap-2 overflow-hidden grow">
-                                    <span className="font-bold text-sm text-notion-text dark:text-white/90 group-hover:text-blue-500 transition-colors truncate">
-                                      {p.identification?.name || t('unnamed')}
-                                    </span>
-                                  </div>
-                                </td>
-                              );
-                            }
-
-                            if (col.key === 'phase') {
-                              return (
-                                <td key={col.key} className="py-3 px-4 text-center">
-                                  <StatusBadge
-                                    name={p.status?.phase?.name || '-'}
-                                    color={PHASE_COLORS[p.status?.phase?.name] || '#64748b'}
-                                  />
-                                </td>
-                              );
-                            }
-
-                            if (col.key === 'status') {
-                              if (activeTab === TABS.PROJECTS) {
-                                return (
-                                  <td key={col.key} className="py-3 px-4">
-                                    <ProgressBar
-                                      value={p.status?.progress || 0}
-                                      color="#238636"
-                                      showText
-                                    />
-                                  </td>
-                                );
-                              }
-                              const s = p.status?.main || {};
-                              return (
-                                <td key={col.key} className="py-3 px-4 text-center">
-                                  <StatusBadge
-                                    name={s.name || '-'}
-                                    color={PHASE_COLORS[s.name] || '#64748b'}
-                                  />
-                                </td>
-                              );
-                            }
-
-                            if (col.key === 'offer_link' || col.key === 'project_link') {
-                              const type = col.key === 'offer_link' ? 'offer' : 'project';
-                              const ids =
-                                type === 'offer'
-                                  ? p.identification?.offer_relation
-                                  : p.identification?.project_relation;
-                              const name = resolveRelationNames(ids, type, projects, offers);
-                              return (
-                                <td
-                                  key={col.key}
-                                  className="py-3 px-4 truncate max-w-[220px]"
-                                  title={name}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-sm text-notion-text dark:text-white/70 truncate uppercase tracking-tight font-medium">
-                                      {name}
-                                    </span>
-                                  </div>
-                                </td>
-                              );
-                            }
-
-                            if (col.key === 'billing') {
-                              return (
-                                <td key={col.key} className="py-3 px-4">
-                                  <ProgressBar
-                                    value={p.financials?.billingPercentage || 0}
-                                    color="#2ea043"
-                                    showText
-                                  />
-                                </td>
-                              );
-                            }
-
-                            if (col.key === 'description') {
-                              return (
-                                <td key={col.key} className="py-3 px-4">
-                                  <span className="text-xs text-notion-text-secondary dark:text-white/50 truncate block">
-                                    {metaValue('Descripción') || metaValue('Description') || '-'}
-                                  </span>
-                                </td>
-                              );
-                            }
-
-                            if (col.key === 'date') {
-                              return (
-                                <td key={col.key} className="py-3 px-4 text-center">
-                                  <span className="text-[10px] font-medium text-notion-text-secondary dark:text-white/40 tracking-wider">
-                                    {metaValue('Fecha') || metaValue('Fecha factura') || '-'}
-                                  </span>
-                                </td>
-                              );
-                            }
-
-                            if (col.key === 'amount_net') {
-                              return (
-                                <td key={col.key} className="py-3 px-4 text-right">
-                                  <span className="text-xs font-bold text-notion-text dark:text-white/80">
-                                    {new Intl.NumberFormat('de-DE', {
-                                      style: 'currency',
-                                      currency: 'EUR',
-                                    }).format(metaValue('Importe neto') || 0)}
-                                  </span>
-                                </td>
-                              );
-                            }
-
-                            if (col.key === 'total') {
-                              return (
-                                <td key={col.key} className="py-3 px-4 text-right">
-                                  <span className="text-xs font-black text-notion-text dark:text-white/95">
-                                    {new Intl.NumberFormat('de-DE', {
-                                      style: 'currency',
-                                      currency: 'EUR',
-                                    }).format(p.financials?.totalOffered || 0)}
-                                  </span>
-                                </td>
-                              );
-                            }
-
-                            if (col.key === 'billed_amount') {
-                              return (
-                                <td key={col.key} className="py-3 px-4 text-right">
-                                  <span className="text-xs font-bold text-emerald-500/80">
-                                    {new Intl.NumberFormat('de-DE', {
-                                      style: 'currency',
-                                      currency: 'EUR',
-                                    }).format(p.financials?.totalBilled || 0)}
-                                  </span>
-                                </td>
-                              );
-                            }
-
-                            if (col.key === 'progress') {
-                              return (
-                                <td key={col.key} className="py-3 px-4">
-                                  <ProgressBar
-                                    value={p.financials?.billingPercentage || 0}
-                                    color="#2ea043"
-                                    showText
-                                  />
-                                </td>
-                              );
-                            }
-
-                            if (col.key === 'linked_invoices') {
-                              return (
-                                <td key={col.key} className="py-3 pl-12 pr-4">
-                                  <div className="flex flex-wrap gap-1">
-                                    {resolveAllLinkedInvoices(p)
-                                      .split(', ')
-                                      .map((text, i) => (
-                                        <span
-                                          key={i}
-                                          className="px-1.5 py-0.5 bg-blue-500/10 text-blue-500 dark:text-blue-400 rounded text-[10px] font-bold border border-blue-500/20 leading-none"
-                                        >
-                                          {text}
-                                        </span>
-                                      ))}
-                                  </div>
-                                </td>
-                              );
-                            }
-
-                            if (col.key === 'quarter') {
-                              const q = metaValue('Trimestre');
-                              return (
-                                <td key={col.key} className="py-6 px-4 text-center">
-                                  <span className="text-[10px] font-bold bg-blue-500/5 text-blue-500 px-2 py-1 rounded border border-blue-500/10">
-                                    {q || '-'}
-                                  </span>
-                                </td>
-                              );
-                            }
-
-                            return (
-                              <td key={col.key} className="py-6 px-4">
-                                -
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-            );
-          })}
+        {activeTab === TABS.INVOICES && (
+          <InvoicesListView 
+            grouped={grouped} 
+            onSelectProject={setSelectedProject} 
+            projects={projects}
+            offers={offers}
+            t={t} 
+          />
+        )}
       </main>
 
       {selectedProject && (

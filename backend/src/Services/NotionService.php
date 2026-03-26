@@ -54,7 +54,7 @@ function fetchNotionProjects($databaseId, $clientId, $type = 'projects', $forceM
     if (isset($data['results'])) {
         foreach ($data['results'] as $page) {
             $props = $page['properties'];
-            $transformed = ($type === 'tasks') ? transformTask($props) : transformProject($props);
+            $transformed = ($type === 'tasks') ? transformTask($props) : transformProject($props, $type);
             
             // Manual filtering for Invoices and Tasks (client data isolation)
             if (($type === 'invoices' || $type === 'tasks') && !empty($clientId)) {
@@ -145,7 +145,7 @@ function transformTask($props) {
     ];
 }
 
-function transformProject($props) {
+function transformProject($props, $type = 'projects', $resolveRelations = false) {
     // Helper to find property by name (case-insensitive and trimmed)
     $get = function($names) use ($props) {
         if (!is_array($names)) $names = [$names];
@@ -193,11 +193,33 @@ function transformProject($props) {
         $phase = $mainStatus;
     }
 
+    $projectRels = extractRelationIds($get(['Proyecto', 'Project', '↗ Proyecto']));
+    $offerRels = extractRelationIds($get(['Vínculo oferta', 'Oferta vinculada', '↗ Oferta', 'Vínculo of...']));
+    
+    // 1. Try to get project name from a direct property (Rollup or Formula) to avoid API calls
+    $projectName = extractText($get(['Proyecto', 'Project']));
+    if ($projectName && strpos($projectName, 'ID:') === 0) {
+        $projectName = null;
+    }
+    $offerName = null;
+
+    // 2. If skip above, or if we want deeper resolution (Details view)
+    if ($resolveRelations) {
+        if (empty($projectName) && !empty($projectRels) && ($type === 'offers' || $type === 'invoices')) {
+            $projectName = resolveRelationName($projectRels[0]);
+        }
+        if (!empty($offerRels) && $type === 'invoices') {
+            $offerName = resolveRelationName($offerRels[0]);
+        }
+    }
+
     return [
         'identification' => [
             'name' => $name,
-            'project_relation' => extractRelationIds($get(['Proyecto', 'Project'])),
-            'offer_relation' => extractRelationIds($get(['Vínculo oferta', 'Oferta vinculada', '↗ Oferta', 'Vínculo of...'])),
+            'project_name' => $projectName,
+            'offer_name' => $offerName,
+            'project_relation' => $projectRels,
+            'offer_relation' => $offerRels,
         ],
         'status' => [
             'main' => $mainStatus,
@@ -230,6 +252,23 @@ function transformProject($props) {
 function extractText($prop) {
     if (!$prop) return null;
     $type = $prop['type'] ?? null;
+    
+    // Handle Rollups (Recursive check)
+    if ($type === 'rollup' && isset($prop['rollup']['array'])) {
+        $texts = [];
+        foreach ($prop['rollup']['array'] as $rollupItem) {
+            $txt = extractText($rollupItem);
+            if ($txt) $texts[] = $txt;
+        }
+        return !empty($texts) ? implode(', ', array_unique($texts)) : null;
+    }
+
+    // Handle Formulas
+    if ($type === 'formula') {
+        $f = $prop['formula'];
+        return $f['string'] ?? (string)($f['number'] ?? ($f['boolean'] ? 'true' : ($f['date'] ? $f['date']['start'] : null)));
+    }
+
     if ($type === 'title') return $prop['title'][0]['plain_text'] ?? null;
     if ($type === 'rich_text') return $prop['rich_text'][0]['plain_text'] ?? null;
     if ($type === 'people') return $prop['people'][0]['name'] ?? null;
@@ -245,40 +284,46 @@ function extractText($prop) {
         $names = array_map(function($s) { return $s['name']; }, $prop['multi_select'] ?? []);
         return implode(', ', $names);
     }
-    
+
     if ($type === 'relation') {
         $rels = $prop['relation'] ?? [];
         if (empty($rels)) return null;
         // Optimization: Do NOT fetch details for relations in list views.
-        // This avoids dozens of extra API calls that slow down the system and cause 500 errors.
         $id = $rels[0]['id'];
         return 'ID:' . substr($id, 0, 8);
     }
 
-    if ($type === 'formula') {
-        $f = $prop['formula'];
-        return $f['string'] ?? (string)($f['number'] ?? ($f['boolean'] ? 'true' : ($f['date'] ? $f['date']['start'] : null)));
-    }
-    
-    if ($type === 'rollup') {
-        $r = $prop['rollup'];
-        if (isset($r['number'])) return (string)$r['number'];
-        if (isset($r['string'])) return $r['string'];
-        if (isset($r['date'])) return $r['date']['start'];
-        
-        if ($r['type'] === 'array') {
-            $texts = [];
-            foreach ($r['array'] as $item) {
-                $txt = extractText($item);
-                if ($txt) $texts[] = $txt;
-            }
-            return implode(', ', array_unique($texts));
-        }
-    }
-    // If we're here, we couldn't extract text. Let's see if it's one of the common types without a wrapper
+    // Final fallback for raw properties
     if (isset($prop['plain_text'])) return $prop['plain_text'];
     if (isset($prop['name'])) return $prop['name'];
 
+    return null;
+}
+
+/**
+ * Helper to resolve a relation ID to its Title/Name.
+ * Note: This makes an extra API call. Use only when necessary.
+ * Features a static cache to avoid redundant calls in the same request.
+ */
+function resolveRelationName($id) {
+    static $cache = [];
+    if (!$id) return null;
+    if (isset($cache[$id])) return $cache[$id];
+
+    $detail = fetchSimplePageDetail($id);
+    if (!$detail || isset($detail['error'])) {
+        $cache[$id] = null;
+        return null;
+    }
+    
+    foreach ($detail['properties'] as $p) {
+        if (($p['type'] ?? '') === 'title') {
+            $name = $p['title'][0]['plain_text'] ?? null;
+            $cache[$id] = $name;
+            return $name;
+        }
+    }
+    $cache[$id] = null;
     return null;
 }
 
@@ -293,44 +338,95 @@ function transformContact($page) {
         'notes' => null
     ];
     
-    $nameFromKey = false;
     $titleVal = null;
+    $richTextFallback = null;
+    $nameCandidates = [];
 
     foreach ($props as $key => $p) {
         $type = $p['type'] ?? '';
-        $lowKey = mb_strtolower($key);
+        $lowKey = mb_strtolower(trim($key));
         $val = extractText($p);
-        
+        if (!$val) continue;
+
         if ($type === 'title') {
             $titleVal = $val;
         }
 
-        if ($lowKey === 'contacto' || $lowKey === 'nombre') {
-            if ($val) {
-                $data['name'] = $val;
-                $nameFromKey = true;
+        // Collect candidates for names
+        if ($lowKey === 'contacto' || $lowKey === 'nombre' || $lowKey === 'contact' || $lowKey === 'name') {
+            if (strpos($val, 'ID:') !== 0) {
+                $nameCandidates[] = $val;
             }
         } 
         
-        if ($type === 'phone_number' || strpos($lowKey, 'tel') !== false) {
-            if ($val) $data['phone'] = $val;
+        // Fallback: any rich text that isn't notes and isn't huge
+        if ($type === 'rich_text' && !$richTextFallback && strlen($val) < 50 && strpos($lowKey, 'nota') === false) {
+            $richTextFallback = $val;
+        }
+
+        if ($type === 'phone_number' || strpos($lowKey, 'tel') !== false || strpos($lowKey, 'tlf') !== false) {
+            $data['phone'] = $val;
         }
         
         if ($type === 'email' || strpos($lowKey, 'mail') !== false || strpos($lowKey, 'correo') !== false) {
-            if ($val) $data['email'] = $val;
+            $data['email'] = $val;
         }
         
-        if ($lowKey === 'rol' || $lowKey === 'puesto' || $lowKey === 'cargo') {
-            $data['role'] = extractStatus($p) ?: ['name' => $val, 'color' => ($val ? 'default' : 'transparent')];
+        if ($lowKey === 'rol' || $lowKey === 'puesto' || $lowKey === 'cargo' || $lowKey === 'role') {
+            $data['role'] = extractStatus($p) ?: ['name' => $val, 'color' => 'default'];
         }
         
-        if ($lowKey === 'notas' || $lowKey === 'comentarios') {
-            if ($val) $data['notes'] = $val;
+        if ($lowKey === 'notas' || $lowKey === 'comentarios' || $lowKey === 'notes' || $lowKey === 'observations' || $lowKey === 'observaciones') {
+            $data['notes'] = $val;
         }
     }
     
-    if (!$nameFromKey && $titleVal) {
-        $data['name'] = $titleVal;
+    // Selection logic for name:
+    // 1. First priority candidate from Contacto/Nombre/etc.
+    if (!empty($nameCandidates)) {
+        $data['name'] = $nameCandidates[0];
+    } 
+    // 2. Special Case: If "Contacto" resulted in an ID and we have no name, resolve it!
+    else {
+        foreach ($props as $key => $p) {
+            $lowKey = mb_strtolower(trim($key));
+            if ($lowKey === 'contacto' || $lowKey === 'nombre' || $lowKey === 'contact' || $lowKey === 'name') {
+                $type = $p['type'] ?? '';
+                $relId = null;
+
+                if ($type === 'relation') {
+                    $relId = $p['relation'][0]['id'] ?? null;
+                } else if ($type === 'rollup' && isset($p['rollup']['array'])) {
+                    foreach ($p['rollup']['array'] as $item) {
+                        if (($item['type'] ?? '') === 'relation') {
+                            $relId = $item['relation'][0]['id'] ?? null;
+                            if ($relId) break;
+                        }
+                    }
+                }
+
+                if ($relId) {
+                    $resolved = resolveRelationName($relId);
+                    if ($resolved) {
+                        $data['name'] = $resolved;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // 3. Fallback: Title (if it's not generic or if we still have no name)
+    if ($data['name'] === 'Sin nombre' || preg_match('/^(Nota|Note|Task|Item|Untitled|ID:)/i', $data['name'])) {
+        if ($titleVal && !preg_match('/^(Nota|Note|Task|Item|Untitled|ID:)/i', $titleVal)) {
+            $data['name'] = $titleVal;
+        }
+        else if ($richTextFallback && $data['name'] === 'Sin nombre') {
+            $data['name'] = $richTextFallback;
+        }
+        else if ($titleVal && $data['name'] === 'Sin nombre') {
+            $data['name'] = $titleVal;
+        }
     }
 
     return $data;
@@ -442,7 +538,7 @@ function extractRemainingProperties($props) {
     ];
     
     $blacklist = [
-        'Responsable', 'Periodo', 'Resumen', 'Coste interno', 'Historial técnico', 'Margen',
+        'Responsable', 'Periodo', 'Resumen', 'Coste interno', 'Coste interno (€)', 'Historial técnico', 'Margen', 'Margen (€)',
         'Proyecto', 'Project', 'Nombre de la tarea', 'Task name', '↗ Proyecto'
     ];
     
@@ -584,7 +680,7 @@ function fetchNotionPageDetail($pageId) {
     return [
         'id' => $pageId,
         'last_edited_time' => $data['last_edited_time'] ?? null,
-        'project' => transformProject($properties),
+        'project' => transformProject($properties, 'projects', true),
         'page_content' => $pageContent,
         'has_tasks' => $has_tasks,
         'has_interactions' => $has_interactions,
