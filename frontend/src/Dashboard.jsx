@@ -40,16 +40,20 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    if (userApps.length > 0 && !activeApp) {
-      setActiveApp(userApps[0].slug);
+    if (userApps.length > 0) {
+      if (!activeApp || !userApps.find(a => a.slug === activeApp)) {
+        setActiveApp(userApps[0].slug);
+      }
+    } else {
+      setActiveApp(null);
     }
   }, [userApps, activeApp]);
 
   useEffect(() => {
-    if (clientId) {
+    if (clientId && userApps.find(a => a.slug === 'notion-dashboard')) {
       setActiveApp('notion-dashboard');
     }
-  }, [clientId]);
+  }, [clientId, userApps]);
 
   const currentApp = userApps.find(a => a.slug === activeApp);
 

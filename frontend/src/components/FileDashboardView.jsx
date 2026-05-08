@@ -35,14 +35,22 @@ const FileDashboardView = ({ userId, externalClientId }) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const getFileIcon = (category) => {
+  const getFileIcon = (fileName, category) => {
+    const name = fileName?.toLowerCase() || '';
     const cat = category?.toLowerCase() || '';
+    
+    // Check extension first as it's more accurate for type
+    if (name.endsWith('.pdf')) return <div className="w-full h-full bg-red-500 rounded-lg flex items-center justify-center text-white p-2"><FileText className="w-full h-full" /></div>;
+    if (/\.(jpg|jpeg|png|gif|webp|svg)$/i.test(name)) return <div className="w-full h-full bg-purple-500 rounded-lg flex items-center justify-center text-white p-2"><ImageIcon className="w-full h-full" /></div>;
+    if (/\.(mp4|mov|avi|wmv)$/i.test(name)) return <div className="w-full h-full bg-indigo-500 rounded-lg flex items-center justify-center text-white p-2"><FileVideo className="w-full h-full" /></div>;
+    if (/\.(mp3|wav|ogg)$/i.test(name)) return <div className="w-full h-full bg-amber-500 rounded-lg flex items-center justify-center text-white p-2"><Music className="w-full h-full" /></div>;
+    if (/\.(zip|rar|7z|tar|gz)$/i.test(name)) return <div className="w-full h-full bg-gray-600 rounded-lg flex items-center justify-center text-white p-2"><Archive className="w-full h-full" /></div>;
+    if (/\.(xls|xlsx|csv|ods)$/i.test(name)) return <div className="w-full h-full bg-emerald-500 rounded-lg flex items-center justify-center text-white p-2"><Grid className="w-full h-full" /></div>;
+    
+    // Fallback to category check
     if (cat.includes('image')) return <div className="w-full h-full bg-purple-500 rounded-lg flex items-center justify-center text-white p-2"><ImageIcon className="w-full h-full" /></div>;
     if (cat.includes('pdf')) return <div className="w-full h-full bg-red-500 rounded-lg flex items-center justify-center text-white p-2"><FileText className="w-full h-full" /></div>;
-    if (cat.includes('spreadsheet') || cat.includes('excel') || cat.includes('csv')) return <div className="w-full h-full bg-emerald-500 rounded-lg flex items-center justify-center text-white p-2"><Grid className="w-full h-full" /></div>;
-    if (cat.includes('video')) return <div className="w-full h-full bg-indigo-500 rounded-lg flex items-center justify-center text-white p-2"><FileVideo className="w-full h-full" /></div>;
-    if (cat.includes('audio')) return <div className="w-full h-full bg-amber-500 rounded-lg flex items-center justify-center text-white p-2"><Music className="w-full h-full" /></div>;
-    if (cat.includes('archive') || cat.includes('zip')) return <div className="w-full h-full bg-gray-600 rounded-lg flex items-center justify-center text-white p-2"><Archive className="w-full h-full" /></div>;
+    
     return <div className="w-full h-full bg-blue-500 rounded-lg flex items-center justify-center text-white p-2"><File className="w-full h-full" /></div>;
   };
 
@@ -194,22 +202,25 @@ const FileDashboardView = ({ userId, externalClientId }) => {
             <div 
               key={file.id} 
               onClick={() => setSelectedFile(file)}
-              className="bg-white dark:bg-[#1e1e1e] rounded-xl border border-notion-border dark:border-white/10 shadow-sm hover:shadow-md hover:border-blue-500/30 transition-all cursor-pointer group overflow-hidden flex flex-col"
+              className="bg-white dark:bg-[#1e1e1e] rounded-xl border border-notion-border dark:border-white/10 shadow-sm hover:shadow-md hover:border-blue-500/30 transition-all cursor-pointer group flex flex-col relative"
             >
               {/* Preview Area */}
-              <div className="aspect-video bg-notion-bg-light dark:bg-white/2 flex items-center justify-center relative">
-                <div className="w-12 h-12">
-                  {getFileIcon(file.category)}
+              <div className="aspect-[4/3] relative">
+                {/* Background Icon (Clipped) */}
+                <div className="absolute inset-0 bg-notion-bg-light dark:bg-white/2 flex items-center justify-center overflow-hidden rounded-t-xl">
+                  <div className="w-16 h-16">
+                    {getFileIcon(file.original_name, file.category)}
+                  </div>
                 </div>
                 
-                {/* Quick Actions Overlay */}
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Download Button (Well Inside) */}
+                <div className="absolute top-4 right-4 z-10">
                   <a 
                     href={fileService.getDownloadUrl(file.id)} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="p-2 bg-white dark:bg-[#2a2a2a] hover:bg-blue-500 text-notion-text-secondary dark:text-gray-400 hover:text-white rounded-lg shadow-sm border border-notion-border dark:border-white/10 transition-all"
+                    className="p-3 bg-white dark:bg-[#2a2a2a] hover:bg-blue-500 text-notion-text-secondary dark:text-gray-400 hover:text-white rounded-xl shadow-lg border border-notion-border dark:border-white/10 transition-all active:scale-95 flex items-center justify-center"
                   >
                     <Download className="w-4 h-4" />
                   </a>
@@ -219,10 +230,10 @@ const FileDashboardView = ({ userId, externalClientId }) => {
               {/* Info Footer */}
               <div className="p-4 flex flex-col gap-1">
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 shrink-0 opacity-60">
+                  <div className="w-4 h-4 shrink-0">
                     {/* Small version of icon */}
                     <div className="scale-75 origin-center">
-                      {getFileIcon(file.category)}
+                      {getFileIcon(file.original_name, file.category)}
                     </div>
                   </div>
                   <h4 className="text-[13px] font-semibold text-notion-text dark:text-white truncate group-hover:text-blue-500 transition-colors">
@@ -291,8 +302,8 @@ const FileDashboardView = ({ userId, externalClientId }) => {
                 >
                   <td className="px-8 py-4">
                     <div className="flex items-center gap-4">
-                      <div className="w-8 h-8 shrink-0">
-                        {getFileIcon(file.category)}
+                      <div className="w-10 h-10 shrink-0">
+                        {getFileIcon(file.original_name, file.category)}
                       </div>
                       <div>
                         <p className="text-xs font-black text-notion-text dark:text-white uppercase tracking-tight group-hover:text-blue-500 transition-colors">

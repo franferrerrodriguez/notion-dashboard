@@ -77,13 +77,20 @@ const UserFilesManager = ({ userId }) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const getFileIcon = (category) => {
+  const getFileIcon = (fileName, category) => {
+    const name = fileName?.toLowerCase() || '';
     const cat = category?.toLowerCase() || '';
+    
+    if (name.endsWith('.pdf')) return <div className="w-full h-full bg-red-500 rounded-lg flex items-center justify-center text-white p-1.5"><FileText className="w-full h-full" /></div>;
+    if (/\.(jpg|jpeg|png|gif|webp|svg)$/i.test(name)) return <div className="w-full h-full bg-purple-500 rounded-lg flex items-center justify-center text-white p-1.5"><ImageIcon className="w-full h-full" /></div>;
+    if (/\.(mp4|mov|avi|wmv)$/i.test(name)) return <div className="w-full h-full bg-indigo-500 rounded-lg flex items-center justify-center text-white p-1.5"><FileVideo className="w-full h-full" /></div>;
+    if (/\.(mp3|wav|ogg)$/i.test(name)) return <div className="w-full h-full bg-amber-500 rounded-lg flex items-center justify-center text-white p-1.5"><Music className="w-full h-full" /></div>;
+    if (/\.(zip|rar|7z|tar|gz)$/i.test(name)) return <div className="w-full h-full bg-gray-600 rounded-lg flex items-center justify-center text-white p-1.5"><Archive className="w-full h-full" /></div>;
+    if (/\.(xls|xlsx|csv|ods)$/i.test(name)) return <div className="w-full h-full bg-emerald-500 rounded-lg flex items-center justify-center text-white p-1.5"><Grid className="w-full h-full" /></div>;
+    
     if (cat.includes('image')) return <div className="w-full h-full bg-purple-500 rounded-lg flex items-center justify-center text-white p-1.5"><ImageIcon className="w-full h-full" /></div>;
     if (cat.includes('pdf')) return <div className="w-full h-full bg-red-500 rounded-lg flex items-center justify-center text-white p-1.5"><FileText className="w-full h-full" /></div>;
-    if (cat.includes('spreadsheet') || cat.includes('excel') || cat.includes('csv')) return <div className="w-full h-full bg-emerald-500 rounded-lg flex items-center justify-center text-white p-1.5"><Grid className="w-full h-full" /></div>;
-    if (cat.includes('video')) return <div className="w-full h-full bg-indigo-500 rounded-lg flex items-center justify-center text-white p-1.5"><FileVideo className="w-full h-full" /></div>;
-    if (cat.includes('archive') || cat.includes('zip')) return <div className="w-full h-full bg-gray-600 rounded-lg flex items-center justify-center text-white p-1.5"><Archive className="w-full h-full" /></div>;
+    
     return <div className="w-full h-full bg-blue-500 rounded-lg flex items-center justify-center text-white p-1.5"><File className="w-full h-full" /></div>;
   };
 
@@ -228,7 +235,7 @@ const UserFilesManager = ({ userId }) => {
             <div key={file.id} className="flex items-center justify-between p-3 bg-white dark:bg-white/5 rounded-2xl border border-notion-border dark:border-white/10 group hover:border-blue-500/30 transition-all">
               <div className="flex items-center gap-3 overflow-hidden">
                 <div className="w-8 h-8 shrink-0">
-                  {getFileIcon(file.category)}
+                  {getFileIcon(file.original_name, file.category)}
                 </div>
                 <div className="overflow-hidden">
                   <p className="text-xs font-black text-notion-text dark:text-white truncate uppercase tracking-tight">

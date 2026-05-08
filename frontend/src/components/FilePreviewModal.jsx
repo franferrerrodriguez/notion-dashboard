@@ -37,7 +37,7 @@ const FilePreviewModal = ({ file, onClose }) => {
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-notion-dark/90 backdrop-blur-md"
+        className="absolute inset-0 bg-notion-dark/90 backdrop-blur-md cursor-pointer"
         onClick={onClose}
       />
 
@@ -64,14 +64,15 @@ const FilePreviewModal = ({ file, onClose }) => {
             <a 
               href={downloadUrl}
               download={file.original_name}
-              className="p-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all shadow-lg shadow-blue-500/20 active:scale-90"
+              className="p-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all shadow-lg shadow-blue-500/20 active:scale-90 flex items-center justify-center"
               title="Descargar"
             >
               <Download className="w-5 h-5" />
             </a>
             <button 
+              type="button"
               onClick={onClose}
-              className="p-3 bg-notion-bg-light dark:bg-white/5 hover:bg-red-500/10 text-notion-text-secondary hover:text-red-500 rounded-xl transition-all ml-2"
+              className="p-3 bg-notion-bg-light dark:bg-white/5 hover:bg-red-500/10 text-notion-text-secondary hover:text-red-500 rounded-xl transition-all ml-2 cursor-pointer flex items-center justify-center"
             >
               <X className="w-5 h-5" />
             </button>
