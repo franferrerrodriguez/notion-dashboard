@@ -133,13 +133,15 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
               >
                 <Mail className="w-3 h-3" /> Información
               </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('apps')}
-                className={`py-4 px-4 text-[10px] font-black uppercase tracking-widest transition-all border-b-2 flex items-center gap-2 ${activeTab === 'apps' ? 'border-blue-500 text-blue-500' : 'border-transparent text-notion-text-secondary hover:text-notion-text dark:hover:text-white'}`}
-              >
-                <AppWindow className="w-3 h-3" /> Aplicaciones
-              </button>
+              {formData.role_id === ROLE_IDS.CLIENT && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('apps')}
+                  className={`py-4 px-4 text-[10px] font-black uppercase tracking-widest transition-all border-b-2 flex items-center gap-2 ${activeTab === 'apps' ? 'border-blue-500 text-blue-500' : 'border-transparent text-notion-text-secondary hover:text-notion-text dark:hover:text-white'}`}
+                >
+                  <AppWindow className="w-3 h-3" /> Aplicaciones
+                </button>
+              )}
             </div>
 
             <div className="p-8 space-y-6 overflow-y-auto custom-scrollbar flex-1">
@@ -215,7 +217,13 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
                       <select 
                         value={formData.role_id}
                         disabled={editingUser?.email === 'root@root.com'}
-                        onChange={(e) => setFormData({...formData, role_id: e.target.value})}
+                        onChange={(e) => {
+                          const newRole = e.target.value;
+                          setFormData({...formData, role_id: newRole});
+                          if (newRole === ROLE_IDS.ADMIN) {
+                            setActiveTab('info');
+                          }
+                        }}
                         className="w-full bg-white dark:bg-notion-dark border border-notion-border dark:border-white/5 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl px-4 py-3 text-sm text-notion-text dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none font-medium"
                       >
                         <option value={ROLE_IDS.ADMIN}>Administrador</option>
@@ -345,22 +353,23 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
               )}
 
 
-              {/* Action Buttons */}
-              <div className="pt-6 flex gap-3 sticky bottom-0 bg-notion-light dark:bg-[#202020] mt-auto border-t border-notion-border dark:border-white/5 py-4 -mx-8 px-8">
-                 <button 
-                   type="button" 
-                   onClick={onClose}
-                   className="flex-1 py-3.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-notion-text-secondary dark:text-white/50 hover:text-notion-text dark:hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-notion-border dark:border-white/5 active:scale-95"
-                 >
-                    Cancelar
-                 </button>
-                 <button 
-                   type="submit"
-                   className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl active:scale-95"
-                 >
-                    {editingUser ? 'Guardar Cambios' : 'Crear Usuario'}
-                 </button>
-              </div>
+            </div>
+
+            {/* Action Buttons - Moved outside scrollable area */}
+            <div className="px-8 py-6 border-t border-notion-border dark:border-white/5 bg-notion-bg-light dark:bg-white/2 flex gap-3 shrink-0">
+               <button 
+                 type="button" 
+                 onClick={onClose}
+                 className="flex-1 py-4 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-notion-text-secondary dark:text-white/50 hover:text-notion-text dark:hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-notion-border dark:border-white/5 active:scale-95"
+               >
+                  Cancelar
+               </button>
+               <button 
+                 type="submit"
+                 className="flex-1 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-600/20 active:scale-95"
+               >
+                  {editingUser ? 'Guardar Cambios' : 'Crear Usuario'}
+               </button>
             </div>
           </form>
         )}

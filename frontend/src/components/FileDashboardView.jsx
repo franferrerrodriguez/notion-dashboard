@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Download, Search, Filter, Grid, List as ListIcon, MoreVertical, File, FileText, Image as ImageIcon, FileVideo, Music, Archive, Eye, Folder, ChevronRight } from 'lucide-react';
 import { fileService } from '../services/api';
 import FilePreviewModal from './FilePreviewModal';
@@ -9,7 +9,11 @@ const FileDashboardView = ({ userId, externalClientId }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
-  const [currentPath, setCurrentPath] = useState(''); // Current "Virtual Folder"
+  const [currentPath, setCurrentPath] = useState([]); // Current "Virtual Folder" (Array)
+
+  const currentPathString = useMemo(() => {
+    return Array.isArray(currentPath) ? currentPath.join('/') : '';
+  }, [currentPath]);
 
   useEffect(() => {
     loadFiles();
@@ -71,29 +75,18 @@ const FileDashboardView = ({ userId, externalClientId }) => {
     allFiles.forEach(file => {
       const category = file.category || 'General';
       
-      if (category === currentPath || (category === 'General' && currentPath === '')) {
+      if (category === currentPathString || (category === 'General' && currentPathString === '')) {
         currentFiles.push(file);
-      } else if (category.startsWith(currentPath + (currentPath ? '/' : ''))) {
-        const remainingPath = category.slice(currentPath.length + (currentPath ? 1 : 0));
+      } else if (category.startsWith(currentPathString + (currentPathString ? '/' : ''))) {
+        const remainingPath = category.slice(currentPathString.length + (currentPathString ? 1 : 0));
         const parts = remainingPath.split('/');
         if (parts[0]) folders.add(parts[0]);
       }
     });
   }
 
-  const breadcrumbs = currentPath ? ['Inicio', ...currentPath.split('/')] : ['Inicio'];
-
-  const navigateTo = (index) => {
-    if (index === 0) {
-      setCurrentPath('');
-    } else {
-      const paths = currentPath.split('/');
-      setCurrentPath(paths.slice(0, index).join('/'));
-    }
-  };
-
   const enterFolder = (folderName) => {
-    setCurrentPath(prev => prev ? `${prev}/${folderName}` : folderName);
+    setCurrentPath(prev => Array.isArray(prev) ? [...prev, folderName] : [folderName]);
   };
 
   if (loading) return (
@@ -145,30 +138,33 @@ const FileDashboardView = ({ userId, externalClientId }) => {
           
           <div className="h-8 w-px bg-notion-border dark:bg-white/10 hidden lg:block"></div>
           
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-black text-notion-text dark:text-white uppercase tracking-widest px-3 py-2.5 bg-blue-500/10 rounded-xl border border-blue-500/20">
-              {currentFiles.length + folders.size} Ítems
-            </span>
-          </div>
         </div>
       </div>
 
-      {/* Breadcrumbs */}
+      {/* Navigation Header */}
       {!searchTerm && (
-        <div className="flex items-center gap-2 px-2 overflow-x-auto pb-2 scrollbar-hide">
-          {breadcrumbs.map((crumb, index) => (
-            <div key={index} className="flex items-center gap-2 shrink-0">
-              {index > 0 && <ChevronRight className="w-3 h-3 text-notion-text-secondary/30" />}
+        <header className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            {Array.isArray(currentPath) && currentPath.length > 0 && (
               <button 
                 type="button"
-                onClick={() => navigateTo(index)}
-                className={`text-[10px] font-black uppercase tracking-widest transition-colors ${index === breadcrumbs.length - 1 ? 'text-blue-500' : 'text-notion-text-secondary hover:text-notion-text dark:hover:text-white'}`}
+                onClick={() => setCurrentPath(prev => Array.isArray(prev) ? prev.slice(0, -1) : [])}
+                className="p-2.5 bg-white dark:bg-white/5 rounded-xl border border-notion-border dark:border-white/10 text-notion-text-secondary hover:text-blue-500 hover:border-blue-500/30 transition-all active:scale-90 shadow-sm"
+                title="Volver"
               >
-                {crumb}
+                <ChevronRight className="w-5 h-5 rotate-180" />
               </button>
+            )}
+            <div>
+              <h2 className="text-xl font-black tracking-tight text-notion-text dark:text-white uppercase">
+                {(Array.isArray(currentPath) && currentPath.length > 0) ? currentPath[currentPath.length - 1] : 'Inicio'}
+              </h2>
+              <p className="text-[10px] font-bold text-notion-text-secondary uppercase tracking-[0.2em]">
+                {(Array.isArray(currentPath) && currentPath.length > 0) ? `Explorando ${currentPath.join(' / ')}` : 'Tus archivos y carpetas'}
+              </p>
             </div>
-          ))}
-        </div>
+          </div>
+        </header>
       )}
 
       {currentFiles.length === 0 && folders.size === 0 ? (
@@ -186,14 +182,36 @@ const FileDashboardView = ({ userId, externalClientId }) => {
             <div 
               key={folderName} 
               onClick={() => enterFolder(folderName)}
-              className="flex items-center gap-4 bg-white dark:bg-white/5 p-4 rounded-xl border border-notion-border dark:border-white/10 hover:bg-notion-bg-light dark:hover:bg-white/10 transition-all cursor-pointer group"
+              className="bg-white dark:bg-[#1e1e1e] rounded-xl border border-notion-border dark:border-white/10 shadow-sm hover:shadow-md hover:border-blue-500/30 transition-all cursor-pointer group flex flex-col relative"
             >
-              <div className="w-10 h-10 flex items-center justify-center text-blue-500/60 dark:text-blue-400/60 group-hover:text-blue-500 transition-colors">
-                <Folder className="w-6 h-6 fill-current" />
+              {/* Preview Area */}
+              <div className="aspect-4/3 relative">
+                <div className="absolute inset-0 bg-notion-bg-light dark:bg-white/2 flex items-center justify-center overflow-hidden rounded-t-xl">
+                  <div className="w-16 h-16">
+                    <div className="w-full h-full bg-blue-500 rounded-lg flex items-center justify-center text-white p-2">
+                      <Folder className="w-full h-full" />
+                    </div>
+                  </div>
+                </div>
               </div>
-              <span className="text-sm font-semibold text-notion-text dark:text-white truncate">
-                {folderName}
-              </span>
+
+              {/* Info Footer */}
+              <div className="p-4 flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 shrink-0 text-blue-500">
+                    <Folder className="w-full h-full fill-current" />
+                  </div>
+                  <h4 className="text-[13px] font-semibold text-notion-text dark:text-white truncate group-hover:text-blue-500 transition-colors">
+                    {folderName}
+                  </h4>
+                </div>
+                
+                <div className="flex items-center justify-between mt-2">
+                  <p className="text-[10px] text-notion-text-secondary dark:text-white/30 font-medium uppercase tracking-wider">
+                    Directorio
+                  </p>
+                </div>
+              </div>
             </div>
           ))}
 
@@ -205,7 +223,7 @@ const FileDashboardView = ({ userId, externalClientId }) => {
               className="bg-white dark:bg-[#1e1e1e] rounded-xl border border-notion-border dark:border-white/10 shadow-sm hover:shadow-md hover:border-blue-500/30 transition-all cursor-pointer group flex flex-col relative"
             >
               {/* Preview Area */}
-              <div className="aspect-[4/3] relative">
+              <div className="aspect-4/3 relative">
                 {/* Background Icon (Clipped) */}
                 <div className="absolute inset-0 bg-notion-bg-light dark:bg-white/2 flex items-center justify-center overflow-hidden rounded-t-xl">
                   <div className="w-16 h-16">

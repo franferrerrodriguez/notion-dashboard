@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Upload, Trash2, File, Download, Loader2, Plus, X, Folder, ChevronRight, FileText, Image as ImageIcon, FileVideo, Music, Archive, Grid } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Upload, Trash2, File, Download, Loader2, Plus, X, Folder, ChevronRight, ChevronLeft, FileText, Image as ImageIcon, FileVideo, Music, Archive, Grid } from 'lucide-react';
 import { fileService } from '../services/api';
 import { useToast } from '../context/NotificationContext';
 
@@ -8,10 +8,14 @@ const UserFilesManager = ({ userId }) => {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [currentPath, setCurrentPath] = useState('');
+  const [currentPath, setCurrentPath] = useState([]); // Current Path (Array)
   const [showNewFolderInput, setShowNewFolderInput] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [localFolders, setLocalFolders] = useState(new Set());
+
+  const currentPathString = useMemo(() => {
+    return Array.isArray(currentPath) ? currentPath.join('/') : '';
+  }, [currentPath]);
 
   useEffect(() => {
     if (userId) {
@@ -37,7 +41,8 @@ const UserFilesManager = ({ userId }) => {
 
     try {
       setUploading(true);
-      await fileService.upload(userId, file, currentPath || 'General');
+      const pathString = (Array.isArray(currentPath) && currentPath.length > 0) ? currentPath.join('/') : 'General';
+      await fileService.upload(userId, file, pathString);
       toast.success('Archivo subido correctamente');
       loadFiles();
     } catch (error) {
@@ -63,7 +68,8 @@ const UserFilesManager = ({ userId }) => {
 
   const handleCreateFolder = () => {
     if (!newFolderName.trim()) return;
-    setLocalFolders(prev => new Set([...prev, currentPath ? `${currentPath}/${newFolderName}` : newFolderName]));
+    const newPath = [...(Array.isArray(currentPath) ? currentPath : []), newFolderName].join('/');
+    setLocalFolders(prev => new Set([...prev, newPath]));
     setNewFolderName('');
     setShowNewFolderInput(false);
     toast.success('Carpeta creada virtualmente (se confirmará al subir archivos)');
@@ -100,8 +106,8 @@ const UserFilesManager = ({ userId }) => {
 
   // Add virtual local folders
   localFolders.forEach(path => {
-    if (path.startsWith(currentPath + (currentPath ? '/' : ''))) {
-      const remainingPath = path.slice(currentPath.length + (currentPath ? 1 : 0));
+    if (path.startsWith(currentPathString + (currentPathString ? '/' : ''))) {
+      const remainingPath = path.slice(currentPathString.length + (currentPathString ? 1 : 0));
       const parts = remainingPath.split('/');
       if (parts[0]) folders.add(parts[0]);
     }
@@ -109,24 +115,17 @@ const UserFilesManager = ({ userId }) => {
 
   files.forEach(file => {
     const category = file.category || 'General';
-    if (category === currentPath || (category === 'General' && currentPath === '')) {
+    if (category === currentPathString || (category === 'General' && currentPathString === '')) {
       currentFiles.push(file);
-    } else if (category.startsWith(currentPath + (currentPath ? '/' : ''))) {
-      const remainingPath = category.slice(currentPath.length + (currentPath ? 1 : 0));
+    } else if (category.startsWith(currentPathString + (currentPathString ? '/' : ''))) {
+      const remainingPath = category.slice(currentPathString.length + (currentPathString ? 1 : 0));
       const parts = remainingPath.split('/');
       if (parts[0]) folders.add(parts[0]);
     }
   });
 
-  const breadcrumbs = currentPath ? ['Inicio', ...currentPath.split('/')] : ['Inicio'];
-
-  const navigateTo = (index) => {
-    if (index === 0) setCurrentPath('');
-    else setCurrentPath(currentPath.split('/').slice(0, index).join('/'));
-  };
-
   const enterFolder = (name) => {
-    setCurrentPath(prev => prev ? `${prev}/${name}` : name);
+    setCurrentPath(prev => Array.isArray(prev) ? [...prev, name] : [name]);
   };
 
   if (loading) return (
@@ -139,20 +138,28 @@ const UserFilesManager = ({ userId }) => {
   return (
     <div className="space-y-6">
       <div className="bg-black/2 dark:bg-white/2 p-4 rounded-2xl border border-notion-border dark:border-white/5 space-y-4">
-        {/* Row 1: Navigation */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-          {breadcrumbs.map((crumb, index) => (
-            <div key={index} className="flex items-center gap-2 shrink-0">
-              {index > 0 && <ChevronRight className="w-3 h-3 text-notion-text-secondary/30" />}
-              <button 
-                type="button"
-                onClick={() => navigateTo(index)}
-                className={`text-[9px] font-black uppercase tracking-widest transition-colors ${index === breadcrumbs.length - 1 ? 'text-blue-500' : 'text-notion-text-secondary hover:text-notion-text dark:hover:text-white'}`}
-              >
-                {crumb}
-              </button>
-            </div>
-          ))}
+        {/* Row 1: Simplified Navigation */}
+        <div className="flex items-center gap-4">
+          {Array.isArray(currentPath) && currentPath.length > 0 && (
+            <button 
+              type="button"
+              onClick={() => setCurrentPath(prev => Array.isArray(prev) ? prev.slice(0, -1) : [])}
+              className="p-2 bg-white dark:bg-white/5 rounded-xl border border-notion-border dark:border-white/10 text-notion-text-secondary hover:text-blue-500 transition-all active:scale-90"
+              title="Volver"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          )}
+          <div>
+            <h3 className="text-sm font-black text-notion-text dark:text-white uppercase tracking-tight">
+              {(Array.isArray(currentPath) && currentPath.length > 0) ? currentPath[currentPath.length - 1] : 'Inicio'}
+            </h3>
+            {Array.isArray(currentPath) && currentPath.length > 0 && (
+              <p className="text-[9px] font-bold text-notion-text-secondary uppercase tracking-widest opacity-60">
+                {currentPath.join(' / ')}
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="h-px bg-notion-border/50 dark:bg-white/5"></div>
