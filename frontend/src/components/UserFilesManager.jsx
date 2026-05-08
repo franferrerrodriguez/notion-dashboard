@@ -65,6 +65,16 @@ const UserFilesManager = ({ userId }) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const getFileIcon = (category) => {
+    const cat = category?.toLowerCase() || '';
+    if (cat.includes('image')) return <div className="w-full h-full bg-purple-500 rounded-lg flex items-center justify-center text-white p-1.5"><ImageIcon className="w-full h-full" /></div>;
+    if (cat.includes('pdf')) return <div className="w-full h-full bg-red-500 rounded-lg flex items-center justify-center text-white p-1.5"><FileText className="w-full h-full" /></div>;
+    if (cat.includes('spreadsheet') || cat.includes('excel') || cat.includes('csv')) return <div className="w-full h-full bg-emerald-500 rounded-lg flex items-center justify-center text-white p-1.5"><Grid className="w-full h-full" /></div>;
+    if (cat.includes('video')) return <div className="w-full h-full bg-indigo-500 rounded-lg flex items-center justify-center text-white p-1.5"><FileVideo className="w-full h-full" /></div>;
+    if (cat.includes('archive') || cat.includes('zip')) return <div className="w-full h-full bg-gray-600 rounded-lg flex items-center justify-center text-white p-1.5"><Archive className="w-full h-full" /></div>;
+    return <div className="w-full h-full bg-blue-500 rounded-lg flex items-center justify-center text-white p-1.5"><File className="w-full h-full" /></div>;
+  };
+
   if (loading) return (
     <div className="flex flex-col items-center justify-center py-10 gap-2">
       <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
@@ -110,8 +120,8 @@ const UserFilesManager = ({ userId }) => {
           {files.map(file => (
             <div key={file.id} className="flex items-center justify-between p-4 bg-white dark:bg-white/5 rounded-2xl border border-notion-border dark:border-white/10 group hover:border-blue-500/30 transition-all">
               <div className="flex items-center gap-4 overflow-hidden">
-                <div className="p-2.5 bg-blue-500/10 rounded-xl text-blue-500">
-                  <File className="w-5 h-5" />
+                <div className="w-8 h-8 shrink-0">
+                  {getFileIcon(file.category)}
                 </div>
                 <div className="overflow-hidden">
                   <p className="text-xs font-black text-notion-text dark:text-white truncate uppercase tracking-tight">
