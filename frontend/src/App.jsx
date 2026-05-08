@@ -7,6 +7,8 @@ import Login from './components/Login.jsx';
 import { ROLES } from './constants/auth';
 import Dashboard from './Dashboard.jsx';
 
+import { NotificationProvider } from './context/NotificationContext';
+
 const App = () => {
   const { user, loading } = useAuth();
 
@@ -22,7 +24,8 @@ const App = () => {
 
   return (
     <BrowserRouter basename={basename}>
-      <Routes>
+      <NotificationProvider>
+        <Routes>
         <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
 
         {/* Main Route: Conditional redirect based on role */}
@@ -59,6 +62,7 @@ const App = () => {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </NotificationProvider>
     </BrowserRouter>
   );
 };

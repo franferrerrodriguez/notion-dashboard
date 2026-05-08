@@ -5,6 +5,8 @@
 require_once __DIR__ . '/config/secrets.php';
 require_once __DIR__ . '/src/Services/NotionService.php';
 require_once __DIR__ . '/src/Controllers/ProjectController.php';
+require_once __DIR__ . '/src/Controllers/AppController.php';
+require_once __DIR__ . '/src/Controllers/FileController.php';
 
 try {
     $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
@@ -86,6 +88,8 @@ function isAdmin() {
 }
 
 $projectController = new ProjectController();
+$appController = new AppController($pdo);
+$fileController = new FileController($pdo);
 
 // --- SETTINGS (ADMIN ONLY) ---
 if ($action === 'settings_get' && $method === 'GET') {
@@ -215,6 +219,63 @@ if ($action === 'profile_update_password' && $method === 'POST') {
     exit;
 }
 
+// --- APPS & FILES ---
+if ($action === 'apps_all' && $method === 'GET') {
+    $appController->listAll();
+    exit;
+}
+
+if ($action === 'apps_user' && $method === 'GET') {
+    $userId = $_GET['user_id'] ?? $_SESSION['user_id'] ?? null;
+    $externalClientId = $_GET['external_client_id'] ?? null;
+    
+    if (!$userId && !$externalClientId) {
+        http_response_code(400);
+        echo json_encode(['error' => 'User ID or External Client ID required']);
+        exit;
+    }
+    $appController->listForUser($userId, $externalClientId);
+    exit;
+}
+
+if ($action === 'files_user' && $method === 'GET') {
+    $userId = $_GET['user_id'] ?? $_SESSION['user_id'] ?? null;
+    $externalClientId = $_GET['external_client_id'] ?? null;
+
+    if (!$userId && !$externalClientId) {
+        http_response_code(400);
+        echo json_encode(['error' => 'User ID or External Client ID required']);
+        exit;
+    }
+    $fileController->listForUser($userId, $externalClientId);
+    exit;
+}
+
+if ($action === 'files_upload' && $method === 'POST') {
+    if (!isAdmin()) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Forbidden']);
+        exit;
+    }
+    $fileController->upload();
+    exit;
+}
+
+if ($action === 'files_delete' && $method === 'DELETE' && isset($_GET['id'])) {
+    if (!isAdmin()) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Forbidden']);
+        exit;
+    }
+    $fileController->delete($_GET['id']);
+    exit;
+}
+
+if ($action === 'files_download' && isset($_GET['id'])) {
+    $fileController->download($_GET['id']);
+    exit;
+}
+
 // --- USERS (ADMIN ONLY) ---
 if (strpos($action, 'users') === 0) {
     if (!isAdmin()) {
@@ -225,13 +286,18 @@ if (strpos($action, 'users') === 0) {
 
     if ($action === 'users_list' && $method === 'GET') {
         $stmt = $pdo->query("
-            SELECT u.id, u.email, u.is_active, u.last_login, r.name as role, cl.external_client_id, cl.logo_url 
+            SELECT u.id, u.email, u.is_active, u.last_login, r.name as role, cl.external_client_id, cl.logo_url,
+                   (SELECT GROUP_CONCAT(app_id) FROM user_apps WHERE user_id = u.id) as app_ids
             FROM users u 
             JOIN roles r ON u.role_id = r.id 
             LEFT JOIN client_links cl ON u.id = cl.user_id 
             ORDER BY u.id DESC
         ");
-        echo json_encode($stmt->fetchAll());
+        $users = $stmt->fetchAll();
+        foreach ($users as &$u) {
+            $u['app_ids'] = $u['app_ids'] ? array_map('intval', explode(',', $u['app_ids'])) : [];
+        }
+        echo json_encode($users);
         exit;
     }
 
@@ -247,6 +313,12 @@ if (strpos($action, 'users') === 0) {
             if (!empty($input['external_client_id'])) {
                 $stmt = $pdo->prepare("INSERT INTO client_links (user_id, external_client_id, logo_url) VALUES (?, ?, ?)");
                 $stmt->execute([$userId, $input['external_client_id'], $input['logo_url'] ?? null]);
+            }
+            if (!empty($input['app_ids'])) {
+                $stmt = $pdo->prepare("INSERT INTO user_apps (user_id, app_id) VALUES (?, ?)");
+                foreach ($input['app_ids'] as $appId) {
+                    $stmt->execute([$userId, $appId]);
+                }
             }
             $pdo->commit();
             echo json_encode(['success' => true, 'id' => $userId]);
@@ -270,11 +342,21 @@ if (strpos($action, 'users') === 0) {
         $pdo->beginTransaction();
         try {
             if ($currentUser && $currentUser['email'] === 'root@root.com') {
-                // If it's root, ONLY allow password update if provided, ignore email/role changes
+                // If it's root, allow password and app updates
                 if (!empty($input['password'])) {
                     $hash = password_hash($input['password'], PASSWORD_DEFAULT);
                     $stmt = $pdo->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
                     $stmt->execute([$hash, $id]);
+                }
+                
+                // Update Apps for root too
+                $stmt = $pdo->prepare("DELETE FROM user_apps WHERE user_id = ?");
+                $stmt->execute([$id]);
+                if (!empty($input['app_ids'])) {
+                    $stmt = $pdo->prepare("INSERT INTO user_apps (user_id, app_id) VALUES (?, ?)");
+                    foreach ($input['app_ids'] as $appId) {
+                        $stmt->execute([$id, $appId]);
+                    }
                 }
             } else {
                 // Standard User Update
@@ -295,6 +377,16 @@ if (strpos($action, 'users') === 0) {
                 if (!empty($input['external_client_id'])) {
                     $stmt = $pdo->prepare("INSERT INTO client_links (user_id, external_client_id, logo_url) VALUES (?, ?, ?)");
                     $stmt->execute([$id, $input['external_client_id'], $input['logo_url'] ?? null]);
+                }
+
+                // Update Apps
+                $stmt = $pdo->prepare("DELETE FROM user_apps WHERE user_id = ?");
+                $stmt->execute([$id]);
+                if (!empty($input['app_ids'])) {
+                    $stmt = $pdo->prepare("INSERT INTO user_apps (user_id, app_id) VALUES (?, ?)");
+                    foreach ($input['app_ids'] as $appId) {
+                        $stmt->execute([$id, $appId]);
+                    }
                 }
             }
             $pdo->commit();

@@ -2,7 +2,7 @@ export const translations = {
   es: {
     // General
     loading: 'Cargando...',
-    notion_query: 'Consultando datos',
+    notion_query: 'Obteniendo datos...',
     error_loading: 'Error al cargar datos',
     close: 'Cerrar',
     admin: 'Administración',
@@ -13,18 +13,20 @@ export const translations = {
     applying: 'Aplicando...',
     edit: 'Editar',
     delete: 'Eliminar',
+    app_projects: 'Proyectos',
+    app_projects_sub: 'Panel de Control',
+    app_files: 'Documentos',
+    app_files_sub: 'Gestor de Archivos',
 
     // Login
     login_title: 'Bienvenido',
-    login_subtitle: 'Panel de Cliente',
+    login_subtitle: 'Portal del Cliente',
     login_email: 'Correo electrónico',
     login_password: 'Contraseña',
     login_button: 'Entrar',
     login_error: 'Credenciales inválidas o error de conexión',
     login_or_separator: 'O',
-    login_demo_button: 'Ver Demo Interactiva',
-    login_demo_desc: 'Entra como cliente y prueba todas las gráficas, sin base de datos real.',
-    login_copyright: '• Notion Client Dashboard',
+    login_copyright: '• Portal del Cliente',
 
     // Logout Modal
     logout_confirm_title: '¿Cerrar sesión ahora?',
@@ -36,7 +38,7 @@ export const translations = {
     mgmt_projects: 'Gestión de Proyectos',
     admin_general: 'Administración General',
     projects: 'Proyectos',
-    admin_panel: 'Panel de Administración',
+    admin_panel: 'Administración',
     access_mgmt: 'Gestión de Accesos & Usuarios',
     tab_projects: 'Proyectos',
     tab_offers: 'Ofertas',
@@ -48,7 +50,7 @@ export const translations = {
     user_list: 'Listado de Acceso',
     new_user: 'Nuevo Usuario',
     config_required: 'Configuración Requerida',
-    notion_config: 'Configuración de Notion',
+    notion_config: 'Conexión de Datos',
     loading_users: 'Cargando Usuarios',
     view_as_client: 'Ver Dashboard como Cliente',
 
@@ -81,18 +83,18 @@ export const translations = {
 
     // Settings Modal
     settings_title: 'Configuración Global',
-    settings_subtitle: 'Notion API & Dashboard',
+    settings_subtitle: 'Conexión & Datos del Portal',
     settings_loading: 'Obteniendo ajustes',
     settings_loading_msg: 'Cargando Configuración...',
     settings_save_success: 'Configuración guardada correctamente',
     settings_save_error: 'Error al guardar la configuración',
-    settings_token_label: 'Token de Integración Notion',
+    settings_token_label: 'Token de Conexión',
     settings_token_placeholder: 'secret_...',
     settings_db_id_placeholder: 'ID Base de Datos...',
-    settings_projects_db_id: 'ID Base de Datos Proyectos',
-    settings_offers_db_id: 'ID Base de Datos Ofertas',
-    settings_invoices_db_id: 'ID Base de Datos Facturas',
-    settings_tasks_db_id: 'ID Base de Datos Tareas',
+    settings_projects_db_id: 'ID Base de Datos (Proyectos)',
+    settings_offers_db_id: 'ID Base de Datos (Ofertas)',
+    settings_invoices_db_id: 'ID Base de Datos (Facturas)',
+    settings_tasks_db_id: 'ID Base de Datos (Tareas)',
     settings_allowed_origins: 'Orígenes Permitidos (CORS)',
     settings_origins_hint: 'Separados por coma. Ej: https://mi-app.com, http://localhost:5173',
     settings_frontend_url: 'URL del Frontend (para impersonación)',
@@ -111,7 +113,7 @@ export const translations = {
     user_password: 'Contraseña',
     user_password_new: 'Nueva Contraseña (opcional)',
     user_role: 'Rol',
-    user_client_tag: 'Cliente Notion (Tag)',
+    user_client_tag: 'Identificador de Cliente',
     user_generate: 'Generar',
     user_select_client: 'Seleccionar Cliente',
     user_loading_data: 'Cargando datos',
@@ -176,9 +178,6 @@ export const translations = {
     mark_all_read_btn: 'Marcar todo como leído',
     mark_read_btn: 'Marcar como leída',
     refresh: 'Refrescar',
-    demo_guide_title: 'Panel de Gestión de Usuarios',
-    demo_guide_desc: 'Desde aquí puedes administrar los accesos al portal. Para comprobar la experiencia de un cliente, pulsa el botón de "flecha externa" (situado a la izquierda del icono de edición) y accederás a la vista que tendrá el cliente cuando acceda con sus credenciales.',
-    demo_guide_close: 'Entendido',
   },
   en: {
     // ... (skipping some for brevity, but I must provide full context or use multi_replace)
@@ -186,7 +185,7 @@ export const translations = {
 
     // General
     loading: 'Loading...',
-    notion_query: 'Querying Notion',
+    notion_query: 'Fetching data...',
     error_loading: 'Error loading data',
     close: 'Close',
     admin: 'Administration',
@@ -197,18 +196,20 @@ export const translations = {
     applying: 'Applying...',
     edit: 'Edit',
     delete: 'Delete',
+    app_projects: 'Projects',
+    app_projects_sub: 'Control Panel',
+    app_files: 'Documents',
+    app_files_sub: 'File Manager',
 
     // Login
     login_title: 'Welcome',
-    login_subtitle: 'Notion Client Dashboard',
+    login_subtitle: 'Client Portal',
     login_email: 'Email',
     login_password: 'Password',
     login_button: 'Sign In',
     login_error: 'Invalid credentials or connection error',
     login_or_separator: 'OR',
-    login_demo_button: 'View Interactive Demo',
-    login_demo_desc: 'Log in as a client and test all charts, without a real database.',
-    login_copyright: '• Notion-Client Dashboard',
+    login_copyright: '• Client Portal',
 
     // Logout Modal
     logout_confirm_title: 'Logout now?',
@@ -232,7 +233,7 @@ export const translations = {
     user_list: 'Access List',
     new_user: 'New User',
     config_required: 'Configuration Required',
-    notion_config: 'Notion Configuration',
+    notion_config: 'Data Connection',
     loading_users: 'Loading Users',
     view_as_client: 'View Dashboard as Client',
 
@@ -265,12 +266,12 @@ export const translations = {
 
     // Settings Modal
     settings_title: 'Global Settings',
-    settings_subtitle: 'Notion API & Dashboard',
+    settings_subtitle: 'Portal Connection & Data',
     settings_loading: 'Fetching settings',
     settings_loading_msg: 'Loading Configuration...',
     settings_save_success: 'Settings saved successfully',
     settings_save_error: 'Error saving settings',
-    settings_token_label: 'Notion Integration Token',
+    settings_token_label: 'Connection Token',
     settings_token_placeholder: 'secret_...',
     settings_db_id_placeholder: 'Database ID...',
     settings_projects_db_id: 'Projects Database ID',
@@ -295,7 +296,7 @@ export const translations = {
     user_password: 'Password',
     user_password_new: 'New Password (optional)',
     user_role: 'Role',
-    user_client_tag: 'Notion Client (Tag)',
+    user_client_tag: 'Client Identifier',
     user_generate: 'Generate',
     user_select_client: 'Select Client',
     user_loading_data: 'Loading data',
@@ -360,8 +361,5 @@ export const translations = {
     mark_all_read_btn: 'Mark all as read',
     mark_read_btn: 'Mark as read',
     refresh: 'Refresh',
-    demo_guide_title: 'User Management Panel',
-    demo_guide_desc: 'From here you can manage portal access. To check a client\'s experience, click the "external arrow" button (to the left of the edit icon) and you will see the view the client will have when logging in with their credentials.',
-    demo_guide_close: 'Got it',
   },
 };

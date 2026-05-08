@@ -13,8 +13,6 @@ const Login = () => {
   const { login } = useAuth();
   const { lang, setLang, t } = useLanguage();
 
-  const isDemo = new URLSearchParams(window.location.search).get('demo') === 'true';
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -27,15 +25,6 @@ const Login = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleDemoLogin = () => {
-    setIsLoading(true);
-    login('test@test.com', 'demo123').catch(() => {
-      setError(t('login_error'));
-    }).finally(() => {
-      setIsLoading(false);
-    });
   };
 
   return (
@@ -80,94 +69,55 @@ const Login = () => {
           </div>
         )}
 
-        {isDemo ? (
-          <div className="space-y-6">
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-black text-notion-text-secondary uppercase tracking-widest pl-1">{t('login_email')}</label>
-              <input 
-                type="email" 
-                value="test@test.com"
-                readOnly
-                className="w-full bg-white dark:bg-[#202020] border border-notion-border dark:border-white/5 rounded-xl px-4 py-3 text-sm text-notion-text dark:text-white/90 focus:outline-none transition-all font-medium opacity-60 cursor-default"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-black text-notion-text-secondary uppercase tracking-widest pl-1">{t('login_password')}</label>
-              <input 
-                type="password" 
-                value="demo123"
-                readOnly
-                className="w-full bg-white dark:bg-[#202020] border border-notion-border dark:border-white/5 rounded-xl px-4 py-3 text-sm text-notion-text dark:text-white/90 focus:outline-none transition-all font-medium opacity-60 cursor-default"
-              />
-            </div>
-
-            <button 
-              type="button"
-              onClick={handleDemoLogin}
-              disabled={isLoading}
-              className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/50 disabled:cursor-not-allowed text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2"
-            >
-              {isLoading ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              ) : t('login_demo_button')}
-            </button>
-            <p className="text-center mt-1 text-[10px] text-notion-text-secondary font-medium px-4">
-              {t('login_demo_desc')}
-            </p>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-black text-notion-text-secondary uppercase tracking-widest pl-1">{t('login_email')}</label>
+            <input 
+              type="email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-white dark:bg-[#202020] border border-notion-border dark:border-white/5 rounded-xl px-4 py-3 text-sm text-notion-text dark:text-white/90 placeholder:text-notion-text-secondary/30 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/30 transition-all font-medium"
+              placeholder="tu@email.com"
+              required
+            />
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-black text-notion-text-secondary uppercase tracking-widest pl-1">{t('login_email')}</label>
+
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-black text-notion-text-secondary uppercase tracking-widest pl-1">{t('login_password')}</label>
+            <div className="relative">
               <input 
-                type="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white dark:bg-[#202020] border border-notion-border dark:border-white/5 rounded-xl px-4 py-3 text-sm text-notion-text dark:text-white/90 placeholder:text-notion-text-secondary/30 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/30 transition-all font-medium"
-                placeholder="tu@email.com"
+                type={showPassword ? 'text' : 'password'} 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-white dark:bg-[#202020] border border-notion-border dark:border-white/5 rounded-xl px-4 py-3 text-sm text-notion-text dark:text-white/90 placeholder:text-notion-text-secondary/30 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/30 transition-all font-medium pr-12"
+                placeholder="••••••••"
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-notion-text-secondary dark:text-gray-500 hover:text-notion-text dark:hover:text-white transition-colors"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
             </div>
+          </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-black text-notion-text-secondary uppercase tracking-widest pl-1">{t('login_password')}</label>
-              <div className="relative">
-                <input 
-                  type={showPassword ? 'text' : 'password'} 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white dark:bg-[#202020] border border-notion-border dark:border-white/5 rounded-xl px-4 py-3 text-sm text-notion-text dark:text-white/90 placeholder:text-notion-text-secondary/30 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/30 transition-all font-medium pr-12"
-                  placeholder="••••••••"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-notion-text-secondary dark:text-gray-500 hover:text-notion-text dark:hover:text-white transition-colors"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <button 
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/50 disabled:cursor-not-allowed text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2"
-            >
-              {isLoading ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              ) : t('login_button')}
-            </button>
-          </form>
-        )}
-
+          <button 
+            type="submit"
+            disabled={isLoading}
+            className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/50 disabled:cursor-not-allowed text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2"
+          >
+            {isLoading ? (
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            ) : t('login_button')}
+          </button>
+        </form>
         <div className="mt-12 text-center">
            <p className="text-[10px] text-notion-text-secondary font-bold uppercase tracking-widest opacity-30">
              © {new Date().getFullYear()} {t('login_copyright')}

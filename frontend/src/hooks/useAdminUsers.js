@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { userService } from '../services/api';
+import { useToast } from '../context/NotificationContext';
 
 /**
  * Custom hook to manage Admin Users state and API mutations.
@@ -8,6 +9,7 @@ import { userService } from '../services/api';
  */
 export const useAdminUsers = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   // Local State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -26,17 +28,27 @@ export const useAdminUsers = () => {
     mutationFn: userService.create,
     onSuccess: () => {
       queryClient.invalidateQueries(['users']);
+      queryClient.invalidateQueries(['user-apps']);
       setIsModalOpen(false);
+      toast.success('Usuario creado correctamente');
     },
+    onError: () => {
+      toast.error('Error al crear el usuario');
+    }
   });
 
   const updateMutation = useMutation({
     mutationFn: (data) => userService.update(editingUser.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries(['users']);
+      queryClient.invalidateQueries(['user-apps']);
       setIsModalOpen(false);
       setEditingUser(null);
+      toast.success('Usuario actualizado correctamente');
     },
+    onError: () => {
+      toast.error('Error al actualizar el usuario');
+    }
   });
 
   const deleteMutation = useMutation({
@@ -45,7 +57,11 @@ export const useAdminUsers = () => {
       queryClient.invalidateQueries(['users']);
       setIsDeleteModalOpen(false);
       setUserToDelete(null);
+      toast.success('Usuario eliminado');
     },
+    onError: () => {
+      toast.error('Error al eliminar el usuario');
+    }
   });
 
   // Handlers
