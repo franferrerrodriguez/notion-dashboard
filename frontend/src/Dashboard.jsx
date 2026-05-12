@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 import { useLanguage } from './context/LanguageContext';
-import { appService } from './services/api';
+import { appService, userService } from './services/api';
 import { ROLES } from './constants/auth';
 import { useQuery } from '@tanstack/react-query';
 
@@ -30,6 +30,16 @@ const Dashboard = () => {
   const [activeApp, setActiveApp] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
+  // React Query for Target User (In View As mode)
+  const { data: targetUser } = useQuery({
+    queryKey: ['target-user', viewUserId],
+    queryFn: () => userService.getById(viewUserId),
+    enabled: !!viewUserId && user?.role === ROLES.ADMIN,
+  });
+
+  // Effective user for display (name and logo)
+  const displayUser = viewUserId ? targetUser : user;
+
   // React Query for User Apps
   const { data: userApps = [], isLoading: loadingApps } = useQuery({
     queryKey: ['user-apps', viewUserId || user?.id],
@@ -39,7 +49,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (userApps.length > 0) {
-      // Only set initial app if not already set or if the current app is not in the user's apps
       if (!activeApp || !userApps.find(a => a.id === activeApp)) {
         const notionApp = userApps.find(a => a.slug === 'notion-dashboard');
         if (notionApp) {
@@ -51,7 +60,7 @@ const Dashboard = () => {
     } else {
       setActiveApp(null);
     }
-  }, [userApps, viewUserId]); // Removed activeApp from dependencies to prevent reset loop
+  }, [userApps, viewUserId]);
 
   const currentApp = userApps.find(a => a.id === activeApp);
 
@@ -66,112 +75,105 @@ const Dashboard = () => {
 
   return (
     <div className="flex h-screen bg-notion-light dark:bg-notion-dark text-notion-text dark:text-white overflow-hidden transition-colors">
-      {/* Sidebar */}
-      <aside 
-        className={`${isSidebarOpen ? 'w-80' : 'w-24'} bg-white dark:bg-[#1a1a1a] border-r border-notion-border dark:border-white/5 transition-all duration-500 ease-in-out flex flex-col relative z-20`}
-      >
-        {/* Toggle Button */}
-        <button 
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="absolute -right-3 top-12 bg-white dark:bg-[#1a1a1a] border border-notion-border dark:border-white/10 rounded-full p-1 text-notion-text-secondary hover:text-blue-500 shadow-xl z-50 transition-colors"
+      {/* Sidebar - Only shown if there are multiple apps */}
+      {userApps.length > 1 && (
+        <aside 
+          className={`${isSidebarOpen ? 'w-80' : 'w-24'} bg-white dark:bg-[#1a1a1a] border-r border-notion-border dark:border-white/5 transition-all duration-500 ease-in-out flex flex-col relative z-20`}
         >
-          {isSidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        </button>
+          {/* Toggle Button */}
+          <button 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="absolute -right-3 top-12 bg-white dark:bg-[#1a1a1a] border border-notion-border dark:border-white/10 rounded-full p-1 text-notion-text-secondary hover:text-blue-500 shadow-xl z-50 transition-colors"
+          >
+            {isSidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          </button>
 
-        {/* Logo Section */}
-        <div className={`p-8 border-b border-notion-border dark:border-white/5 flex items-center gap-4 ${!isSidebarOpen ? 'justify-center' : ''}`}>
-          <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
-             <LayoutDashboard className="w-5 h-5 text-white" />
-          </div>
-          {isSidebarOpen && (
-            <div className="overflow-hidden whitespace-nowrap">
-               <h2 className="text-lg font-black tracking-tight uppercase">Portal</h2>
-               <p className="text-[9px] font-black text-notion-text-secondary dark:text-white/20 uppercase tracking-[0.2em]">Servicios Digitales</p>
+          {/* Logo Section */}
+          <div className={`p-8 border-b border-notion-border dark:border-white/5 flex items-center gap-4 ${!isSidebarOpen ? 'justify-center' : ''}`}>
+            <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
+               <LayoutDashboard className="w-5 h-5 text-white" />
             </div>
-          )}
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2 mt-4 overflow-y-auto custom-scrollbar">
-          {isSidebarOpen && (
-            <p className="text-[9px] font-black text-notion-text-secondary dark:text-white/20 uppercase tracking-[0.2em] px-4 mb-4">
-              Tus Servicios
-            </p>
-          )}
-          
-          {userApps.map(app => (
-            <button
-              key={app.id}
-              onClick={() => setActiveApp(app.id)}
-              className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all group ${activeApp === app.id ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'hover:bg-black/5 dark:hover:bg-white/5 text-notion-text-secondary dark:text-white/40'}`}
-              title={app.name}
-            >
-              <div className={`p-1.5 rounded-lg shrink-0 ${activeApp === app.id ? 'bg-white/20' : 'bg-notion-bg-light dark:bg-white/5 group-hover:bg-blue-600/10'}`}>
-                {app.slug === 'notion-dashboard' ? <AppWindow className="w-5 h-5" /> : <FolderOpen className="w-5 h-5" />}
+            {isSidebarOpen && (
+              <div className="overflow-hidden whitespace-nowrap">
+                 <h2 className="text-lg font-black tracking-tight uppercase">Portal</h2>
+                 <p className="text-[9px] font-black text-notion-text-secondary dark:text-white/20 uppercase tracking-[0.2em]">Servicios Digitales</p>
               </div>
-              {isSidebarOpen && (
-                <div className="text-left overflow-hidden">
-                   <p className="text-xs font-black uppercase tracking-tight truncate">
-                     {app.name}
-                   </p>
-                   <p className={`text-[9px] font-bold uppercase tracking-widest truncate ${activeApp === app.id ? 'text-white/60' : 'text-notion-text-secondary dark:text-white/20'}`}>
-                     {app.description}
-                   </p>
-                </div>
-              )}
-            </button>
-          ))}
-        </nav>
+            )}
+          </div>
 
-        {/* Bottom Section */}
-        <div className="p-4 border-t border-notion-border dark:border-white/5 space-y-2">
-           {user?.role === ROLES.ADMIN && (
-              <Link
-                to="/admin"
-                className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all hover:bg-amber-500/10 text-amber-500 group ${!isSidebarOpen ? 'justify-center' : ''}`}
-                title="Administración"
+          {/* Navigation */}
+          <nav className="flex-1 p-4 space-y-2 mt-4 overflow-y-auto custom-scrollbar">
+            {isSidebarOpen && (
+              <p className="text-[9px] font-black text-notion-text-secondary dark:text-white/20 uppercase tracking-[0.2em] px-4 mb-4">
+                Tus Servicios
+              </p>
+            )}
+            
+            {userApps.map(app => (
+              <button
+                key={app.id}
+                onClick={() => setActiveApp(app.id)}
+                className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all group ${activeApp === app.id ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'hover:bg-black/5 dark:hover:bg-white/5 text-notion-text-secondary dark:text-white/40'}`}
+                title={app.name}
               >
-                <Shield className="w-5 h-5 shrink-0" />
-                {isSidebarOpen && <span className="text-[10px] font-black uppercase tracking-widest">Administración</span>}
-              </Link>
-           )}
-           <button
-              onClick={logout}
-              className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all hover:bg-red-500/10 text-red-500 group ${!isSidebarOpen ? 'justify-center' : ''}`}
-              title="Cerrar Sesión"
-            >
-              <LogOut className="w-5 h-5 shrink-0" />
-              {isSidebarOpen && <span className="text-[10px] font-black uppercase tracking-widest">Cerrar Sesión</span>}
-            </button>
-        </div>
-      </aside>
+                <div className={`p-1.5 rounded-lg shrink-0 ${activeApp === app.id ? 'bg-white/20' : 'bg-notion-bg-light dark:bg-white/5 group-hover:bg-blue-600/10'}`}>
+                  {app.slug === 'notion-dashboard' ? <AppWindow className="w-5 h-5" /> : <FolderOpen className="w-5 h-5" />}
+                </div>
+                {isSidebarOpen && (
+                  <div className="text-left overflow-hidden">
+                     <p className="text-xs font-black uppercase tracking-tight truncate">
+                       {app.name}
+                     </p>
+                     <p className={`text-[9px] font-bold uppercase tracking-widest truncate ${activeApp === app.id ? 'text-white/60' : 'text-notion-text-secondary dark:text-white/20'}`}>
+                       {app.description}
+                     </p>
+                  </div>
+                )}
+              </button>
+            ))}
+          </nav>
+
+          {/* Bottom Section */}
+          <div className="p-4 border-t border-notion-border dark:border-white/5 space-y-2">
+             {user?.role === ROLES.ADMIN && (
+                <Link
+                  to="/admin"
+                  className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all hover:bg-amber-500/10 text-amber-500 group ${!isSidebarOpen ? 'justify-center' : ''}`}
+                  title="Administración"
+                >
+                  <Shield className="w-5 h-5 shrink-0" />
+                  {isSidebarOpen && <span className="text-[10px] font-black uppercase tracking-widest">Administración</span>}
+                </Link>
+             )}
+             <button
+                onClick={logout}
+                className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all hover:bg-red-500/10 text-red-500 group ${!isSidebarOpen ? 'justify-center' : ''}`}
+                title="Cerrar Sesión"
+              >
+                <LogOut className="w-5 h-5 shrink-0" />
+                {isSidebarOpen && <span className="text-[10px] font-black uppercase tracking-widest">Cerrar Sesión</span>}
+              </button>
+          </div>
+        </aside>
+      )}
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto custom-scrollbar relative">
         {/* Top Header */}
         <header className="sticky top-0 z-10 bg-notion-light/80 dark:bg-notion-dark/80 backdrop-blur-xl px-12 py-6 border-b border-notion-border dark:border-white/5 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <div className={`rounded-2xl border shadow-inner flex items-center justify-center overflow-hidden transition-all duration-500 bg-white dark:bg-white/5 border-notion-border dark:border-white/10 w-14 h-14 p-2`}>
-              {user?.logo_url ? (
-                <img src={user.logo_url} alt="Logo" className="max-w-full max-h-full object-contain" />
-              ) : (
-                <FolderRoot className="w-8 h-8 text-blue-500" />
-              )}
-            </div>
-            <div>
-                <h1 className="text-2xl font-black tracking-tight uppercase flex items-center gap-3">
-                  {viewUserId ? (
-                    <>
-                      <span className="text-notion-text-secondary">Viewing as:</span>
-                      <span className="text-blue-500">{userApps[0]?.client_name || 'Client'}</span>
-                      <Link to="/admin" className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl transition-colors">
-                        <ArrowLeft className="w-5 h-5 text-notion-text-secondary" />
-                      </Link>
-                    </>
-                  ) : (
-                    user?.email.split('@')[0]
-                  )}
+            {displayUser?.logo_url && (
+              <div className={`rounded-2xl border shadow-inner flex items-center justify-center overflow-hidden transition-all duration-500 bg-white dark:bg-white/5 border-notion-border dark:border-white/10 w-14 h-14 p-2`}>
+                <img src={displayUser.logo_url} alt="Logo" className="max-w-full max-h-full object-contain" />
+              </div>
+            )}
+            <div className="flex flex-col">
+                <h1 className="text-xl font-black tracking-tight uppercase text-notion-text dark:text-white leading-tight">
+                  Libro de Mantenimiento Digital
                 </h1>
+                <p className="text-[10px] font-black text-notion-text-secondary dark:text-white/40 uppercase tracking-[0.2em] mt-1">
+                  {displayUser?.name || displayUser?.email?.split('@')[0]}
+                </p>
             </div>
           </div>
 

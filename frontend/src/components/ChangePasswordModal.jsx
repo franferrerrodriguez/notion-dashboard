@@ -3,8 +3,10 @@ import { createPortal } from 'react-dom';
 import { X, Lock, RefreshCw, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { authService } from '../services/api';
 import { useToast } from '../context/NotificationContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const ChangePasswordModal = ({ isOpen, onClose }) => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -30,7 +32,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
     try {
       await authService.updatePassword(password);
       setStatus('success');
-      toast.success('Contraseña actualizada con éxito');
+      toast.success(t('change_password_success'));
       setTimeout(() => {
         onClose();
         setStatus(null);
@@ -38,7 +40,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
       }, 2000);
     } catch {
       setStatus('error');
-      toast.error('Error al actualizar la contraseña');
+      toast.error(t('change_password_error'));
     } finally {
       setLoading(false);
     }
@@ -55,7 +57,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                 <Lock className="w-4 h-4 text-blue-500" />
              </div>
              <h2 className="text-sm font-black tracking-tight text-notion-text dark:text-white uppercase">
-               Cambiar Contraseña
+               {t('change_password_title')}
              </h2>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors text-notion-text-secondary dark:text-white/20">
@@ -67,14 +69,14 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
           <div className="space-y-1.5">
             <div className="flex justify-between items-center pr-1">
               <label className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest pl-1 flex items-center gap-2">
-                Nueva Contraseña
+                {t('new_password')}
               </label>
               <button 
                 type="button"
                 onClick={generatePassword}
                 className="text-[9px] font-black text-blue-500 hover:text-blue-400 uppercase tracking-widest flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-blue-500/10 transition-all active:scale-95"
               >
-                <RefreshCw className="w-2.5 h-2.5" /> Generar
+                <RefreshCw className="w-2.5 h-2.5" /> {t('user_generate')}
               </button>
             </div>
             <div className="relative">
@@ -108,14 +110,14 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
           {status === 'success' && (
             <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-xl animate-in slide-in-from-top-2">
               <CheckCircle2 className="w-4 h-4 text-green-500" />
-              <p className="text-xs font-bold text-green-500">Contraseña actualizada con éxito</p>
+              <p className="text-xs font-bold text-green-500">{t('change_password_success')}</p>
             </div>
           )}
 
           {status === 'error' && (
             <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl animate-in slide-in-from-top-2">
               <AlertCircle className="w-4 h-4 text-red-500" />
-              <p className="text-xs font-bold text-red-500">Error al actualizar la contraseña</p>
+              <p className="text-xs font-bold text-red-500">{t('change_password_error')}</p>
             </div>
           )}
 
@@ -125,14 +127,14 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                onClick={onClose}
                className="flex-1 py-3 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-notion-text-secondary rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
              >
-                Cancelar
+                {t('cancel')}
              </button>
              <button 
                type="submit"
                disabled={!password || loading || status === 'success'}
                className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl active:scale-95"
              >
-                {loading ? 'Guardando...' : 'Actualizar'}
+                {loading ? t('applying') : t('refresh')}
              </button>
           </div>
         </form>

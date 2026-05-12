@@ -176,6 +176,11 @@ export const userService = {
     });
     return await response.json();
   },
+  async getById(id) {
+    const response = await fetch(`${BASE_URL}/index.php?action=users_detail&id=${id}`, fetchConfig);
+    if (!response.ok) throw new Error('Failed to fetch user details');
+    return await response.json();
+  },
 };
 
 export const appService = {

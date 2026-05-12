@@ -3,11 +3,14 @@ import { createPortal } from 'react-dom';
 import { X, Shield, Mail, Lock, Link as LinkIcon, RefreshCw, Eye, EyeOff, ExternalLink, AppWindow, FolderOpen, Plus } from 'lucide-react';
 import { ROLE_IDS, ROLES } from '../constants/auth';
 import { projectService, appService } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 import UserFilesManager from './UserFilesManager';
 
 const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     email: '',
+    name: '',
     password: '',
     role_id: ROLE_IDS.CLIENT,
     external_client_id: '',
@@ -48,6 +51,7 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
     if (editingUser) {
       setFormData({
         email: editingUser.email || '',
+        name: editingUser.name || '',
         password: '', // Don't show old hash
         role_id: editingUser.role === ROLES.ADMIN ? ROLE_IDS.ADMIN : ROLE_IDS.CLIENT,
         external_client_id: editingUser.external_client_id || '',
@@ -58,6 +62,7 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
     } else {
       setFormData({
         email: '',
+        name: '',
         password: '',
         role_id: ROLE_IDS.CLIENT,
         external_client_id: '',
@@ -103,10 +108,10 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
              </div>
              <div>
                 <h2 className="text-lg font-black tracking-tight text-notion-text dark:text-white">
-                  {editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}
+                  {editingUser ? t('user_edit') : t('user_new')}
                 </h2>
                 <p className="text-[10px] font-bold text-notion-text-secondary uppercase tracking-widest">
-                  Acceso al Portal
+                  {t('login_subtitle')}
                 </p>
              </div>
           </div>
@@ -119,8 +124,8 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
           <div className="p-20 flex flex-col items-center justify-center gap-4 animate-in fade-in duration-500">
             <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
             <div className="flex flex-col items-center gap-1">
-              <p className="text-sm font-black text-notion-text dark:text-white uppercase tracking-widest">Cargando datos</p>
-              <p className="text-[10px] font-bold text-notion-text-secondary uppercase tracking-[0.2em] animate-pulse">Sincronizando sistema</p>
+              <p className="text-sm font-black text-notion-text dark:text-white uppercase tracking-widest">{t('loading_data')}</p>
+              <p className="text-[10px] font-bold text-notion-text-secondary uppercase tracking-[0.2em] animate-pulse">{t('settings_loading_msg')}</p>
             </div>
           </div>
         ) : (
@@ -132,7 +137,7 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
                 onClick={() => setActiveTab('info')}
                 className={`py-4 px-4 text-[10px] font-black uppercase tracking-widest transition-all border-b-2 flex items-center gap-2 ${activeTab === 'info' ? 'border-blue-500 text-blue-500' : 'border-transparent text-notion-text-secondary hover:text-notion-text dark:hover:text-white'}`}
               >
-                <Mail className="w-3 h-3" /> Información
+                <Mail className="w-3 h-3" /> {t('summary')}
               </button>
               {formData.role_id === ROLE_IDS.CLIENT && (
                 <button
@@ -140,7 +145,7 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
                   onClick={() => setActiveTab('apps')}
                   className={`py-4 px-4 text-[10px] font-black uppercase tracking-widest transition-all border-b-2 flex items-center gap-2 ${activeTab === 'apps' ? 'border-blue-500 text-blue-500' : 'border-transparent text-notion-text-secondary hover:text-notion-text dark:hover:text-white'}`}
                 >
-                  <AppWindow className="w-3 h-3" /> Aplicaciones
+                  <AppWindow className="w-3 h-3" /> {t('col_apps')}
                 </button>
               )}
             </div>
@@ -174,14 +179,14 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
                     <div className="space-y-1.5">
                       <div className="flex justify-between items-center pr-1">
                         <label className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest pl-1 flex items-center gap-2">
-                          <Lock className="w-3 h-3" /> {editingUser ? 'Nueva Contraseña (opcional)' : 'Contraseña'}
+                          <Lock className="w-3 h-3" /> {editingUser ? t('user_password_new') : t('user_password')}
                         </label>
                         <button 
                           type="button"
                           onClick={generatePassword}
                           className="text-[9px] font-black text-blue-500 hover:text-blue-400 uppercase tracking-widest flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-blue-500/10 transition-all active:scale-95"
                         >
-                          <RefreshCw className="w-2.5 h-2.5" /> Generar
+                          <RefreshCw className="w-2.5 h-2.5" /> {t('user_generate')}
                         </button>
                       </div>
                       <div className="relative">
@@ -210,6 +215,21 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
                       </div>
                     </div>
 
+                    {/* Client Name */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest pl-1 flex items-center gap-2">
+                        <Plus className="w-3 h-3" /> {t('col_name')}
+                      </label>
+                      <input 
+                        type="text" 
+                        name="name"
+                        value={formData.name || ''}
+                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                        className="w-full bg-white dark:bg-notion-dark border border-notion-border dark:border-white/5 rounded-xl px-4 py-3 text-sm text-notion-text dark:text-white placeholder:text-notion-text-secondary/30 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/30 transition-all font-medium"
+                        placeholder="Nombre comercial o personal"
+                      />
+                    </div>
+
                     {/* Role selection */}
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-black text-notion-text-secondary uppercase tracking-widest pl-1 flex items-center gap-2">
@@ -227,8 +247,8 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
                         }}
                         className="w-full bg-white dark:bg-notion-dark border border-notion-border dark:border-white/5 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl px-4 py-3 text-sm text-notion-text dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none font-medium"
                       >
-                        <option value={ROLE_IDS.ADMIN}>Administrador</option>
-                        <option value={ROLE_IDS.CLIENT}>Cliente</option>
+                        <option value={ROLE_IDS.ADMIN}>{t('admin')}</option>
+                        <option value={ROLE_IDS.CLIENT}>{t('prop_client')}</option>
                       </select>
                     </div>
 
@@ -257,7 +277,7 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
                               {formData.is_active ? <Shield className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
                             </div>
                             <div>
-                              <p className="text-[10px] font-black text-notion-text dark:text-white uppercase tracking-widest pl-1">Estado de la cuenta</p>
+                              <p className="text-[10px] font-black text-notion-text dark:text-white uppercase tracking-widest pl-1">{t('col_status')}</p>
                             </div>
                           </div>
                           <button
@@ -322,7 +342,7 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
                                 onChange={(e) => setFormData({...formData, external_client_id: e.target.value})}
                                 className="w-full bg-white dark:bg-notion-dark border border-notion-border dark:border-white/10 rounded-xl px-4 py-2.5 text-xs text-notion-text dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none font-medium"
                               >
-                                <option value="">Seleccionar Cliente Notion (Tag)</option>
+                                <option value="">{t('user_select_client')} (Tag)</option>
                                 {clientOptions.map(opt => (
                                   <option key={opt.id} value={opt.id}>{opt.name}</option>
                                 ))}
@@ -339,7 +359,7 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
                                         <FolderOpen className="w-4 h-4" />
                                      </div>
                                      <h4 className="text-[10px] font-black text-notion-text dark:text-white uppercase tracking-widest">
-                                        Gestión de Documentos
+                                        {t('mgmt_assets')}
                                      </h4>
                                   </div>
                                </div>
@@ -363,13 +383,13 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
                  onClick={onClose}
                  className="flex-1 py-4 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-notion-text-secondary dark:text-white/50 hover:text-notion-text dark:hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-notion-border dark:border-white/5 active:scale-95"
                >
-                  Cancelar
+                  {t('cancel')}
                </button>
                <button 
                  type="submit"
                  className="flex-1 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-600/20 active:scale-95"
                >
-                  {editingUser ? 'Guardar Cambios' : 'Crear Usuario'}
+                  {editingUser ? t('save_changes') : t('new_user')}
                </button>
             </div>
           </form>

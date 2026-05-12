@@ -86,6 +86,16 @@ const UserDropdown = () => {
             </div>
 
             <div className="px-2 py-1 border-b border-notion-border dark:border-white/5 mb-1">
+              {user.role === ROLES.ADMIN && (
+                <Link
+                  to="/admin"
+                  onClick={() => setIsOpen(false)}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-amber-500 hover:bg-amber-500/10 rounded-xl transition-all group mb-1"
+                >
+                  <Shield className="w-3.5 h-3.5" />
+                  {t('admin_panel')}
+                </Link>
+              )}
               <button 
                 onClick={() => {
                   setIsOpen(false);

@@ -164,6 +164,7 @@ if ($action === 'login' && $method === 'POST') {
             'user' => [
                 'id' => $user['id'], 
                 'email' => $user['email'], 
+                'name' => $user['name'],
                 'role' => $user['role_name'],
                 'external_client_id' => $user['external_client_id'],
                 'logo_url' => $user['logo_url']
@@ -185,7 +186,7 @@ if ($action === 'logout') {
 if ($action === 'me') {
     if (isset($_SESSION['user_id'])) {
         $stmt = $pdo->prepare("
-            SELECT u.id, u.email, r.name as role, cl.external_client_id, cl.logo_url
+            SELECT u.id, u.email, u.name, r.name as role, cl.external_client_id, cl.logo_url
             FROM users u 
             JOIN roles r ON u.role_id = r.id 
             LEFT JOIN client_links cl ON u.id = cl.user_id
@@ -282,7 +283,7 @@ if (strpos($action, 'users') === 0) {
 
     if ($action === 'users_list' && $method === 'GET') {
         $stmt = $pdo->query("
-            SELECT u.id, u.email, u.is_active, u.last_login, r.name as role, cl.external_client_id, cl.logo_url,
+            SELECT u.id, u.email, u.name, u.is_active, u.last_login, r.name as role, cl.external_client_id, cl.logo_url,
                    (SELECT GROUP_CONCAT(app_id) FROM user_apps WHERE user_id = u.id) as app_ids
             FROM users u 
             JOIN roles r ON u.role_id = r.id 
@@ -303,8 +304,8 @@ if (strpos($action, 'users') === 0) {
         $pdo->beginTransaction();
         try {
             $isActive = isset($input['is_active']) ? (int)$input['is_active'] : 1;
-            $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, role_id, is_active) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$input['email'], $hash, $input['role_id'], $isActive]);
+            $stmt = $pdo->prepare("INSERT INTO users (email, name, password_hash, role_id, is_active) VALUES (?, ?, ?, ?, ?)");
+            $stmt->execute([$input['email'], $input['name'] ?? null, $hash, $input['role_id'], $isActive]);
             $userId = $pdo->lastInsertId();
             if (!empty($input['external_client_id'])) {
                 $stmt = $pdo->prepare("INSERT INTO client_links (user_id, external_client_id, logo_url) VALUES (?, ?, ?)");
@@ -357,8 +358,8 @@ if (strpos($action, 'users') === 0) {
             } else {
                 // Standard User Update
                 $isActive = isset($input['is_active']) ? (int)$input['is_active'] : 1;
-                $stmt = $pdo->prepare("UPDATE users SET email = ?, role_id = ?, is_active = ? WHERE id = ?");
-                $stmt->execute([$input['email'], $input['role_id'], $isActive, $id]);
+                $stmt = $pdo->prepare("UPDATE users SET email = ?, name = ?, role_id = ?, is_active = ? WHERE id = ?");
+                $stmt->execute([$input['email'], $input['name'] ?? null, $input['role_id'], $isActive, $id]);
                 
                 // Optional Password Update
                 if (!empty($input['password'])) {
@@ -392,6 +393,20 @@ if (strpos($action, 'users') === 0) {
             http_response_code(500);
             echo json_encode(['error' => $e->getMessage()]);
         }
+        exit;
+    }
+
+    if ($action === 'users_detail' && $method === 'GET' && isset($_GET['id'])) {
+        $stmt = $pdo->prepare("
+            SELECT u.id, u.email, u.name, r.name as role, cl.external_client_id, cl.logo_url
+            FROM users u 
+            JOIN roles r ON u.role_id = r.id 
+            LEFT JOIN client_links cl ON u.id = cl.user_id
+            WHERE u.id = ?
+        ");
+        $stmt->execute([$_GET['id']]);
+        $user = $stmt->fetch();
+        echo json_encode($user);
         exit;
     }
 

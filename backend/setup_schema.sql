@@ -22,6 +22,7 @@ CREATE TABLE roles (
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(191) NOT NULL UNIQUE,
+    name VARCHAR(255) DEFAULT NULL,
     password_hash VARCHAR(255) NOT NULL,
     role_id INT NOT NULL,
     is_active TINYINT(1) DEFAULT 1,
