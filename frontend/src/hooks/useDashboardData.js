@@ -1,159 +1,132 @@
-import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
-import { ROLES } from '../constants/auth';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
-import { projectService } from '../services/api';
+import { projectService, appService, fileService } from '../services/api';
+import { useToast } from '../context/NotificationContext';
 
-const TABS = {
-  CALENDAR: 'CALENDAR',
-  PROJECTS: 'PROJECTS',
-  OFFERS: 'OFFERS',
-  INVOICES: 'INVOICES',
-};
-
-export const useDashboardData = (activeTab) => {
+export function useDashboardData(activeTab = null, viewUserId = null) {
   const { user } = useAuth();
-  const { clientId } = useParams();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const clientId = user?.external_client_id;
+  const userId = user?.id;
+  
+  const targetUserId = viewUserId || userId;
 
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [unreadItems, setUnreadItems] = useState([]);
-  const [loadingUnread, setLoadingUnread] = useState(false);
-
-  // Tasks state
-  const [tasks, setTasks] = useState([]);
-  const [loadingTasks, setLoadingTasks] = useState(false);
-
-  const effectiveClientId = user?.role === ROLES.ADMIN && clientId ? clientId : null;
-
-  const { data: projectsResponse, isLoading: loadingProjects } = useQuery({
-    queryKey: ['notion_data', user?.id, effectiveClientId, TABS.PROJECTS],
-    queryFn: ({ signal }) => projectService.getAll(effectiveClientId, TABS.PROJECTS.toLowerCase(), signal),
-    enabled: !!user,
-  });
-  const projects = projectsResponse?.data || [];
-
-  const { data: offersResponse, isLoading: loadingOffers } = useQuery({
-    queryKey: ['notion_data', user?.id, effectiveClientId, TABS.OFFERS],
-    queryFn: ({ signal }) => projectService.getAll(effectiveClientId, TABS.OFFERS.toLowerCase(), signal),
-    enabled: !!user && (activeTab === TABS.OFFERS || activeTab === TABS.INVOICES),
-  });
-  const offers = offersResponse?.data || [];
-
-  const { data: invoicesResponse, isLoading: loadingInvoices } = useQuery({
-    queryKey: ['notion_data', user?.id, effectiveClientId, TABS.INVOICES],
-    queryFn: ({ signal }) => projectService.getAll(effectiveClientId, TABS.INVOICES.toLowerCase(), signal),
-    enabled: !!user && (activeTab === TABS.INVOICES || activeTab === TABS.OFFERS),
-  });
-  const invoices = invoicesResponse?.data || [];
-
-  const { data: clientInfo } = useQuery({
-    queryKey: ['client_info', effectiveClientId || user?.id],
-    queryFn: ({ signal }) => projectService.getClientInfo(effectiveClientId, signal),
-    enabled: !!user,
+  // Projects Query
+  const projectsQuery = useQuery({
+    queryKey: ['projects', clientId, viewUserId],
+    queryFn: ({ signal }) => projectService.getAll(clientId, 'projects', signal, viewUserId),
+    enabled: !!(clientId || viewUserId),
   });
 
-  const refetchUnread = useCallback(async () => {
-    setLoadingUnread(true);
-    try {
-      const status = await projectService.getUnreadStatus(effectiveClientId);
-      const items = status.items || [];
-      setUnreadItems(items);
-      setUnreadCount(items.filter((i) => i.is_unread).length);
-    } catch (err) {
-      console.error('Failed to refetch unread:', err);
-    } finally {
-      setLoadingUnread(false);
+  // Offers Query
+  const offersQuery = useQuery({
+    queryKey: ['offers', clientId, viewUserId],
+    queryFn: ({ signal }) => projectService.getAll(clientId, 'offers', signal, viewUserId),
+    enabled: !!(clientId || viewUserId),
+  });
+
+  // Invoices Query
+  const invoicesQuery = useQuery({
+    queryKey: ['invoices', clientId, viewUserId],
+    queryFn: ({ signal }) => projectService.getAll(clientId, 'invoices', signal, viewUserId),
+    enabled: !!(clientId || viewUserId),
+  });
+
+  // Tasks Query
+  const tasksQuery = useQuery({
+    queryKey: ['tasks', clientId, viewUserId],
+    queryFn: ({ signal }) => projectService.getAll(clientId, 'tasks', signal, viewUserId),
+    enabled: !!(clientId || viewUserId),
+  });
+
+  // Apps Query
+  const appsQuery = useQuery({
+    queryKey: ['apps', targetUserId, viewUserId],
+    queryFn: () => appService.getForUser(targetUserId, clientId, viewUserId),
+    enabled: !!targetUserId,
+  });
+
+  // Files Query
+  const filesQuery = useQuery({
+    queryKey: ['files', targetUserId, viewUserId],
+    queryFn: () => fileService.getForUser(targetUserId, clientId, viewUserId),
+    enabled: !!targetUserId,
+  });
+
+  // Unread Status Query
+  const unreadStatusQuery = useQuery({
+    queryKey: ['unreadStatus', clientId, viewUserId],
+    queryFn: ({ signal }) => projectService.getUnreadStatus(clientId, signal, viewUserId),
+    enabled: !!(clientId || viewUserId),
+    refetchInterval: 30000, // Refresh every 30s
+  });
+
+  // Client Info Query (for logo and branding if viewing as client)
+  const clientInfoQuery = useQuery({
+    queryKey: ['clientInfo', clientId, viewUserId],
+    queryFn: ({ signal }) => projectService.getClientInfo(clientId, signal, viewUserId),
+    enabled: !!(clientId || viewUserId),
+  });
+
+  // Mutations for notifications
+  const markReadMutation = useMutation({
+    mutationFn: (itemId) => projectService.markRead(itemId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['unreadStatus'] });
+      toast.success('Notificación marcada como leída');
+    },
+    onError: () => {
+      toast.error('Error al actualizar notificación');
     }
-  }, [effectiveClientId]);
+  });
 
-  const markNotificationAsRead = async (item) => {
-    const previousItems = [...unreadItems];
-    const previousCount = unreadCount;
-    
-    setUnreadItems(unreadItems.filter(i => i.id !== item.id));
-    setUnreadCount(prev => Math.max(0, prev - 1));
-
-    try {
-      await projectService.markRead(item.id, item.last_edited_time);
-    } catch (err) {
-      console.error('Failed to mark as read:', err);
-      setUnreadItems(previousItems);
-      setUnreadCount(previousCount);
-      throw err;
+  const markAllReadMutation = useMutation({
+    mutationFn: () => projectService.markAllRead(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['unreadStatus'] });
+      toast.success('Todas las notificaciones marcadas como leídas');
+    },
+    onError: () => {
+      toast.error('Error al actualizar notificaciones');
     }
-  };
-
-  const handleMarkAllRead = async () => {
-    const previousUnreadItems = [...unreadItems];
-    const previousUnreadCount = unreadCount;
-    
-    // Calculate maxTime
-    const maxTime = unreadItems.reduce((latest, item) => {
-      if (!latest) return item.last_edited_time;
-      return new Date(item.last_edited_time) > new Date(latest) ? item.last_edited_time : latest;
-    }, null);
-
-    setUnreadItems([]);
-    setUnreadCount(0);
-    
-    try {
-      await projectService.markAllRead(maxTime);
-      refetchUnread();
-    } catch (err) {
-      console.error('Failed to mark all as read:', err);
-      // Rollback
-      setUnreadItems(previousUnreadItems);
-      setUnreadCount(previousUnreadCount);
-    }
-  };
-
-  useEffect(() => {
-    if (user) refetchUnread();
-  }, [user, effectiveClientId, refetchUnread]);
-
-  useEffect(() => {
-    const fetchTasks = async () => {
-      setLoadingTasks(true);
-      try {
-        const response = await projectService.getAll(effectiveClientId, 'tasks');
-        const taskList = response?.data || response || [];
-        setTasks(taskList);
-      } catch (err) {
-        console.error('Failed to fetch tasks manually:', err);
-      } finally {
-        setLoadingTasks(false);
-      }
-    };
-
-    if (user) fetchTasks();
-  }, [user, effectiveClientId]);
-
-  const isTabLoading =
-    activeTab === TABS.CALENDAR
-      ? loadingTasks
-      : activeTab === TABS.PROJECTS
-        ? loadingProjects
-        : activeTab === TABS.OFFERS
-          ? loadingOffers || loadingInvoices
-          : activeTab === TABS.INVOICES
-            ? loadingInvoices || loadingOffers || loadingProjects
-            : false;
+  });
 
   return {
-    effectiveClientId,
+    projects: projectsQuery.data?.data || [],
+    offers: offersQuery.data?.data || [],
+    invoices: invoicesQuery.data?.data || [],
+    tasks: tasksQuery.data?.data || [],
+    apps: appsQuery.data || [],
+    files: filesQuery.data || [],
+    unreadStatus: unreadStatusQuery.data || { count: 0, has_unread: false, items: [] },
+    unreadItems: unreadStatusQuery.data?.items || [],
+    unreadCount: unreadStatusQuery.data?.count || 0,
+    clientInfo: clientInfoQuery.data || null,
+    isLoading:
+      projectsQuery.isLoading ||
+      offersQuery.isLoading ||
+      invoicesQuery.isLoading ||
+      tasksQuery.isLoading ||
+      appsQuery.isLoading ||
+      filesQuery.isLoading ||
+      unreadStatusQuery.isLoading ||
+      clientInfoQuery.isLoading,
+    isTabLoading:
+      (activeTab === 'PROJECTS' && projectsQuery.isLoading) ||
+      (activeTab === 'OFFERS' && offersQuery.isLoading) ||
+      (activeTab === 'INVOICES' && invoicesQuery.isLoading) ||
+      (activeTab === 'CALENDAR' && (tasksQuery.isLoading || projectsQuery.isLoading)),
+    isError:
+      projectsQuery.isError ||
+      offersQuery.isError ||
+      invoicesQuery.isError ||
+      tasksQuery.isError,
+    handleMarkAllRead: markAllReadMutation.mutate,
+    markNotificationAsRead: (item) => markReadMutation.mutate(item.id),
+    refetchUnread: unreadStatusQuery.refetch,
+    loadingUnread: unreadStatusQuery.isLoading || markReadMutation.isPending || markAllReadMutation.isPending,
+    viewUserId,
     user,
-    projects,
-    offers,
-    invoices,
-    tasks,
-    clientInfo,
-    unreadItems,
-    unreadCount,
-    loadingUnread,
-    isTabLoading,
-    handleMarkAllRead,
-    markNotificationAsRead,
-    refetchUnread
   };
-};
+}

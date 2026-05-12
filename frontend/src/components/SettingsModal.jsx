@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Settings, Database, Key, Save, RefreshCw, CheckCircle2, AlertCircle, Eye, EyeOff, Target, Receipt, CalendarDays } from 'lucide-react';
 import { settingsService } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/NotificationContext';
 
 const SettingsModal = ({ isOpen, onClose }) => {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [settings, setSettings] = useState({
     notion_integration_token: '',
     notion_projects_database_id: '',
@@ -42,10 +45,12 @@ const SettingsModal = ({ isOpen, onClose }) => {
     try {
       await settingsService.save(settings);
       setStatus('success');
+      toast.success(t('settings_save_success'));
       setTimeout(() => setStatus(null), 3000);
     } catch {
       setSaving(false);
       setStatus('error');
+      toast.error(t('settings_save_error'));
     } finally {
       setSaving(false);
     }
@@ -53,8 +58,8 @@ const SettingsModal = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-200 flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+  const modalContent = (
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="bg-white dark:bg-notion-dark border border-notion-border dark:border-white/10 rounded-3xl w-full max-w-[500px] shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
         
         {/* Header */}
@@ -211,6 +216,8 @@ const SettingsModal = ({ isOpen, onClose }) => {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default SettingsModal;

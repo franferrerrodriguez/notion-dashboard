@@ -8,9 +8,10 @@ const fetchConfig = {
 };
 
 export const projectService = {
-  async getAll(clientId = null, type = 'projects', signal) {
+  async getAll(clientId = null, type = 'projects', signal, viewUserId = null) {
     let url = `${BASE_URL}/index.php?action=list&type=${type}`;
-    if (clientId) url += `&clientId=${clientId}`;
+    if (viewUserId) url += `&viewUserId=${viewUserId}`;
+    else if (clientId) url += `&clientId=${clientId}`;
 
     const response = await fetch(url, { ...fetchConfig, signal });
     if (!response.ok) throw new Error(`Failed to fetch ${type}`);
@@ -71,15 +72,19 @@ export const projectService = {
     return await response.json();
   },
 
-  async getUnreadStatus(clientId, signal) {
-    const url = `${BASE_URL}/index.php?action=unread_status${clientId ? `&client_id=${encodeURIComponent(clientId)}` : ''}`;
+  async getUnreadStatus(clientId, signal, viewUserId = null) {
+    let url = `${BASE_URL}/index.php?action=unread_status`;
+    if (viewUserId) url += `&viewUserId=${encodeURIComponent(viewUserId)}`;
+    else if (clientId) url += `&client_id=${encodeURIComponent(clientId)}`;
     const response = await fetch(url, { ...fetchConfig, signal });
     if (!response.ok) throw new Error('Failed to fetch unread status');
     return await response.json();
   },
 
-  async getClientInfo(clientId, signal) {
-    const url = `${BASE_URL}/index.php?action=client_info${clientId ? `&client_id=${encodeURIComponent(clientId)}` : ''}`;
+  async getClientInfo(clientId, signal, viewUserId = null) {
+    let url = `${BASE_URL}/index.php?action=client_info`;
+    if (viewUserId) url += `&viewUserId=${encodeURIComponent(viewUserId)}`;
+    else if (clientId) url += `&client_id=${encodeURIComponent(clientId)}`;
     const response = await fetch(url, { ...fetchConfig, signal });
     if (!response.ok) throw new Error('Failed to fetch client info');
     return await response.json();
@@ -180,9 +185,11 @@ export const appService = {
     return await response.json();
   },
 
-  async getForUser(userId, externalClientId = null) {
+  async getForUser(userId, externalClientId = null, viewUserId = null) {
     let url = `${BASE_URL}/index.php?action=apps_user&user_id=${userId}`;
-    if (externalClientId) {
+    if (viewUserId) {
+      url += `&viewUserId=${viewUserId}`;
+    } else if (externalClientId) {
       url += `&external_client_id=${externalClientId}`;
     }
     const response = await fetch(url, fetchConfig);
@@ -192,9 +199,11 @@ export const appService = {
 };
 
 export const fileService = {
-  async getForUser(userId, externalClientId = null) {
+  async getForUser(userId, externalClientId = null, viewUserId = null) {
     let url = `${BASE_URL}/index.php?action=files_user&user_id=${userId}`;
-    if (externalClientId) {
+    if (viewUserId) {
+      url += `&viewUserId=${viewUserId}`;
+    } else if (externalClientId) {
       url += `&external_client_id=${externalClientId}`;
     }
     const response = await fetch(url, fetchConfig);

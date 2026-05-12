@@ -75,7 +75,7 @@ describe('UserModal Component', () => {
     projectService.getClientOptions.mockResolvedValueOnce([]);
     const editingUser = { 
       id: 1, 
-      email: 'test@test.com', 
+      email: 'user@example.com', 
       role: 'Client', 
       is_active: 1,
       external_client_id: 'client_1'

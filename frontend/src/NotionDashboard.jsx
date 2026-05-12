@@ -26,6 +26,8 @@ import InvoicesListView from './components/dashboard/InvoicesListView';
 import OffersListView from './components/dashboard/OffersListView';
 import ProjectsListView from './components/dashboard/ProjectsListView';
 
+import { useParams } from 'react-router-dom';
+
 const TABS = {
   CALENDAR: 'CALENDAR',
   PROJECTS: 'PROJECTS',
@@ -33,8 +35,9 @@ const TABS = {
   INVOICES: 'INVOICES',
 };
 
-const NotionDashboard = ({ effectiveClientId }) => {
+const NotionDashboard = () => {
   const { t } = useLanguage();
+  const { viewUserId } = useParams();
 
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedTask, setSelectedTask] = useState(null);
@@ -57,7 +60,7 @@ const NotionDashboard = ({ effectiveClientId }) => {
     isTabLoading,
     handleMarkAllRead,
     markNotificationAsRead,
-  } = useDashboardData(activeTab, effectiveClientId);
+  } = useDashboardData(activeTab, viewUserId);
 
   // REVERSE LOOKUP: Group invoices by their related offer ID
   const reverseInvoiceMap = useMemo(() => resolveInvoiceMap(invoices, offers), [invoices, offers]);

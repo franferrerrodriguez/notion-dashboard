@@ -25,37 +25,35 @@ import ThemeToggle from './components/ThemeToggle';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
+  const { viewUserId } = useParams();
   const { t } = useLanguage();
-  const { clientId } = useParams();
   const [activeApp, setActiveApp] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  const effectiveClientId = user?.role === ROLES.ADMIN && clientId ? clientId : null;
-
   // React Query for User Apps
   const { data: userApps = [], isLoading: loadingApps } = useQuery({
-    queryKey: ['user-apps', user?.id, effectiveClientId],
-    queryFn: () => appService.getForUser(user.id, effectiveClientId),
-    enabled: !!user?.id,
+    queryKey: ['user-apps', viewUserId || user?.id],
+    queryFn: () => appService.getForUser(viewUserId || user.id, null, viewUserId),
+    enabled: !!(user?.id || viewUserId),
   });
 
   useEffect(() => {
     if (userApps.length > 0) {
-      if (!activeApp || !userApps.find(a => a.slug === activeApp)) {
-        setActiveApp(userApps[0].slug);
+      // Only set initial app if not already set or if the current app is not in the user's apps
+      if (!activeApp || !userApps.find(a => a.id === activeApp)) {
+        const notionApp = userApps.find(a => a.slug === 'notion-dashboard');
+        if (notionApp) {
+          setActiveApp(notionApp.id);
+        } else {
+          setActiveApp(userApps[0].id);
+        }
       }
     } else {
       setActiveApp(null);
     }
-  }, [userApps, activeApp]);
+  }, [userApps, viewUserId]); // Removed activeApp from dependencies to prevent reset loop
 
-  useEffect(() => {
-    if (clientId && userApps.find(a => a.slug === 'notion-dashboard')) {
-      setActiveApp('notion-dashboard');
-    }
-  }, [clientId, userApps]);
-
-  const currentApp = userApps.find(a => a.slug === activeApp);
+  const currentApp = userApps.find(a => a.id === activeApp);
 
   if (loadingApps) {
     return (
@@ -103,21 +101,21 @@ const Dashboard = () => {
           
           {userApps.map(app => (
             <button
-              key={app.slug}
-              onClick={() => setActiveApp(app.slug)}
-              className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all group ${activeApp === app.slug ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'hover:bg-black/5 dark:hover:bg-white/5 text-notion-text-secondary dark:text-white/40'}`}
+              key={app.id}
+              onClick={() => setActiveApp(app.id)}
+              className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all group ${activeApp === app.id ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'hover:bg-black/5 dark:hover:bg-white/5 text-notion-text-secondary dark:text-white/40'}`}
               title={app.name}
             >
-              <div className={`p-1.5 rounded-lg shrink-0 ${activeApp === app.slug ? 'bg-white/20' : 'bg-notion-bg-light dark:bg-white/5 group-hover:bg-blue-600/10'}`}>
+              <div className={`p-1.5 rounded-lg shrink-0 ${activeApp === app.id ? 'bg-white/20' : 'bg-notion-bg-light dark:bg-white/5 group-hover:bg-blue-600/10'}`}>
                 {app.slug === 'notion-dashboard' ? <AppWindow className="w-5 h-5" /> : <FolderOpen className="w-5 h-5" />}
               </div>
               {isSidebarOpen && (
                 <div className="text-left overflow-hidden">
                    <p className="text-xs font-black uppercase tracking-tight truncate">
-                     {app.slug === 'notion-dashboard' ? t('app_projects') : t('app_files')}
+                     {app.name}
                    </p>
-                   <p className={`text-[9px] font-bold uppercase tracking-widest truncate ${activeApp === app.slug ? 'text-white/60' : 'text-notion-text-secondary dark:text-white/20'}`}>
-                     {app.slug === 'notion-dashboard' ? t('app_projects_sub') : t('app_files_sub')}
+                   <p className={`text-[9px] font-bold uppercase tracking-widest truncate ${activeApp === app.id ? 'text-white/60' : 'text-notion-text-secondary dark:text-white/20'}`}>
+                     {app.description}
                    </p>
                 </div>
               )}
@@ -161,14 +159,19 @@ const Dashboard = () => {
               )}
             </div>
             <div>
-               <h1 className="text-2xl font-black tracking-tight uppercase">
-                 {effectiveClientId || user?.email.split('@')[0]}
-               </h1>
-               {effectiveClientId && (
-                 <p className="text-[9px] font-black text-amber-500 uppercase tracking-[0.2em] flex items-center gap-1.5">
-                   <Shield className="w-3 h-3" /> Administrador
-                 </p>
-               )}
+                <h1 className="text-2xl font-black tracking-tight uppercase flex items-center gap-3">
+                  {viewUserId ? (
+                    <>
+                      <span className="text-notion-text-secondary">Viewing as:</span>
+                      <span className="text-blue-500">{userApps[0]?.client_name || 'Client'}</span>
+                      <Link to="/admin" className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl transition-colors">
+                        <ArrowLeft className="w-5 h-5 text-notion-text-secondary" />
+                      </Link>
+                    </>
+                  ) : (
+                    user?.email.split('@')[0]
+                  )}
+                </h1>
             </div>
           </div>
 
@@ -180,11 +183,11 @@ const Dashboard = () => {
 
         {/* Content Area */}
         <div className="p-12 max-w-full mx-auto">
-          {activeApp === 'notion-dashboard' && (
-            <NotionDashboard effectiveClientId={effectiveClientId} />
+          {currentApp?.slug === 'notion-dashboard' && (
+            <NotionDashboard />
           )}
-          {activeApp === 'file-dashboard' && (
-            <FileDashboardView userId={user.id} externalClientId={effectiveClientId} />
+          {currentApp?.slug === 'file-dashboard' && (
+            <FileDashboardView userId={viewUserId || user.id} viewUserId={viewUserId} />
           )}
           {userApps.length === 0 && (
             <div className="flex flex-col items-center justify-center py-32">

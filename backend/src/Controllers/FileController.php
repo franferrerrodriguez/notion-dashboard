@@ -16,9 +16,12 @@ class FileController {
     }
 
     public function listForUser($userId, $externalClientId = null) {
-        if ($externalClientId) {
+        if ($userId) {
+            $stmt = $this->pdo->prepare("SELECT * FROM user_files WHERE user_id = ? ORDER BY uploaded_at DESC");
+            $stmt->execute([$userId]);
+        } elseif ($externalClientId) {
             $stmt = $this->pdo->prepare("
-                SELECT uf.* 
+                SELECT DISTINCT uf.* 
                 FROM user_files uf
                 JOIN client_links cl ON uf.user_id = cl.user_id
                 WHERE cl.external_client_id = ?
@@ -26,8 +29,8 @@ class FileController {
             ");
             $stmt->execute([$externalClientId]);
         } else {
-            $stmt = $this->pdo->prepare("SELECT * FROM user_files WHERE user_id = ? ORDER BY uploaded_at DESC");
-            $stmt->execute([$userId]);
+            echo json_encode([]);
+            return;
         }
         echo json_encode($stmt->fetchAll());
     }

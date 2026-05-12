@@ -37,7 +37,7 @@ describe('Login Component', () => {
     renderWithProvider(<Login />);
 
     fireEvent.change(screen.getByPlaceholderText(/tu@email.com/i), {
-      target: { value: 'test@test.com' },
+      target: { value: 'user@example.com' },
     });
     fireEvent.change(screen.getByPlaceholderText(/••••••••/i), {
       target: { value: 'password123' },
@@ -47,7 +47,7 @@ describe('Login Component', () => {
     fireEvent.click(screen.getByRole('button', { name: /Entrar/i }));
 
     await waitFor(() => {
-      expect(mockLogin).toHaveBeenCalledWith('test@test.com', 'password123');
+      expect(mockLogin).toHaveBeenCalledWith('user@example.com', 'password123');
     });
   });
 
@@ -60,7 +60,7 @@ describe('Login Component', () => {
     renderWithProvider(<Login />);
 
     fireEvent.change(screen.getByPlaceholderText(/tu@email.com/i), {
-      target: { value: 'test@test.com' },
+      target: { value: 'user@example.com' },
     });
     fireEvent.change(screen.getByPlaceholderText(/••••••••/i), {
       target: { value: 'wrong' },

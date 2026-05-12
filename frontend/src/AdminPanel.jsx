@@ -10,10 +10,10 @@ import {
   Trash2,
   UserPlus,
   XCircle,
-  X,
-  Info,
+  AppWindow,
+  FolderOpen
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import ConfirmModal from './components/ConfirmModal';
 import SettingsModal from './components/SettingsModal';
 import ThemeToggle from './components/ThemeToggle';
@@ -21,8 +21,9 @@ import UserDropdown from './components/UserDropdown';
 import UserModal from './components/UserModal';
 import { ROLES } from './constants/auth';
 import { useLanguage } from './context/LanguageContext';
-import { settingsService } from './services/api';
+import { settingsService, appService } from './services/api';
 import { useAdminUsers } from './hooks/useAdminUsers';
+
 const AdminPanel = () => {
   const queryClient = useQueryClient();
   const { t } = useLanguage();
@@ -47,6 +48,11 @@ const AdminPanel = () => {
   const { data: settings } = useQuery({
     queryKey: ['settings'],
     queryFn: settingsService.get,
+  });
+
+  const { data: availableApps = [] } = useQuery({
+    queryKey: ['apps-all'],
+    queryFn: () => appService.getAll(),
   });
 
   const isConfigured = 
@@ -141,7 +147,7 @@ const AdminPanel = () => {
                   {t('col_status')}
                 </th>
                 <th className="py-5 px-4 text-[11px] font-black text-notion-text-secondary dark:text-white/40 uppercase tracking-widest text-center">
-                  {t('col_notion_link')}
+                  Apps
                 </th>
                 <th className="py-5 px-8 text-[11px] font-black text-notion-text-secondary dark:text-white/40 uppercase tracking-widest text-right">
                   {t('col_actions')}
@@ -197,17 +203,31 @@ const AdminPanel = () => {
                     </div>
                   </td>
                   <td className="py-6 px-4 text-center">
-                    {u.role === ROLES.CLIENT ? (
-                      <div className="flex flex-col items-center gap-1">
-                        <code className="text-[10px] font-bold text-blue-500 bg-blue-500/5 px-3 py-1 rounded-lg border border-blue-500/10 uppercase tracking-wider">
-                          {u.external_client_id || '-'}
-                        </code>
-                      </div>
-                    ) : (
-                      <span className="text-notion-text-secondary/20 dark:text-white/10 text-xs">
-                        -
-                      </span>
-                    )}
+                    <div className="flex justify-center gap-2">
+                      {u.app_ids.length > 0 ? (
+                        u.app_ids.map(appId => {
+                          const app = availableApps.find(a => a.id === appId);
+                          if (!app) return null;
+                          return (
+                            <div key={appId} className="relative group/app">
+                              <div 
+                                className="p-1.5 bg-blue-500/10 rounded-lg border border-blue-500/20 text-blue-500 transition-all hover:bg-blue-500 hover:text-white cursor-help"
+                              >
+                                {app.slug === 'notion-dashboard' ? <AppWindow className="w-3.5 h-3.5" /> : <FolderOpen className="w-3.5 h-3.5" />}
+                              </div>
+                              
+                              {/* Custom Tooltip */}
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[8px] font-black uppercase tracking-widest rounded-lg opacity-0 group-hover/app:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-50 shadow-xl translate-y-1 group-hover/app:translate-y-0">
+                                {app.name}
+                                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-white"></div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <span className="text-[10px] font-bold text-notion-text-secondary/30 uppercase tracking-widest">Ninguna</span>
+                      )}
+                    </div>
                   </td>
                   <td className="py-6 px-8 text-right">
                     <div className="flex justify-end gap-3 transition-all relative">
@@ -216,7 +236,7 @@ const AdminPanel = () => {
                           onClick={() => {
                             const baseUrl = window.location.origin;
                             const routerBasename = import.meta.env.VITE_ROUTER_BASENAME || '';
-                            const path = `${baseUrl}${routerBasename.endsWith('/') ? routerBasename.slice(0, -1) : routerBasename}/view-as/${u.external_client_id}`;
+                            const path = `${baseUrl}${routerBasename.endsWith('/') ? routerBasename.slice(0, -1) : routerBasename}/view-as/${u.id}`;
                             window.open(path, '_blank');
                           }}
                           title={t('view_as_client')}

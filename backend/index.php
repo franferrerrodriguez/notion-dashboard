@@ -226,28 +226,24 @@ if ($action === 'apps_all' && $method === 'GET') {
 }
 
 if ($action === 'apps_user' && $method === 'GET') {
-    $userId = $_GET['user_id'] ?? $_SESSION['user_id'] ?? null;
+    $userId = $_SESSION['user_id'] ?? null;
+    $viewUserId = $_GET['viewUserId'] ?? null;
+    $targetUserId = ($viewUserId && isAdmin()) ? $viewUserId : $userId;
     $externalClientId = $_GET['external_client_id'] ?? null;
-    
-    if (!$userId && !$externalClientId) {
-        http_response_code(400);
-        echo json_encode(['error' => 'User ID or External Client ID required']);
-        exit;
-    }
-    $appController->listForUser($userId, $externalClientId);
+    $appController->listForUser($targetUserId, $externalClientId);
     exit;
 }
 
 if ($action === 'files_user' && $method === 'GET') {
-    $userId = $_GET['user_id'] ?? $_SESSION['user_id'] ?? null;
+    $userId = $_SESSION['user_id'] ?? null;
+    $viewUserId = $_GET['viewUserId'] ?? null;
+    $queryUserId = $_GET['user_id'] ?? null;
+    
+    // Priority: Admin specifying user_id > ViewAs mode > Own session
+    $targetUserId = (isAdmin() && $queryUserId) ? $queryUserId : (($viewUserId && isAdmin()) ? $viewUserId : $userId);
+    
     $externalClientId = $_GET['external_client_id'] ?? null;
-
-    if (!$userId && !$externalClientId) {
-        http_response_code(400);
-        echo json_encode(['error' => 'User ID or External Client ID required']);
-        exit;
-    }
-    $fileController->listForUser($userId, $externalClientId);
+    $fileController->listForUser($targetUserId, $externalClientId);
     exit;
 }
 
@@ -470,14 +466,19 @@ if ($action === 'unread_status') {
 }
 if ($action === 'client_info') {
     $clientId = $_GET['client_id'] ?? null;
-    if (empty($clientId) && isset($_SESSION['user_id'])) {
-        $stmt = $pdo->prepare("SELECT external_client_id FROM client_links WHERE user_id = ?");
-        $stmt->execute([$_SESSION['user_id']]);
-        $clientId = $stmt->fetchColumn();
+    $viewUserId = $_GET['viewUserId'] ?? null;
+
+    if (empty($clientId)) {
+        $targetUserId = ($viewUserId && isAdmin()) ? $viewUserId : ($_SESSION['user_id'] ?? null);
+        if ($targetUserId) {
+            $stmt = $pdo->prepare("SELECT external_client_id FROM client_links WHERE user_id = ?");
+            $stmt->execute([$targetUserId]);
+            $clientId = $stmt->fetchColumn();
+        }
     }
     
     if ($clientId) {
-        $stmt = $pdo->prepare("SELECT external_client_id as id, logo_url FROM client_links WHERE external_client_id = ? LIMIT 1");
+        $stmt = $pdo->prepare("SELECT DISTINCT external_client_id as id, logo_url FROM client_links WHERE external_client_id = ? LIMIT 1");
         $stmt->execute([$clientId]);
         echo json_encode($stmt->fetch() ?: ['id' => $clientId, 'logo_url' => null]);
     } else {

@@ -56,10 +56,9 @@ const App = () => {
 
         {/* View As Client functionality for Admins */}
         <Route
-          path="/view-as/:clientId"
+          path="/view-as/:viewUserId"
           element={user?.role === ROLES.ADMIN ? <Dashboard /> : <Navigate to="/" replace />}
         />
-
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </NotificationProvider>

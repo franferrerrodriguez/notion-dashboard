@@ -9,17 +9,23 @@ class ProjectController {
         
         // Default to the current user's linked client ID
         $clientId = '';
-        if ($userId) {
+
+        // --- NEW: Allow Admin to "View As" another user account ---
+        if (isset($_GET['viewUserId']) && isAdmin()) {
+            $stmt = $pdo->prepare("SELECT external_client_id FROM client_links WHERE user_id = ?");
+            $stmt->execute([$_GET['viewUserId']]);
+            $clientId = $stmt->fetchColumn() ?: '';
+            $userId = $_GET['viewUserId']; // Override userId for read status checks
+        } elseif (isset($_GET['clientId']) && isAdmin()) {
+            $clientId = $_GET['clientId'];
+        } elseif ($userId) {
             $stmt = $pdo->prepare("SELECT external_client_id FROM client_links WHERE user_id = ?");
             $stmt->execute([$userId]);
             $link = $stmt->fetch();
             $clientId = $link['external_client_id'] ?? '';
         }
 
-        // --- NEW: Allow Admin to "View As" another client ---
-        if (isset($_GET['clientId']) && isAdmin()) {
-            $clientId = $_GET['clientId'];
-        }
+
 
         if (empty($clientId)) {
             echo json_encode(['data' => [], 'message' => 'No client linked to this user']);
@@ -59,7 +65,7 @@ class ProjectController {
         }
 
         // Fetch client logo if available
-        $stmt = $pdo->prepare("SELECT logo_url FROM client_links WHERE external_client_id = ? LIMIT 1");
+        $stmt = $pdo->prepare("SELECT DISTINCT logo_url FROM client_links WHERE external_client_id = ? LIMIT 1");
         $stmt->execute([$clientId]);
         $logoUrl = $stmt->fetchColumn();
 
@@ -171,6 +177,12 @@ class ProjectController {
     public function unreadStatus() {
         $userId = $_SESSION['user_id'] ?? 0;
         $clientId = $_GET['client_id'] ?? null;
+        $viewUserId = $_GET['viewUserId'] ?? null;
+
+        if ($viewUserId && isAdmin()) {
+            $userId = $viewUserId;
+            $clientId = null; // Let the helper find the client_id for this specific user
+        }
         
         if (!$userId) {
             http_response_code(401);
@@ -183,10 +195,9 @@ class ProjectController {
         echo json_encode($result);
     }
 
-    private function getUnreadStatusItems($userId, $clientId) {
+    private function getUnreadStatusItems($userId, $clientId = null) {
         $pdo = $GLOBALS['pdo'];
         
-        // If clientId not provided via GET (Admin mode), fetch from mapping (Client mode)
         if (empty($clientId)) {
             $stmt = $pdo->prepare("SELECT external_client_id FROM client_links WHERE user_id = ?");
             $stmt->execute([$userId]);

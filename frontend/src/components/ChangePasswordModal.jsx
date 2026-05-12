@@ -1,8 +1,11 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Lock, RefreshCw, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { authService } from '../services/api';
+import { useToast } from '../context/NotificationContext';
 
 const ChangePasswordModal = ({ isOpen, onClose }) => {
+  const { toast } = useToast();
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null); // 'success' | 'error'
@@ -27,6 +30,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
     try {
       await authService.updatePassword(password);
       setStatus('success');
+      toast.success('Contraseña actualizada con éxito');
       setTimeout(() => {
         onClose();
         setStatus(null);
@@ -34,13 +38,14 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
       }, 2000);
     } catch {
       setStatus('error');
+      toast.error('Error al actualizar la contraseña');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-200 flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+  const modalContent = (
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="bg-notion-light dark:bg-[#202020] border border-notion-border dark:border-white/10 rounded-3xl w-full max-w-[400px] shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
         
         {/* Header */}
@@ -134,6 +139,8 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default ChangePasswordModal;

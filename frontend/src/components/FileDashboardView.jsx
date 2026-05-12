@@ -3,7 +3,7 @@ import { Download, Search, Filter, Grid, List as ListIcon, MoreVertical, File, F
 import { fileService } from '../services/api';
 import FilePreviewModal from './FilePreviewModal';
 
-const FileDashboardView = ({ userId, externalClientId }) => {
+const FileDashboardView = ({ userId, viewUserId = null }) => {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,12 +17,12 @@ const FileDashboardView = ({ userId, externalClientId }) => {
 
   useEffect(() => {
     loadFiles();
-  }, [userId, externalClientId]);
+  }, [userId, viewUserId]);
 
   const loadFiles = async () => {
     try {
       setLoading(true);
-      const data = await fileService.getForUser(userId, externalClientId);
+      const data = await fileService.getForUser(userId, null, viewUserId);
       setFiles(data || []);
     } catch (error) {
       console.error("Error loading files:", error);
@@ -142,38 +142,28 @@ const FileDashboardView = ({ userId, externalClientId }) => {
       </div>
 
       {/* Navigation Header */}
-      {!searchTerm && (
+      {!searchTerm && Array.isArray(currentPath) && currentPath.length > 0 && (
         <header className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            {Array.isArray(currentPath) && currentPath.length > 0 && (
-              <button 
-                type="button"
-                onClick={() => setCurrentPath(prev => Array.isArray(prev) ? prev.slice(0, -1) : [])}
-                className="p-2.5 bg-white dark:bg-white/5 rounded-xl border border-notion-border dark:border-white/10 text-notion-text-secondary hover:text-blue-500 hover:border-blue-500/30 transition-all active:scale-90 shadow-sm"
-                title="Volver"
-              >
-                <ChevronRight className="w-5 h-5 rotate-180" />
-              </button>
-            )}
-            <div>
-              <h2 className="text-xl font-black tracking-tight text-notion-text dark:text-white uppercase">
-                {(Array.isArray(currentPath) && currentPath.length > 0) ? currentPath[currentPath.length - 1] : 'Inicio'}
-              </h2>
-              <p className="text-[10px] font-bold text-notion-text-secondary uppercase tracking-[0.2em]">
-                {(Array.isArray(currentPath) && currentPath.length > 0) ? `Explorando ${currentPath.join(' / ')}` : 'Tus archivos y carpetas'}
-              </p>
-            </div>
+            <button 
+              type="button"
+              onClick={() => setCurrentPath(prev => Array.isArray(prev) ? prev.slice(0, -1) : [])}
+              className="p-2.5 bg-white dark:bg-white/5 rounded-xl border border-notion-border dark:border-white/10 text-notion-text-secondary hover:text-blue-500 hover:border-blue-500/30 transition-all active:scale-90 shadow-sm flex items-center gap-2 pr-4"
+              title="Volver"
+            >
+              <ChevronRight className="w-5 h-5 rotate-180" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Volver</span>
+            </button>
           </div>
         </header>
       )}
 
       {currentFiles.length === 0 && folders.size === 0 ? (
         <div className="flex flex-col items-center justify-center py-40 bg-white dark:bg-white/2 rounded-[48px] border border-notion-border dark:border-white/5 shadow-2xl">
-          <div className="w-24 h-24 bg-blue-500/5 rounded-[40px] flex items-center justify-center mb-8 animate-bounce duration-3000">
+          <div className="w-24 h-24 bg-blue-500/5 rounded-[40px] flex items-center justify-center mb-8">
             <File className="w-12 h-12 text-blue-500/10" />
           </div>
-          <p className="text-base font-black text-notion-text dark:text-white uppercase tracking-[0.2em] mb-2">No hay resultados</p>
-          <p className="text-[11px] font-bold text-notion-text-secondary dark:text-white/20 uppercase tracking-[0.3em]">Prueba con otro nombre o categoría</p>
+          <p className="text-base font-black text-notion-text dark:text-white uppercase tracking-[0.2em] mb-2">No hay ficheros</p>
         </div>
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

@@ -13,16 +13,7 @@ class AppController {
     }
 
     public function listForUser($userId, $externalClientId = null) {
-        if ($externalClientId) {
-            $stmt = $this->pdo->prepare("
-                SELECT a.* 
-                FROM apps a
-                JOIN user_apps ua ON a.id = ua.app_id
-                JOIN client_links cl ON ua.user_id = cl.user_id
-                WHERE cl.external_client_id = ?
-            ");
-            $stmt->execute([$externalClientId]);
-        } else {
+        if ($userId) {
             $stmt = $this->pdo->prepare("
                 SELECT a.* 
                 FROM apps a
@@ -30,6 +21,18 @@ class AppController {
                 WHERE ua.user_id = ?
             ");
             $stmt->execute([$userId]);
+        } elseif ($externalClientId) {
+            $stmt = $this->pdo->prepare("
+                SELECT DISTINCT a.* 
+                FROM apps a
+                JOIN user_apps ua ON a.id = ua.app_id
+                JOIN client_links cl ON ua.user_id = cl.user_id
+                WHERE cl.external_client_id = ?
+            ");
+            $stmt->execute([$externalClientId]);
+        } else {
+            echo json_encode([]);
+            return;
         }
         echo json_encode($stmt->fetchAll());
     }
