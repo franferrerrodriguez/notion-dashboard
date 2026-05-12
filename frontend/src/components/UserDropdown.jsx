@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { LogOut, ChevronDown, Shield, Globe, Check, Lock } from 'lucide-react';
@@ -104,7 +105,7 @@ const UserDropdown = () => {
                 className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-notion-text dark:text-white/80 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl transition-all group"
               >
                 <Lock className="w-3.5 h-3.5 text-notion-text-secondary dark:text-gray-500 group-hover:text-blue-500 transition-colors" />
-                Cambiar Contraseña
+                {t('change_password_title')}
               </button>
             </div>
 
