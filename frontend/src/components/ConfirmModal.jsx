@@ -10,7 +10,7 @@ const ConfirmModal = React.memo(({ isOpen, onClose, onConfirm, title, message, c
   if (!isOpen) return null;
 
   const modalContent = (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 overflow-hidden">
+    <div className="fixed inset-0 z-10000 flex items-center justify-center p-4 overflow-hidden">
       {/* Subtle Overlay */}
       <div 
         className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-300" 

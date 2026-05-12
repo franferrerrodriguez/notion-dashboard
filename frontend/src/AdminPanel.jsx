@@ -147,7 +147,7 @@ const AdminPanel = () => {
                   {t('col_status')}
                 </th>
                 <th className="py-5 px-4 text-[11px] font-black text-notion-text-secondary dark:text-white/40 uppercase tracking-widest text-center">
-                  Apps
+                  {t('col_apps')}
                 </th>
                 <th className="py-5 px-8 text-[11px] font-black text-notion-text-secondary dark:text-white/40 uppercase tracking-widest text-right">
                   {t('col_actions')}
@@ -209,7 +209,7 @@ const AdminPanel = () => {
                           u.app_ids.map(appId => {
                             const app = availableApps.find(a => a.id === appId);
                             if (!app) return null;
-                            const shortName = app.slug === 'notion-dashboard' ? 'Project DB' : 'Archivos';
+                            const shortName = app.slug === 'notion-dashboard' ? 'Project DB' : t('app_files_short');
                             return (
                               <div key={appId} className="relative group/app">
                                 <span className="text-[9px] font-black px-3 py-1.5 rounded-lg border border-blue-500/20 bg-blue-500/10 text-blue-500 uppercase tracking-widest transition-all hover:bg-blue-500 hover:text-white cursor-default">
@@ -225,7 +225,7 @@ const AdminPanel = () => {
                             );
                           })
                         ) : (
-                          <span className="text-[10px] font-bold text-notion-text-secondary/30 uppercase tracking-widest">Ninguna</span>
+                          <span className="text-[10px] font-bold text-notion-text-secondary/30 uppercase tracking-widest">{t('none')}</span>
                         )
                       ) : (
                         <span className="text-[9px] font-black px-3 py-1.5 rounded-lg border border-notion-border dark:border-white/10 bg-black/5 dark:bg-white/5 text-notion-text-secondary dark:text-white/30 uppercase tracking-widest">
