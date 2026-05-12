@@ -192,6 +192,8 @@ export const translations = {
     col_name: 'Nombre',
     directory: 'Directorio',
     files: 'Ficheros',
+    header_maintenance: 'Libro de Mantenimiento Digital',
+    header_projects: 'Gestión de Proyectos',
   },
   en: {
     // ... (skipping some for brevity, but I must provide full context or use multi_replace)
@@ -389,5 +391,7 @@ export const translations = {
     col_name: 'Name',
     directory: 'Directory',
     files: 'Files',
+    header_maintenance: 'Digital Maintenance Log',
+    header_projects: 'Project Management',
   },
 };

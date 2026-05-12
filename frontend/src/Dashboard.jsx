@@ -169,7 +169,7 @@ const Dashboard = () => {
             )}
             <div className="flex flex-col">
                 <h1 className="text-xl font-black tracking-tight uppercase text-notion-text dark:text-white leading-tight">
-                  Libro de Mantenimiento Digital
+                  {currentApp?.slug === 'file-dashboard' ? t('header_maintenance') : t('header_projects')}
                 </h1>
                 <p className="text-[10px] font-black text-notion-text-secondary dark:text-white/40 uppercase tracking-[0.2em] mt-1">
                   {displayUser?.name || displayUser?.email?.split('@')[0]}

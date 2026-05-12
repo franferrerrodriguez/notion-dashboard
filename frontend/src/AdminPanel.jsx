@@ -209,7 +209,7 @@ const AdminPanel = () => {
                           u.app_ids.map(appId => {
                             const app = availableApps.find(a => a.id === appId);
                             if (!app) return null;
-                            const shortName = app.slug === 'notion-dashboard' ? 'Project DB' : t('app_files_short');
+                            const shortName = app.slug === 'notion-dashboard' ? t('projects') : t('app_files_short');
                             return (
                               <div key={appId} className="relative group/app">
                                 <span className="text-[9px] font-black px-3 py-1.5 rounded-lg border border-blue-500/20 bg-blue-500/10 text-blue-500 uppercase tracking-widest transition-all hover:bg-blue-500 hover:text-white cursor-default">
