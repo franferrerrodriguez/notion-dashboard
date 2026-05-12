@@ -204,28 +204,33 @@ const AdminPanel = () => {
                   </td>
                   <td className="py-6 px-4 text-center">
                     <div className="flex justify-center gap-2">
-                      {u.app_ids.length > 0 ? (
-                        u.app_ids.map(appId => {
-                          const app = availableApps.find(a => a.id === appId);
-                          if (!app) return null;
-                          return (
-                            <div key={appId} className="relative group/app">
-                              <div 
-                                className="p-1.5 bg-blue-500/10 rounded-lg border border-blue-500/20 text-blue-500 transition-all hover:bg-blue-500 hover:text-white cursor-help"
-                              >
-                                {app.slug === 'notion-dashboard' ? <AppWindow className="w-3.5 h-3.5" /> : <FolderOpen className="w-3.5 h-3.5" />}
+                      {u.role === ROLES.CLIENT ? (
+                        u.app_ids.length > 0 ? (
+                          u.app_ids.map(appId => {
+                            const app = availableApps.find(a => a.id === appId);
+                            if (!app) return null;
+                            const shortName = app.slug === 'notion-dashboard' ? 'Project DB' : 'Archivos';
+                            return (
+                              <div key={appId} className="relative group/app">
+                                <span className="text-[9px] font-black px-3 py-1.5 rounded-lg border border-blue-500/20 bg-blue-500/10 text-blue-500 uppercase tracking-widest transition-all hover:bg-blue-500 hover:text-white cursor-default">
+                                  {shortName}
+                                </span>
+                                
+                                {/* Custom Tooltip (Optional now but kept for description) */}
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[8px] font-black uppercase tracking-widest rounded-lg opacity-0 group-hover/app:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-50 shadow-xl translate-y-1 group-hover/app:translate-y-0">
+                                  {app.name}
+                                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-white"></div>
+                                </div>
                               </div>
-                              
-                              {/* Custom Tooltip */}
-                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[8px] font-black uppercase tracking-widest rounded-lg opacity-0 group-hover/app:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-50 shadow-xl translate-y-1 group-hover/app:translate-y-0">
-                                {app.name}
-                                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-white"></div>
-                              </div>
-                            </div>
-                          );
-                        })
+                            );
+                          })
+                        ) : (
+                          <span className="text-[10px] font-bold text-notion-text-secondary/30 uppercase tracking-widest">Ninguna</span>
+                        )
                       ) : (
-                        <span className="text-[10px] font-bold text-notion-text-secondary/30 uppercase tracking-widest">Ninguna</span>
+                        <span className="text-[9px] font-black px-3 py-1.5 rounded-lg border border-notion-border dark:border-white/10 bg-black/5 dark:bg-white/5 text-notion-text-secondary dark:text-white/30 uppercase tracking-widest">
+                          Admin
+                        </span>
                       )}
                     </div>
                   </td>

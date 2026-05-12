@@ -1,4 +1,4 @@
-# Notion Dashboard - Full-Stack React Architecture ⚛️⚡
+# Project Dashboard - Full-Stack React Architecture ⚛️⚡
 
 A professional-grade Client Portal and Administrative Dashboard built with a modern, scalable architecture. This project bridges **Notion API** data with a custom-built interface, providing a seamless experience for project visualization and client management.
 
@@ -51,4 +51,5 @@ This project follows high-level engineering standards to ensure stability and ma
 - **CI Readiness**: "Zero-warning" policy achieved (excluding Tailwind CSS v4 internal lints).
 
 ---
+
 Developed by [Fran Ferrer](https://github.com/franferrerrodriguez) — Focused on Modern Web Architecture and Scalable Solutions.

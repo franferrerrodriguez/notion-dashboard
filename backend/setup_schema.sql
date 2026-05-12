@@ -93,7 +93,7 @@ INSERT INTO roles (id, name) VALUES (1, 'Admin'), (2, 'Client');
 
 -- Initial apps
 INSERT INTO apps (name, slug, description, icon) VALUES 
-('Notion Dashboard', 'notion-dashboard', 'Acceso a proyectos, facturas y tareas en Notion', 'LayoutDashboard'),
+('Project Dashboard', 'notion-dashboard', 'Acceso a proyectos, facturas y tareas', 'LayoutDashboard'),
 ('Gestor de Archivos', 'file-dashboard', 'Documentos y archivos compartidos', 'FolderOpen');
 
 -- Initial settings seed

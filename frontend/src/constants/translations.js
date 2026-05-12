@@ -2,7 +2,7 @@ export const translations = {
   es: {
     // General
     loading: 'Cargando...',
-    notion_query: 'Obteniendo datos...',
+    project_query: 'Obteniendo datos...',
     error_loading: 'Error al cargar datos',
     close: 'Cerrar',
     admin: 'Administración',
@@ -50,7 +50,7 @@ export const translations = {
     user_list: 'Listado de Acceso',
     new_user: 'Nuevo Usuario',
     config_required: 'Configuración Requerida',
-    notion_config: 'Conexión de Datos',
+    notion_config: 'Conexión Notion',
     loading_users: 'Cargando Usuarios',
     view_as_client: 'Ver Dashboard como Cliente',
 
@@ -64,7 +64,7 @@ export const translations = {
     col_email: 'Email',
     col_role: 'Rol',
     col_status: 'Estado',
-    col_notion_link: 'Vinculación Notion',
+    col_project_id: 'ID Proyecto',
     col_actions: 'Acciones',
     col_billing: 'Facturación',
     col_code: 'Código',
@@ -88,7 +88,7 @@ export const translations = {
     settings_loading_msg: 'Cargando Configuración...',
     settings_save_success: 'Configuración guardada correctamente',
     settings_save_error: 'Error al guardar la configuración',
-    settings_token_label: 'Token de Conexión',
+    settings_token_label: 'Token de Conexión Notion',
     settings_token_placeholder: 'secret_...',
     settings_db_id_placeholder: 'ID Base de Datos...',
     settings_projects_db_id: 'ID Base de Datos (Proyectos)',
@@ -185,7 +185,7 @@ export const translations = {
 
     // General
     loading: 'Loading...',
-    notion_query: 'Fetching data...',
+    project_query: 'Fetching data...',
     error_loading: 'Error loading data',
     close: 'Close',
     admin: 'Administration',
@@ -233,7 +233,7 @@ export const translations = {
     user_list: 'Access List',
     new_user: 'New User',
     config_required: 'Configuration Required',
-    notion_config: 'Data Connection',
+    notion_config: 'Notion Connection',
     loading_users: 'Loading Users',
     view_as_client: 'View Dashboard as Client',
 
@@ -247,7 +247,7 @@ export const translations = {
     col_email: 'Email',
     col_role: 'Role',
     col_status: 'Status',
-    col_notion_link: 'Notion Link',
+    col_project_id: 'Project ID',
     col_actions: 'Actions',
     col_billing: 'Billing',
     col_code: 'Code',
@@ -271,7 +271,7 @@ export const translations = {
     settings_loading_msg: 'Loading Configuration...',
     settings_save_success: 'Settings saved successfully',
     settings_save_error: 'Error saving settings',
-    settings_token_label: 'Connection Token',
+    settings_token_label: 'Notion Connection Token',
     settings_token_placeholder: 'secret_...',
     settings_db_id_placeholder: 'Database ID...',
     settings_projects_db_id: 'Projects Database ID',
