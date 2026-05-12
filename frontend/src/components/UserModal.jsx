@@ -124,7 +124,7 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null }) => {
           <div className="p-20 flex flex-col items-center justify-center gap-4 animate-in fade-in duration-500">
             <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
             <div className="flex flex-col items-center gap-1">
-              <p className="text-sm font-black text-notion-text dark:text-white uppercase tracking-widest">{t('loading_data')}</p>
+              <p className="text-sm font-black text-notion-text dark:text-white uppercase tracking-widest">{t('user_loading_data')}</p>
               <p className="text-[10px] font-bold text-notion-text-secondary uppercase tracking-[0.2em] animate-pulse">{t('settings_loading_msg')}</p>
             </div>
           </div>
